@@ -1,0 +1,9 @@
+---
+apiVersion: "mysql.oracle.com/v1"
+kind: MySQLCluster
+metadata:
+  name: mysql-wordpress
+spec:
+  replicas: 3
+  secretRef:
+    name: wordpress-mysql-root-password

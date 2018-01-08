@@ -1,0 +1,6 @@
+apiVersion: "mysql.oracle.com/v1"
+kind: MySQLCluster
+metadata:
+  name: mysql-test-cluster
+spec:
+  replicas: 3

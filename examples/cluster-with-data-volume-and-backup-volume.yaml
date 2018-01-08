@@ -1,0 +1,61 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    type: local
+  name: mysql-local-volume
+spec:
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 10Gi
+  hostPath:
+    path: /tmp/data1
+  persistentVolumeReclaimPolicy: Recycle
+  storageClassName: manual
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    type: local
+  name: mysql-local-backup-volume
+spec:
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 10Gi
+  hostPath:
+    path: /tmp/data2
+  persistentVolumeReclaimPolicy: Recycle
+  storageClassName: manual
+---
+apiVersion: "mysql.oracle.com/v1"
+kind: MySQLCluster
+metadata:
+  name: example-mysql-cluster-with-volume
+spec:
+  replicas: 1
+  secretRef:
+    name: mysql-root-user-secret
+  volumeClaimTemplate:
+    metadata:
+      name: data
+    spec:
+      storageClassName: manual
+      accessModes:
+        - ReadWriteMany
+      resources:
+        requests:
+          storage: 1Gi
+  backupVolumeClaimTemplate:
+    metadata:
+      name: backup-data
+    spec:
+      storageClassName: manual
+      accessModes:
+        - ReadWriteMany
+      resources:
+        requests:
+          storage: 1Gi

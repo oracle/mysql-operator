@@ -1,0 +1,48 @@
+# Ignore builds
+dist/
+bin/
+.push-wcr*
+.container-wcr*
+
+test/system/runner.log
+test/system/terraform/cluster/.terraform/
+test/system/terraform/cluster/ansible_hosts
+test/system/terraform/cluster/mysql-operator-*-admin.conf
+test/system/terraform/cluster/mysql-operator-*-source.sh
+test/system/terraform/cluster/master
+test/system/terraform/cluster/master.pub
+test/system/terraform/cluster/terraform.tfstate
+test/system/terraform/cluster/terraform.tfstate.backup
+
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
+.glide/
+
+**/*~
+
+cloud-provider.cfg
+manifests/bmcs-config.yaml
+manifests/bmcs-secret.yaml
+env.sh
+
+# test generated file
+test/e2e/manifests/e2e-mysql-operator-controller.yaml
+
+# Vim
+*.sw[op]
+.go
+
+# Goland 
+.idea
+*.iml

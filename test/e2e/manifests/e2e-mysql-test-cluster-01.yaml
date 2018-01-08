@@ -1,0 +1,8 @@
+apiVersion: "mysql.oracle.com/v1"
+kind: MySQLCluster
+metadata:
+  name: e2e-mysql-test-cluster-01
+spec:
+  replicas: 1
+  secretRef:
+    name: mysql-root-user-secret

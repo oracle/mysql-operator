@@ -1,0 +1,9 @@
+apiVersion: "mysql.oracle.com/v1"
+kind: MySQLRestore
+metadata:
+  name: mysql-example-restore
+spec:
+  clusterRef:
+    name: mysql
+  backupRef:
+    name: mysql-example-backup

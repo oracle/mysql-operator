@@ -1,0 +1,11 @@
+rbac:
+  enabled: false
+operator:
+  namespace: mysql-operator
+  global: true
+  register_crd: true
+image:
+  tag: 0.3.0
+  pullPolicy: Always
+docker:
+  pullSecret: odx-docker-pull-secret

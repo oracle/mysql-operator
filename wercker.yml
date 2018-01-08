@@ -1,0 +1,148 @@
+box: golang:1.9
+
+test:
+  base-path: "/go/src/github.com/oracle/mysql-operator"
+  steps:
+    - script:
+      name: test
+      code: make test
+
+build:
+  base-path: "/go/src/github.com/oracle/mysql-operator"
+  steps:
+    - script:
+      name: build binaries
+      code: make build
+
+    - script:
+      name: copy build artifacts
+      code: |
+        mkdir -p ${WERCKER_OUTPUT_DIR}/bin
+        cp -R /go/bin/mysql-agent ${WERCKER_OUTPUT_DIR}/bin/
+        cp -R /go/bin/mysql-operator ${WERCKER_OUTPUT_DIR}/bin/
+        cp -R dist ${WERCKER_OUTPUT_DIR}/
+
+    - script:
+      name: copy test artifacts
+      code: |
+        cp -R Makefile ${WERCKER_OUTPUT_DIR}/
+        cp -R cmd ${WERCKER_OUTPUT_DIR}/
+        cp -R pkg ${WERCKER_OUTPUT_DIR}/
+        cp -R test ${WERCKER_OUTPUT_DIR}/
+        cp -R vendor ${WERCKER_OUTPUT_DIR}/
+        cp -R mysql-operator ${WERCKER_OUTPUT_DIR}/
+        cp -R .git ${WERCKER_OUTPUT_DIR}/
+
+push-operator-image:
+  box:
+    id: oraclelinux:7.3
+  steps:
+    - script:
+      name: set environment variables
+      code: |
+        export VERSION=$(cat dist/version.txt)
+        echo "Pushing operator version ${VERSION}"
+
+    - script:
+      name: prepare
+      code: |
+        mv bin/mysql-operator /mysql-operator
+        chmod +x /mysql-operator
+
+    - internal/docker-push:
+      registry: https://wcr.io/v2
+      repository: wcr.io/oracle/mysql-operator
+      tag: $VERSION
+      entrypoint: /mysql-operator
+
+push-agent-image:
+  box:
+    id: mysql/mysql-server:5.7.20-1.1.2
+  steps:
+    - script:
+      name: set environment variables
+      code: |
+        export VERSION=$(cat dist/version.txt)
+        echo "Pushing agent version ${VERSION}"
+
+    - script:
+      name: prepare
+      code: |
+        mv bin/mysql-agent /mysql-agent
+        chmod +x /mysql-agent
+
+    - internal/docker-push:
+      registry: https://wcr.io/v2
+      repository: wcr.io/oracle/mysql-agent
+      tag: $VERSION
+      entrypoint: /mysql-agent
+      user: mysql
+
+e2e-test-TestCreateCluster:
+  base-path: "/go/src/github.com/oracle/mysql-operator"
+  box:
+    registry: https://wcr.io/v2
+    id: wcr.io/oracle/mysql-operator-ci-e2e:1.0.0
+  steps:
+    - script:
+      name: e2e create cluster test
+      code: make e2e-TestCreateCluster
+
+e2e-test-TestContainerCrashRecovery:
+  base-path: "/go/src/github.com/oracle/mysql-operator"
+  box:
+    registry: https://wcr.io/v2
+    id: wcr.io/oracle/mysql-operator-ci-e2e:1.0.0
+  steps:
+    - script:
+      name: e2e container crash recovery Test
+      code: make e2e-TestContainerCrashRecovery
+
+e2e-test-TestPodCrashRecovery:
+  base-path: "/go/src/github.com/oracle/mysql-operator"
+  box:
+    registry: https://wcr.io/v2
+    id: wcr.io/oracle/mysql-operator-ci-e2e:1.0.0
+  steps:
+    - script:
+      name: e2e pod crash recovery Test
+      code: make e2e-TestPodCrashRecovery
+
+e2e-test-TestBackUpRestore:
+  base-path: "/go/src/github.com/oracle/mysql-operator"
+  box:
+    registry: https://wcr.io/v2
+    id: wcr.io/oracle/mysql-operator-ci-e2e:1.0.0
+  steps:
+    - script:
+      name: e2e backup restore test
+      code: make e2e-TestBackUpRestore
+
+e2e-test-TestScheduledBackup:
+  base-path: "/go/src/github.com/oracle/mysql-operator"
+  box:
+    registry: https://wcr.io/v2
+    id: wcr.io/oracle/mysql-operator-ci-e2e:1.0.0
+  steps:
+    - script:
+      name: e2e scheduled backup test
+      code: make e2e-TestScheduledBackup
+
+e2e-test-TestUpgrade:
+  base-path: "/go/src/github.com/oracle/mysql-operator"
+  box:
+    registry: https://wcr.io/v2
+    id: wcr.io/oracle/mysql-operator-ci-e2e:1.0.0
+  steps:
+    - script:
+      name: e2e upgrade test
+      code: |
+        make e2e-teardown-TestUpgrade
+        if [ $(git log -1 --pretty=format:"%H" HEAD) == $(git log -1 --pretty=format:"%H" origin/master) ]; then
+            make e2e-setup-TestUpgrade MYSQL_OPERATOR_VERSION=$(git log -1 --pretty=format:"%H" origin/master~1)
+        else
+            make e2e-setup-TestUpgrade MYSQL_OPERATOR_VERSION=$(git log -1 --pretty=format:"%H" origin/master)
+        fi
+        make e2e-run-TestUpgrade
+        make e2e-teardown-TestUpgrade
+        
