@@ -1,6 +1,6 @@
 # MySQL Operator
 
-[![build status](https://github.com/oracle/mysql-operator/badges/master/build.svg)](https://github.com/oracle/mysql-operator/commits/master)
+[![wercker status](https://app.wercker.com/status/cc1710e8b354d1a22f36b04c8313eac9/s/master "wercker status")](https://app.wercker.com/project/byKey/cc1710e8b354d1a22f36b04c8313eac9)
 
 The MySQL [Operator][1] creates, configures and manages MySQL clusters running on Kubernetes.
 
