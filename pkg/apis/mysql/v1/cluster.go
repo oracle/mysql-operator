@@ -67,6 +67,10 @@ type MySQLClusterSpec struct {
 	// If it is not set we generate a secret dynamically
 	// +optional
 	SecretRef *corev1.LocalObjectReference `json:"secretRef,omitempty"`
+
+	// ConfigRef allows a user to specify a custom configuration file for MySQL.
+	// +optional
+	ConfigRef *corev1.LocalObjectReference `json:"configRef,omitempty"`
 }
 
 // MySQLClusterPhase describes the state of the cluster.
@@ -157,6 +161,12 @@ func (c *MySQLCluster) EnsureDefaults() *MySQLCluster {
 	}
 
 	return c
+}
+
+// RequiresConfigMount will return true if a user has specified a config map
+// for configuring the cluster else false
+func (c *MySQLCluster) RequiresConfigMount() bool {
+	return c.Spec.ConfigRef != nil
 }
 
 // RequiresSecret returns true if a secret should be generated

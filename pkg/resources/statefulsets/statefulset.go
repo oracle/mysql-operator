@@ -73,6 +73,16 @@ func volumeMounts(cluster *api.MySQLCluster) []v1.VolumeMount {
 	}
 	mounts = append(mounts, backupMount)
 
+	// A user may explicitly define a my.cnf configuration file for
+	// their MySQL cluster.
+	if cluster.RequiresConfigMount() {
+		mounts = append(mounts, v1.VolumeMount{
+			Name:      cluster.Name,
+			MountPath: "/etc/my.cnf",
+			SubPath:   "my.cnf",
+		})
+	}
+
 	return mounts
 }
 
@@ -286,6 +296,19 @@ func NewForCluster(cluster *api.MySQLCluster, serviceName string) *apps.Stateful
 	if cluster.Spec.BackupVolumeClaimTemplate == nil {
 		podVolumes = append(podVolumes, v1.Volume{Name: mySQLBackupVolumeName,
 			VolumeSource: v1.VolumeSource{EmptyDir: &v1.EmptyDirVolumeSource{Medium: ""}}})
+	}
+
+	if cluster.RequiresConfigMount() {
+		podVolumes = append(podVolumes, v1.Volume{
+			Name: cluster.Name,
+			VolumeSource: v1.VolumeSource{
+				ConfigMap: &v1.ConfigMapVolumeSource{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: cluster.Spec.ConfigRef.Name,
+					},
+				},
+			},
+		})
 	}
 
 	containers := []v1.Container{

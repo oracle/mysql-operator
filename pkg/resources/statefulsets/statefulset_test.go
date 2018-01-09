@@ -105,3 +105,30 @@ func TestClusterHasNodeSelector(t *testing.T) {
 		t.Errorf("Expected cluster with NVMe node selector")
 	}
 }
+
+func TestClusterCustomConfig(t *testing.T) {
+	cluster := &api.MySQLCluster{
+		Spec: api.MySQLClusterSpec{
+			ConfigRef: &v1.LocalObjectReference{
+				Name: "mycnf",
+			},
+		},
+	}
+
+	statefulSet := NewForCluster(cluster, "mycluster")
+	containers := statefulSet.Spec.Template.Spec.Containers
+
+	var hasExpectedVolumeMount = false
+	for _, container := range containers {
+		for _, mount := range container.VolumeMounts {
+			if mount.MountPath == "/etc/my.cnf" {
+				hasExpectedVolumeMount = true
+				break
+			}
+		}
+	}
+
+	if !hasExpectedVolumeMount {
+		t.Errorf("Cluster is missing expected volume mount for custom config map")
+	}
+}
