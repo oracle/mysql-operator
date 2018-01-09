@@ -55,23 +55,22 @@ func volumeMounts(cluster *api.MySQLCluster) []v1.VolumeMount {
 	if cluster.Spec.VolumeClaimTemplate != nil {
 		name = cluster.Spec.VolumeClaimTemplate.Name
 	}
-	mount := v1.VolumeMount{
+
+	mounts = append(mounts, v1.VolumeMount{
 		Name:      name,
 		MountPath: "/var/lib/mysql",
 		SubPath:   "mysql",
-	}
-	mounts = append(mounts, mount)
+	})
 
 	backupName := mySQLBackupVolumeName
 	if cluster.Spec.BackupVolumeClaimTemplate != nil {
 		backupName = cluster.Spec.BackupVolumeClaimTemplate.Name
 	}
-	backupMount := v1.VolumeMount{
+	mounts = append(mounts, v1.VolumeMount{
 		Name:      backupName,
 		MountPath: MySQLAgentBasePath,
 		SubPath:   "mysql",
-	}
-	mounts = append(mounts, backupMount)
+	})
 
 	// A user may explicitly define a my.cnf configuration file for
 	// their MySQL cluster.
