@@ -36,13 +36,6 @@ var validVersions = []string{
 	defaultVersion,
 }
 
-// MySQLSecretRef holds reference to a custom secret
-// which enables configuration of things like the
-// MYSQL_ROOT_PASSWORD in a cluster
-type MySQLSecretRef struct {
-	Name string `json:"name"`
-}
-
 // MySQLClusterSpec defines the attributes a user can specify when creating a cluster
 type MySQLClusterSpec struct {
 	// Version defines the MySQL Docker image version.
@@ -73,7 +66,7 @@ type MySQLClusterSpec struct {
 	// If defined, we use this secret for configuring the MYSQL_ROOT_PASSWORD
 	// If it is not set we generate a secret dynamically
 	// +optional
-	SecretRef *MySQLSecretRef `json:"secretRef,omitempty"`
+	SecretRef *corev1.LocalObjectReference `json:"secretRef,omitempty"`
 }
 
 // MySQLClusterPhase describes the state of the cluster.

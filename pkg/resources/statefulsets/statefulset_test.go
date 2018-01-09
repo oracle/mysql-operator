@@ -40,7 +40,7 @@ func TestMySQLRootPasswordNoSecretRef(t *testing.T) {
 func TestMySQLRootPasswordWithSecretRef(t *testing.T) {
 	cluster := &api.MySQLCluster{
 		Spec: api.MySQLClusterSpec{
-			SecretRef: &api.MySQLSecretRef{Name: "secret"},
+			SecretRef: &v1.LocalObjectReference{Name: "secret"},
 		},
 	}
 
@@ -54,7 +54,7 @@ func TestMySQLRootPasswordWithSecretRef(t *testing.T) {
 func TestClusterWithoutPVCHasBackupContainerAndVolumes(t *testing.T) {
 	cluster := &api.MySQLCluster{
 		Spec: api.MySQLClusterSpec{
-			SecretRef: &api.MySQLSecretRef{Name: "secret"},
+			SecretRef: &v1.LocalObjectReference{Name: "secret"},
 		},
 	}
 
@@ -73,7 +73,7 @@ func TestClusterWithoutPVCHasBackupContainerAndVolumes(t *testing.T) {
 func TestClusterWithPVCHasBackupContainerAndVolumes(t *testing.T) {
 	cluster := &api.MySQLCluster{
 		Spec: api.MySQLClusterSpec{
-			SecretRef:                 &api.MySQLSecretRef{Name: "secret"},
+			SecretRef:                 &v1.LocalObjectReference{Name: "secret"},
 			VolumeClaimTemplate:       &v1.PersistentVolumeClaim{},
 			BackupVolumeClaimTemplate: &v1.PersistentVolumeClaim{},
 		},
