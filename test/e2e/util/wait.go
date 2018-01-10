@@ -1,19 +1,17 @@
 package util
 
 import (
-	"errors"
 	"fmt"
 	"os/exec"
-	"testing"
 	"time"
+
+	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	mysqlop "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-
-	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
-	mysqlop "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 )
 
 // DefaultRetry is the default backoff for e2e tests.
@@ -56,7 +54,7 @@ func Retry(backoff wait.Backoff, fn wait.ConditionFunc) error {
 // WaitForClusterPhase retries until a cluster reaches a given phase or a
 // timeout is reached.
 func WaitForClusterPhase(
-	t *testing.T,
+	t *T,
 	cluster *api.MySQLCluster,
 	phase api.MySQLClusterPhase,
 	backoff wait.Backoff,
@@ -68,7 +66,7 @@ func WaitForClusterPhase(
 // WaitForNamedClusterPhase retries until a cluster reaches a given phase or a
 // timeout is reached.
 func WaitForNamedClusterPhase(
-	t *testing.T,
+	t *T,
 	clusterNameSpace string,
 	clusterName string,
 	phase api.MySQLClusterPhase,
@@ -80,10 +78,10 @@ func WaitForNamedClusterPhase(
 	err = Retry(backoff, func() (bool, error) {
 		cl, err = mySQLOpClient.MysqlV1().MySQLClusters(clusterNameSpace).Get(clusterName, metav1.GetOptions{})
 		if err != nil {
-			fmt.Printf("waiting for cluster '%s' to reach phase: '%v', error: '%v'...\n", clusterName, phase, err)
+			t.Logf("waiting for cluster '%s' to reach phase: '%v', error: '%v'...", clusterName, phase, err)
 			return false, err
 		}
-		fmt.Printf("waiting for cluster '%s' to reach phase: '%v', currently: '%v'...\n", clusterName, phase, cl.Status.Phase)
+		t.Logf("waiting for cluster '%s' to reach phase: '%v', currently: '%v'...", clusterName, phase, cl.Status.Phase)
 		return cl.Status.Phase == phase, err
 	})
 	if err != nil {
@@ -94,7 +92,7 @@ func WaitForNamedClusterPhase(
 
 // WaitForBackupPhase retries until a backup completes or timeout is reached.
 func WaitForBackupPhase(
-	t *testing.T,
+	t *T,
 	backup *api.MySQLBackup,
 	phase api.BackupPhase,
 	backoff wait.Backoff,
@@ -107,7 +105,7 @@ func WaitForBackupPhase(
 		if err != nil {
 			return false, err
 		}
-		fmt.Printf("waiting for backup %s to reach phase: '%s', currently: '%s'...\n", backup.Name, phase, latest.Status.Phase)
+		t.Logf("waiting for backup %s to reach phase: '%s', currently: '%s'...", backup.Name, phase, latest.Status.Phase)
 		if latest.Status.Phase == api.BackupPhaseFailed {
 			return true, fmt.Errorf("Backup '%s' phase reached %s.", backup.Name, api.BackupPhaseFailed)
 		}
@@ -121,7 +119,7 @@ func WaitForBackupPhase(
 
 // WaitForRestorePhase retries until a restore completes or timeout is reached.
 func WaitForRestorePhase(
-	t *testing.T,
+	t *T,
 	restore *api.MySQLRestore,
 	phase api.RestorePhase,
 	backoff wait.Backoff,
@@ -134,7 +132,7 @@ func WaitForRestorePhase(
 		if err != nil {
 			return false, err
 		}
-		fmt.Printf("waiting for restore %s to reach phase: '%s', currently: '%s'...\n", restore.Name, phase, latest.Status.Phase)
+		t.Logf("waiting for restore %s to reach phase: '%s', currently: '%s'...", restore.Name, phase, latest.Status.Phase)
 		if latest.Status.Phase == api.RestorePhaseFailed {
 			return true, fmt.Errorf("Restore '%s' phase reached %s.", restore.Name, api.RestorePhaseFailed)
 		}
@@ -148,7 +146,7 @@ func WaitForRestorePhase(
 
 // WaitForPodPhase retries until the pod phase is reached or timeout is reached.
 func WaitForPodPhase(
-	t *testing.T,
+	t *T,
 	namespace string,
 	podName string,
 	podPhase v1.PodPhase,
@@ -159,9 +157,9 @@ func WaitForPodPhase(
 	var err error
 	err = Retry(backoff, func() (bool, error) {
 		latest, err = kubeClient.CoreV1().Pods(namespace).Get(podName, metav1.GetOptions{})
-		fmt.Printf("Waiting for pod '%s' to reach phase: '%v', currently: '%v'...\n", podName, podPhase, latest.Status.Phase)
+		t.Logf("Waiting for pod '%s' to reach phase: '%v', currently: '%v'...", podName, podPhase, latest.Status.Phase)
 		if latest.Status.Phase == v1.PodFailed {
-			return true, fmt.Errorf("Pod '%s' phase reached %s\n", podName, v1.PodFailed)
+			return true, fmt.Errorf("Pod '%s' phase reached %s", podName, v1.PodFailed)
 		}
 		return latest.Status.Phase == podPhase, err
 	})
@@ -173,7 +171,7 @@ func WaitForPodPhase(
 
 // WaitForPodReadyStatus retries until all containers in a pod are in the desired ready state or timeout is reached.
 func WaitForPodReadyStatus(
-	t *testing.T,
+	t *T,
 	namespace string,
 	podName string,
 	backoff wait.Backoff,
@@ -190,7 +188,7 @@ func WaitForPodReadyStatus(
 				allReady = false
 			}
 		}
-		fmt.Printf("Waiting for pod '%s' to reach ready: '%v', currently: '%v'...\n", podName, desiredReady, allReady)
+		t.Logf("Waiting for pod '%s' to reach ready: '%v', currently: '%v'...", podName, desiredReady, allReady)
 		if allReady == desiredReady {
 			return true, err
 		}
@@ -203,7 +201,7 @@ func WaitForPodReadyStatus(
 }
 
 func getClusterStatusJSON(
-	t *testing.T,
+	t *T,
 	podName string,
 	containerName string,
 	namespace string,
@@ -212,7 +210,7 @@ func getClusterStatusJSON(
 		"--", "curl", "localhost:8080/cluster-status")
 	output, err := cmd.Output()
 	if err != nil {
-		return "", errors.New(fmt.Sprintf("failed to execute command:%v: %v", cmd.Args, err))
+		return "", fmt.Errorf("failed to execute command:%v: %v", cmd.Args, err)
 	}
 	return string(output), nil
 }

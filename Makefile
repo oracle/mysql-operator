@@ -127,6 +127,7 @@ define e2efunc-wercker
 	if [ -z "$$MYSQL_OPERATOR_VERSION" ]; then export MYSQL_OPERATOR_VERSION=`cat dist/version.txt`; fi && \
 	export NEW_NAMESPACE=$(NEW_NAMESPACE) && \
 	export USE_GLOBAL_NAMESPACE=$(USE_GLOBAL_NAMESPACE) && \
+	export E2E_NON_BUFFERED_LOGS=true && \
 	./test/e2e/scripts/e2e-mysql-operator-cluster.sh $(1)
 endef
 
@@ -159,6 +160,7 @@ define e2efunc-docker
 	   -e E2E_TEST_RUN="$$E2E_TEST_RUN"                                              \
 	   -e USE_GLOBAL_NAMESPACE=$(USE_GLOBAL_NAMESPACE)                               \
 	   -e NEW_NAMESPACE=$(NEW_NAMESPACE)                                             \
+	   -e E2E_NON_BUFFERED_LOGS=true                                                 \
 	   -e HOME=/tmp                                                                  \
 	   $(TEST_E2E_IMAGE)                                                             \
 	   /bin/sh -c "./test/e2e/scripts/e2e-mysql-operator-cluster.sh $(1)"

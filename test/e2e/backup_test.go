@@ -1,7 +1,6 @@
 package e2e
 
 import (
-	"fmt"
 	"testing"
 
 	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
@@ -12,29 +11,30 @@ import (
 
 const testDatabaseName string = "employees"
 
-func TestBackUpRestore(t *testing.T) {
+func TestBackUpRestore(test *testing.T) {
+	t := e2eutil.NewT(test)
 	f := framework.Global
 	var err error
 
 	// ---------------------------------------------------------------------- //
-	fmt.Printf("creating mysqlcluster...\n")
+	t.Log("creating mysqlcluster...")
 	// ---------------------------------------------------------------------- //
 	testdb := e2eutil.CreateTestDB(t, "e2e-br-", 1, f.DestroyAfterFailure)
 	defer testdb.Delete()
 	clusterName := testdb.Cluster().Name
 
 	// ---------------------------------------------------------------------- //
-	fmt.Println("populating database..")
+	t.Log("populating database..")
 	// ---------------------------------------------------------------------- //
 	testdb.Populate()
 
 	// ---------------------------------------------------------------------- //
-	fmt.Println("validating database..")
+	t.Log("validating database..")
 	// ---------------------------------------------------------------------- //
 	testdb.Test()
 
 	// ---------------------------------------------------------------------- //
-	fmt.Printf("creating mysqlbackup for mysqlcluster '%s'...\n", clusterName)
+	t.Logf("creating mysqlbackup for mysqlcluster '%s'...", clusterName)
 	// ---------------------------------------------------------------------- //
 	backupName := "e2e-test-snapshot-backup-"
 	s3StorageCredentials := "s3-upload-credentials"
@@ -65,7 +65,7 @@ func TestBackUpRestore(t *testing.T) {
 	t.Logf("created backup at location: %s", backup.Status.Outcome.Location)
 
 	// ---------------------------------------------------------------------- //
-	fmt.Println("trying connection to container")
+	t.Log("trying connection to container")
 	// ---------------------------------------------------------------------- //
 	err = e2eutil.Retry(e2eutil.DefaultRetry, func() (bool, error) {
 		passwd, err := testdb.GetPassword()
@@ -76,12 +76,12 @@ func TestBackUpRestore(t *testing.T) {
 	}
 
 	// ---------------------------------------------------------------------- //
-	fmt.Println("validating database..")
+	t.Log("validating database..")
 	// ---------------------------------------------------------------------- //
 	testdb.Test()
 
 	// ---------------------------------------------------------------------- //
-	fmt.Println("deleting the %s database..", testDatabaseName)
+	t.Log("deleting the %s database..", testDatabaseName)
 	// ---------------------------------------------------------------------- //
 	podName := clusterName + "-0"
 	username := "root"
@@ -94,7 +94,7 @@ func TestBackUpRestore(t *testing.T) {
 	}
 
 	// ---------------------------------------------------------------------- //
-	fmt.Printf("creating mysqlrestore from mysqlbackup '%s' for mysqlcluster '%s'.\n", backup.Name, clusterName)
+	t.Logf("creating mysqlrestore from mysqlbackup '%s' for mysqlcluster '%s'.", backup.Name, clusterName)
 	// ---------------------------------------------------------------------- //
 	restoreName := backup.Name + "-restore-"
 	restoreSpec := e2eutil.NewMySQLRestore(clusterName, backup.Name, restoreName)
@@ -115,7 +115,7 @@ func TestBackUpRestore(t *testing.T) {
 	}
 
 	// ---------------------------------------------------------------------- //
-	fmt.Println("trying connection to container")
+	t.Log("trying connection to container")
 	// ---------------------------------------------------------------------- //
 	err = e2eutil.Retry(e2eutil.DefaultRetry, func() (bool, error) {
 		passwd, err := testdb.GetPassword()
@@ -126,7 +126,9 @@ func TestBackUpRestore(t *testing.T) {
 	}
 
 	// ---------------------------------------------------------------------- //
-	fmt.Println("validating database...")
+	t.Log("validating database...")
 	// ---------------------------------------------------------------------- //
 	testdb.Test()
+
+	t.Report()
 }

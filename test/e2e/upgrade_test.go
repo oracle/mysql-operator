@@ -6,25 +6,26 @@ import (
 	"strings"
 	"testing"
 
-	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
 	"github.com/oracle/mysql-operator/pkg/constants"
 	"github.com/oracle/mysql-operator/test/e2e/framework"
 	e2eutil "github.com/oracle/mysql-operator/test/e2e/util"
+
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const mysqlOperatorImageName = "wcr.io/oracle/mysql-operator"
 const mysqlAgentContainerName = "mysql-agent"
 
-func TestUpgrade(t *testing.T) {
+func TestUpgrade(test *testing.T) {
+	t := e2eutil.NewT(test)
 	f := framework.Global
 
 	oldVersion := getOperatorVersion(t, f)
-	t.Logf("Old version: %s\n", oldVersion)
+	t.Logf("Old version: %s", oldVersion)
 	newVersion := f.BuildVersion
-	t.Logf("New version: %s\n", newVersion)
+	t.Logf("New version: %s", newVersion)
 
 	// Check that we have the old operator installed and running.
 	if oldVersion == newVersion {
@@ -34,7 +35,7 @@ func TestUpgrade(t *testing.T) {
 	// Create a cluster using the old version.
 	testdb := e2eutil.CreateTestDB(t, "e2e-up-", int32(3), f.DestroyAfterFailure)
 	cluster := testdb.Cluster()
-	t.Logf("Created cluster: %s\n", cluster.Name)
+	t.Logf("Created cluster: %s", cluster.Name)
 	testdb.Populate()
 	defer testdb.Delete()
 
@@ -52,14 +53,16 @@ func TestUpgrade(t *testing.T) {
 	// Check that the existing cluster has been upgraded to the new version.
 	testdb = e2eutil.GetTestDB(t, cluster.Name, f.DestroyAfterFailure)
 	cluster = testdb.Cluster()
-	t.Logf("Got cluster: %s\n", cluster.Name)
+	t.Logf("Got cluster: %s", cluster.Name)
 	checkClusterVersion(t, f, cluster, newVersion)
 
 	// Test the database..
 	testdb.Test()
+
+	t.Report()
 }
 
-func getOperatorVersion(t *testing.T, f *framework.Framework) string {
+func getOperatorVersion(t *e2eutil.T, f *framework.Framework) string {
 	listOpts := metav1.ListOptions{LabelSelector: "app=mysql-operator"}
 	podList, err := f.KubeClient.CoreV1().Pods(f.Namespace).List(listOpts)
 	if err != nil {
@@ -74,13 +77,13 @@ func getOperatorVersion(t *testing.T, f *framework.Framework) string {
 	return ""
 }
 
-func checkClusterVersion(t *testing.T, f *framework.Framework, cluster *api.MySQLCluster, version string) {
-	t.Logf("Checking cluster has the version: %s\n", version)
+func checkClusterVersion(t *e2eutil.T, f *framework.Framework, cluster *api.MySQLCluster, version string) {
+	t.Logf("Checking cluster has the version: %s", version)
 	if cluster.Labels[constants.MySQLOperatorVersionLabel] != version {
 		t.Fatalf("Error: Cluster MySQLOperatorVersionLabel was incorrect: %s != %s.", cluster.Labels[constants.MySQLOperatorVersionLabel], version)
 	}
 
-	t.Logf("Checking statefulset has the version: %s\n", version)
+	t.Logf("Checking statefulset has the version: %s", version)
 	ss, err := f.KubeClient.AppsV1beta1().StatefulSets(cluster.Namespace).Get(cluster.Name, metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Error: Error getting statefulset for cluster %s: %v", cluster.Name, err)
@@ -89,7 +92,7 @@ func checkClusterVersion(t *testing.T, f *framework.Framework, cluster *api.MySQ
 		t.Fatalf("Error: StatefulSet MySQLOperatorVersionLabel was incorrect: %s != %s.", ss.Labels[constants.MySQLOperatorVersionLabel], version)
 	}
 
-	t.Logf("Checking %s container in the statefulset spec has the version: %s\n", mysqlAgentContainerName, version)
+	t.Logf("Checking %s container in the statefulset spec has the version: %s", mysqlAgentContainerName, version)
 	containerVersion := getContainerImageVersion(t, ss.Spec.Template.Spec, mysqlAgentContainerName)
 	if containerVersion != version {
 		t.Fatalf("Error: StatefulSet %s container version was incorrect: %s != %s.", mysqlAgentContainerName, containerVersion, version)
@@ -102,18 +105,18 @@ func checkClusterVersion(t *testing.T, f *framework.Framework, cluster *api.MySQ
 		t.Fatalf("Error: Unable to list pods for cluster: %s", cluster.Name)
 	}
 	for _, pod := range podList.Items {
-		t.Logf("Checking pod %s has the version: %s\n", pod.Name, version)
+		t.Logf("Checking pod %s has the version: %s", pod.Name, version)
 		if pod.Labels[constants.MySQLOperatorVersionLabel] != version {
 			t.Fatalf("Error: Pod MySQLOperatorVersionLabel was incorrect: %s != %s.", ss.Labels[constants.MySQLOperatorVersionLabel], version)
 		}
 
-		t.Logf("Checking %s container in the pod %s has the version: %s\n", mysqlAgentContainerName, pod.Name, version)
+		t.Logf("Checking %s container in the pod %s has the version: %s", mysqlAgentContainerName, pod.Name, version)
 		containerVersion := getContainerImageVersion(t, pod.Spec, mysqlAgentContainerName)
 		if containerVersion != version {
 			t.Fatalf("Error: Pod %s container version was incorrect: %s != %s.", mysqlAgentContainerName, containerVersion, version)
 		}
 
-		t.Logf("Checking %s version running in the pod %s has the version: %s\n", mysqlAgentContainerName, pod.Name, version)
+		t.Logf("Checking %s version running in the pod %s has the version: %s", mysqlAgentContainerName, pod.Name, version)
 		agentVersion := getRunningAgentVersion(t, f.Namespace, pod.Name, mysqlAgentContainerName)
 		if agentVersion != version {
 			t.Fatalf("Error: Agent version running in pod %s was incorrect: %s != %s.", pod.Name, containerVersion, version)
@@ -121,7 +124,7 @@ func checkClusterVersion(t *testing.T, f *framework.Framework, cluster *api.MySQ
 	}
 }
 
-func getContainerImageVersion(t *testing.T, podSpec v1.PodSpec, containerName string) string {
+func getContainerImageVersion(t *e2eutil.T, podSpec v1.PodSpec, containerName string) string {
 	for _, container := range podSpec.Containers {
 		if container.Name == "mysql-agent" {
 			return versionFromImage(container.Image)
@@ -135,7 +138,7 @@ func versionFromImage(image string) string {
 	return strings.Split(image, ":")[1]
 }
 
-func getRunningAgentVersion(t *testing.T, namespace string, podName string, containerName string) string {
+func getRunningAgentVersion(t *e2eutil.T, namespace string, podName string, containerName string) string {
 	cmd := exec.Command("kubectl", "-n", namespace, "logs", podName, "-c", containerName)
 	output, err := cmd.Output()
 	if err != nil {
@@ -147,8 +150,8 @@ func getRunningAgentVersion(t *testing.T, namespace string, podName string, cont
 	return version
 }
 
-func upgradeOperator(t *testing.T, f *framework.Framework, version string) string {
-	t.Logf("Upgrading operator to version: %s\n", version)
+func upgradeOperator(t *e2eutil.T, f *framework.Framework, version string) string {
+	t.Logf("Upgrading operator to version: %s", version)
 	patchJSON := fmt.Sprintf(
 		`{"spec":{
 			"template":{
@@ -165,13 +168,13 @@ func upgradeOperator(t *testing.T, f *framework.Framework, version string) strin
 	return waitForOperatorUpgrade(t, f, version)
 }
 
-func waitForOperatorUpgrade(t *testing.T, f *framework.Framework, desiredVersion string) string {
+func waitForOperatorUpgrade(t *e2eutil.T, f *framework.Framework, desiredVersion string) string {
 	var version string
 	backoff := e2eutil.NewDefaultRetyWithDuration(5)
 	backoff.Steps = 25
 	err := e2eutil.Retry(backoff, func() (bool, error) {
 		version = getOperatorVersion(t, f)
-		fmt.Printf("waiting for operator upgrade. version: '%s', desired version: '%s'\n", version, desiredVersion)
+		t.Logf("waiting for operator upgrade. version: '%s', desired version: '%s'", version, desiredVersion)
 		if version == desiredVersion {
 			return true, nil
 		}
