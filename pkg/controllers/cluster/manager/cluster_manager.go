@@ -251,10 +251,10 @@ func (m *ClusterManager) bootstrap(ctx context.Context) (*innodb.ClusterStatus, 
 
 // Run runs the ClusterManager controller.
 // NOTE: ctx is not currently used for cancellation by caller (the stopCh is).
-func (m *ClusterManager) Run(ctx context.Context, stopCh <-chan struct{}) {
-	wait.Until(func() { m.Sync(ctx) }, time.Second*pollingIntervalSeconds, stopCh)
+func (m *ClusterManager) Run(ctx context.Context) {
+	wait.Until(func() { m.Sync(ctx) }, time.Second*pollingIntervalSeconds, ctx.Done())
 
-	<-stopCh
+	<-ctx.Done()
 
 	// Stop the primary-only controllers if they're running
 	if m.primaryCancelFunc != nil {

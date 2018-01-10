@@ -1,6 +1,7 @@
 package backupschedule
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -106,7 +107,7 @@ func NewController(
 
 // Run is a blocking function that runs the specified number of worker goroutines
 // to process items in the work queue.
-func (controller *Controller) Run(numWorkers int, stopCh <-chan struct{}) error {
+func (controller *Controller) Run(ctx context.Context, numWorkers int) error {
 	var wg sync.WaitGroup
 
 	defer func() {
@@ -126,7 +127,7 @@ func (controller *Controller) Run(numWorkers int, stopCh <-chan struct{}) error 
 	defer glog.Info("Shutting down backup schedule controller")
 
 	glog.V(2).Info("Waiting for backup schedule controller caches to sync")
-	if !cache.WaitForCacheSync(stopCh, controller.backupScheduleListerSynced) {
+	if !cache.WaitForCacheSync(ctx.Done(), controller.backupScheduleListerSynced) {
 		return errors.New("timed out waiting for backup schedule controller caches to sync")
 	}
 	glog.V(2).Info("Backup schedule controller caches are synced")
@@ -134,14 +135,14 @@ func (controller *Controller) Run(numWorkers int, stopCh <-chan struct{}) error 
 	wg.Add(numWorkers)
 	for i := 0; i < numWorkers; i++ {
 		go func() {
-			wait.Until(controller.runWorker, time.Second, stopCh)
+			wait.Until(controller.runWorker, time.Second, ctx.Done())
 			wg.Done()
 		}()
 	}
 
-	go wait.Until(controller.enqueueAllEnabledSchedules, controller.syncPeriod, stopCh)
+	go wait.Until(controller.enqueueAllEnabledSchedules, controller.syncPeriod, ctx.Done())
 
-	<-stopCh
+	<-ctx.Done()
 	return nil
 }
 
