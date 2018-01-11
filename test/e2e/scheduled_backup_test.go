@@ -5,24 +5,26 @@ import (
 	"testing"
 	"time"
 
-	constants "github.com/oracle/mysql-operator/pkg/constants"
+	"github.com/oracle/mysql-operator/pkg/constants"
 	"github.com/oracle/mysql-operator/test/e2e/framework"
 	e2eutil "github.com/oracle/mysql-operator/test/e2e/util"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestScheduledBackup(t *testing.T) {
+func TestScheduledBackup(test *testing.T) {
+	t := e2eutil.NewT(test)
 	f := framework.Global
 
 	// ---------------------------------------------------------------------- //
-	fmt.Println("creating cluster..")
+	t.Log("creating cluster..")
 	// ---------------------------------------------------------------------- //
 	testdb := e2eutil.CreateTestDB(t, "e2e-br-", 1, f.DestroyAfterFailure)
 	defer testdb.Delete()
 	clusterName := testdb.Cluster().Name
 
 	// ---------------------------------------------------------------------- //
-	fmt.Println("populating database..")
+	t.Log("populating database..")
 	// ---------------------------------------------------------------------- //
 	testDatabaseName := "test"
 	podName := clusterName + "-0"
@@ -33,7 +35,7 @@ func TestScheduledBackup(t *testing.T) {
 	dbHelper.EnsureDBTableValue(testDatabaseName, "people", "name", "kris")
 
 	// ---------------------------------------------------------------------- //
-	fmt.Printf("creating backup schedule for cluster '%s' that runs every minute...\n", clusterName)
+	t.Logf("creating backup schedule for cluster '%s' that runs every minute...", clusterName)
 	// ---------------------------------------------------------------------- //
 	backupScheduleName := "e2e-test-backup-schedule-"
 	s3StorageCredentials := "s3-upload-credentials"
@@ -45,7 +47,7 @@ func TestScheduledBackup(t *testing.T) {
 	}
 
 	// ---------------------------------------------------------------------- //
-	fmt.Println("checking that 1 complete backup exists, and is labelled correctly..")
+	t.Log("checking that 1 complete backup exists, and is labelled correctly..")
 	// ---------------------------------------------------------------------- //
 	time.Sleep(5 * time.Second)
 	n := numCompletedBackups(t, f, backupSchedule.Name)
@@ -54,7 +56,7 @@ func TestScheduledBackup(t *testing.T) {
 	}
 
 	// ---------------------------------------------------------------------- //
-	fmt.Println("checking that 2 complete backups exist, and are labelled correctly..")
+	t.Log("checking that 2 complete backups exist, and are labelled correctly..")
 	// ---------------------------------------------------------------------- //
 	time.Sleep(95 * time.Second)
 	n = numCompletedBackups(t, f, backupSchedule.Name)
@@ -63,7 +65,7 @@ func TestScheduledBackup(t *testing.T) {
 	}
 
 	// ---------------------------------------------------------------------- //
-	fmt.Println("validating operator version label on the backup schedule..")
+	t.Log("validating operator version label on the backup schedule..")
 	// ---------------------------------------------------------------------- //
 	backupSchedule, err = f.MySQLOpClient.MysqlV1().MySQLBackupSchedules(f.Namespace).Get(backupSchedule.Name, metav1.GetOptions{})
 	if backupSchedule.Labels[constants.MySQLOperatorVersionLabel] != f.BuildVersion {
@@ -73,15 +75,17 @@ func TestScheduledBackup(t *testing.T) {
 	}
 
 	// ---------------------------------------------------------------------- //
-	fmt.Printf("deleteing backup schedule: %s\n", backupSchedule.Name)
+	t.Logf("deleteing backup schedule: %s", backupSchedule.Name)
 	// ---------------------------------------------------------------------- //
 	err = f.MySQLOpClient.MysqlV1().MySQLBackupSchedules(f.Namespace).Delete(backupSchedule.Name, &metav1.DeleteOptions{})
 	if err != nil {
 		t.Fatalf("Failed to delete backup schedule: %v", err)
 	}
+
+	t.Report()
 }
 
-func numCompletedBackups(t *testing.T, f *framework.Framework, backupScheduleName string) int {
+func numCompletedBackups(t *e2eutil.T, f *framework.Framework, backupScheduleName string) int {
 	labelSelector := fmt.Sprintf("backup-schedule=%s", backupScheduleName)
 	listOpts := metav1.ListOptions{LabelSelector: labelSelector}
 	backupList, err := f.MySQLOpClient.MysqlV1().MySQLBackups(f.Namespace).List(listOpts)
@@ -90,7 +94,7 @@ func numCompletedBackups(t *testing.T, f *framework.Framework, backupScheduleNam
 		return 0
 	} else {
 		for _, backup := range backupList.Items {
-			fmt.Printf("Found backup, name: %s, phase: %s\n", backup.Name, backup.Status.Phase)
+			t.Logf("Found backup, name: %s, phase: %s", backup.Name, backup.Status.Phase)
 		}
 		return len(backupList.Items)
 	}

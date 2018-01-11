@@ -3,15 +3,16 @@ package e2e
 import (
 	"testing"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/oracle/mysql-operator/pkg/constants"
 	"github.com/oracle/mysql-operator/pkg/resources/secrets"
 	"github.com/oracle/mysql-operator/test/e2e/framework"
 	e2eutil "github.com/oracle/mysql-operator/test/e2e/util"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestCreateCluster(t *testing.T) {
+func TestCreateCluster(test *testing.T) {
+	t := e2eutil.NewT(test)
 	f := framework.Global
 	replicas := int32(3)
 
@@ -61,4 +62,6 @@ func TestCreateCluster(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error getting root password secret for cluster %s: %v", cluster.Name, err)
 	}
+
+	t.Report()
 }

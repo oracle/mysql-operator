@@ -2,23 +2,20 @@ package util
 
 import (
 	"fmt"
-
-	"testing"
-
 	"math/rand"
 	"os/exec"
 	"strings"
 	"time"
 
 	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/oracle/mysql-operator/test/e2e/framework"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type TestDB struct {
 	cluster             *api.MySQLCluster
-	t                   *testing.T
+	t                   *T
 	destroyAfterFailure bool
 }
 
@@ -30,7 +27,7 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func CreateTestDB(t *testing.T, prefix string, replicas int32, destroyAfterFailure bool) *TestDB {
+func CreateTestDB(t *T, prefix string, replicas int32, destroyAfterFailure bool) *TestDB {
 	f := framework.Global
 
 	res, err := f.MySQLOpClient.MysqlV1().MySQLClusters(f.Namespace).Create(NewMySQLCluster(prefix, replicas))
@@ -54,7 +51,7 @@ func CreateTestDB(t *testing.T, prefix string, replicas int32, destroyAfterFailu
 	}
 }
 
-func GetTestDB(t *testing.T, name string, destroyAfterFailure bool) *TestDB {
+func GetTestDB(t *T, name string, destroyAfterFailure bool) *TestDB {
 	f := framework.Global
 
 	res, err := f.MySQLOpClient.MysqlV1().
@@ -95,9 +92,9 @@ func (testDB *TestDB) install() {
 	err = Retry(NewDefaultRetyWithDuration(25*time.Second), func() (bool, error) {
 		output, err = executor.ExecuteCMD("git clone https://github.com/datacharmer/test_db.git")
 		if err != nil {
-			fmt.Printf("failed to clone test db, retrying ...\n")
-			fmt.Printf("    output: %s\n", output)
-			fmt.Printf("    err: %v\n", err)
+			testDB.t.Logf("failed to clone test db, retrying ...")
+			testDB.t.Logf("    output: %s", output)
+			testDB.t.Logf("    err: %v", err)
 			return false, nil
 		}
 		return true, nil
@@ -146,13 +143,11 @@ func (testDB *TestDB) GetPassword() (string, error) {
 }
 
 func (testDB *TestDB) Test() {
-	t := testDB.t
-
 	clusterName := testDB.cluster.Name
 	podname := string(clusterName + "-0")
 	username := "root"
-	password := GetMySQLPassword(t, podname, testDB.cluster.Namespace)
-	executor := NewKubectlSimpleSQLExecutor(t, podname, username, password, testDB.cluster.Namespace)
+	password := GetMySQLPassword(testDB.t, podname, testDB.cluster.Namespace)
+	executor := NewKubectlSimpleSQLExecutor(testDB.t, podname, username, password, testDB.cluster.Namespace)
 	output, err := executor.ExecuteCMD("cd test_db")
 	if err != nil {
 		testDB.install()
@@ -167,22 +162,18 @@ func (testDB *TestDB) Test() {
 	)
 	output, err = executeCmd(testDB.t, cmd)
 	if err != nil {
-		t.Fatalf("Copy db test script failed:%s", output)
+		testDB.t.Fatalf("Copy db test script failed:%s", output)
 	}
 
-	t.Logf("Testing db data")
+	testDB.t.Logf("Testing db data")
 	output, err = executor.ExecuteCMD(fmt.Sprintf("/sql_test.sh 'mysql -uroot -p%s'", password))
 	if err != nil {
-		t.Fatalf("Test db md5 failed:%s", output)
+		testDB.t.Fatalf("Test db md5 failed:%s", output)
 	}
-	assertOK(t, output)
-	t.Logf(output)
-}
-
-func assertOK(t *testing.T, output string) {
 	if !testOK(output, "employees") {
-		t.Error("'employees' database integrity checksum failed.")
+		testDB.t.Error("'employees' database integrity checksum failed.")
 	}
+	testDB.t.Logf(output)
 }
 
 func testOK(output string, target string) bool {

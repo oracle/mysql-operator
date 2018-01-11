@@ -3,10 +3,7 @@ package util
 import (
 	"os/exec"
 	"strings"
-	"testing"
 )
-
-// MySQLOperatorDBHelper **************************************************************************
 
 // DBTestHelper can be used to quickly create and check some basic database entities.
 type DBTestHelper interface {
@@ -22,14 +19,14 @@ type DBTestHelper interface {
 
 // MySQLDBTestHelper can be used to quickly create and check some basic MySQL database entities.
 type MySQLDBTestHelper struct {
-	t  *testing.T
+	t  *T
 	ex SimpleSQLExecutor
 }
 
 // NewMySQLDBTestHelper creates a MySQLDBTestHelper with the specified SimpleSQLExecutor.
-func NewMySQLDBTestHelper(testing *testing.T, executor SimpleSQLExecutor) *MySQLDBTestHelper {
+func NewMySQLDBTestHelper(t *T, executor SimpleSQLExecutor) *MySQLDBTestHelper {
 	return &MySQLDBTestHelper{
-		t:  testing,
+		t:  t,
 		ex: executor,
 	}
 }
@@ -38,7 +35,7 @@ func NewMySQLDBTestHelper(testing *testing.T, executor SimpleSQLExecutor) *MySQL
 func (dbh *MySQLDBTestHelper) CreateDB(db string) {
 	_, e := dbh.ex.ExecuteSQL("create database " + db + ";")
 	if e != nil {
-		dbh.t.Fatalf("Error creating database '%v': %v\n", db, e)
+		dbh.t.Fatalf("Error creating database '%v': %v", db, e)
 	}
 	dbExists := dbh.HasDB(db)
 	if !dbExists {
@@ -50,9 +47,7 @@ func (dbh *MySQLDBTestHelper) CreateDB(db string) {
 func (dbh *MySQLDBTestHelper) HasDB(db string) bool {
 	out, e := dbh.ex.ExecuteSQL("show databases;")
 	if e != nil {
-		dbh.t.Fatalf(
-			"Error checking database '%v' existence: %v",
-			db, e)
+		dbh.t.Fatalf("Error checking database '%v' existence: %v", db, e)
 	} else {
 		return hasRowColumnValue(out, db)
 	}
@@ -65,12 +60,11 @@ func (dbh *MySQLDBTestHelper) DeleteDB(db string) {
 	if dbExists {
 		_, e := dbh.ex.ExecuteSQL("drop database " + db + ";")
 		if e != nil {
-			dbh.t.Fatalf("Error deleting database '%v: %v\n", db, e)
+			dbh.t.Fatalf("Error deleting database '%v: %v", db, e)
 		}
 		dbExists := dbh.HasDB(db)
 		if dbExists {
-			dbh.t.Fatalf(
-				"Error database '%v' was not deleted.", db)
+			dbh.t.Fatalf("Error database '%v' was not deleted.", db)
 		}
 	}
 }
@@ -133,8 +127,6 @@ func (dbh *MySQLDBTestHelper) EnsureDBTableValue(db string, table string, column
 	dbh.CreateDBTableValue(db, table, column, value)
 }
 
-// SimpleSQLExecutor ************************************************************************
-
 // SimpleSQLExecutor is a simple interface for executing SQL operations against a database.
 // An SQL command string is executed; and the full output of the command is returned.
 // Client's can parse the output string as required.
@@ -146,7 +138,7 @@ type SimpleSQLExecutor interface {
 // KubectlSimpleSQLExecutor uses kubectl (no dependencies) to implement the SimpleSQLExecutor
 // interface.
 type KubectlSimpleSQLExecutor struct {
-	t         *testing.T
+	t         *T
 	podname   string
 	username  string
 	password  string
@@ -155,14 +147,14 @@ type KubectlSimpleSQLExecutor struct {
 
 // NewKubectlSimpleSQLExecutor creates a KubectlSimpleSQLExecutor.
 func NewKubectlSimpleSQLExecutor(
-	tester *testing.T,
+	t *T,
 	podname string,
 	username string,
 	password string,
 	namespace string,
 ) *KubectlSimpleSQLExecutor {
 	return &KubectlSimpleSQLExecutor{
-		t:         tester,
+		t:         t,
 		podname:   podname,
 		username:  username,
 		password:  password,
@@ -172,7 +164,6 @@ func NewKubectlSimpleSQLExecutor(
 
 // ExecuteSQL executes the specified SQL command using kubectl via exec.
 func (kse KubectlSimpleSQLExecutor) ExecuteSQL(sql string) (string, error) {
-
 	cmd := exec.Command(
 		"kubectl",
 		"-n",
@@ -196,7 +187,6 @@ func (kse KubectlSimpleSQLExecutor) ExecuteSQL(sql string) (string, error) {
 
 // ExecuteCMD executes the specified command using kubectl via exec.
 func (kse KubectlSimpleSQLExecutor) ExecuteCMD(cmdStr string) (string, error) {
-
 	cmd := exec.Command(
 		"kubectl",
 		"-n",
@@ -218,7 +208,6 @@ func (kse KubectlSimpleSQLExecutor) ExecuteCMD(cmdStr string) (string, error) {
 // ExecuteSQLForDB executes the specified SQL command against the specified db
 // using kubectl via exec.
 func (kse KubectlSimpleSQLExecutor) ExecuteSQLForDB(db string, sql string) (string, error) {
-
 	cmd := exec.Command(
 		"kubectl",
 		"-n",
@@ -240,10 +229,9 @@ func (kse KubectlSimpleSQLExecutor) ExecuteSQLForDB(db string, sql string) (stri
 	return output, err
 }
 
-// Functions ************************************************************************
-
-// Helper function to search exactly (exclusively and completely on one row) for the
-// specified string in a '\n' delimitted string
+// hasRowColumnValue is a helper function that searches exactly (exclusively
+// and completely on one row) for the specified string in a '\n' delimitted
+// string.
 func hasRowColumnValue(out string, value string) bool {
 	for _, row := range strings.Split(out, "\n") {
 		if row == value {
@@ -253,8 +241,8 @@ func hasRowColumnValue(out string, value string) bool {
 	return false
 }
 
-// Execute the specified command against the commandline and return all output.
-func executeCmd(t *testing.T, cmd *exec.Cmd) (string, error) {
+// executeCmd executes the specified command and returns all output.
+func executeCmd(t *T, cmd *exec.Cmd) (string, error) {
 	output, e := cmd.CombinedOutput()
 	if e != nil {
 		t.Logf("failed to execute command:%v: %v", cmd.Args, e)
@@ -263,7 +251,7 @@ func executeCmd(t *testing.T, cmd *exec.Cmd) (string, error) {
 }
 
 // GetMySQLPassword is a helper method to get the MYSQL_ROOT_PASSWORD from a running pod.
-func GetMySQLPassword(t *testing.T, podname string, namespace string) string {
+func GetMySQLPassword(t *T, podname string, namespace string) string {
 	cmd := exec.Command(
 		"kubectl",
 		"-n",
