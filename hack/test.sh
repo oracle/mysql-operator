@@ -20,6 +20,7 @@ set -o nounset
 export CGO_ENABLED=0
 
 TARGETS=$(for d in "$@"; do echo ./$d/...; done)
+TARGETS=$(go list -e ${TARGETS} | egrep -v "/(vendor|generated)/")
 
 echo "Running tests:"
 go test -i -installsuffix "static" -ldflags "-X ${PKG}/pkg/version.buildVersion=1.0.0" ${TARGETS}

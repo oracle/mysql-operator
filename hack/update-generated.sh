@@ -8,5 +8,5 @@ ${REPO_ROOT}/vendor/k8s.io/code-generator/generate-groups.sh \
   github.com/oracle/mysql-operator/pkg/generated \
   github.com/oracle/mysql-operator/pkg/apis \
   mysql:v1 \
-  #--go-header-file hack/boilerplate.go.txt \
-$@
+  --go-header-file hack/boilerplate/boilerplate.go.txt \
+  $@
