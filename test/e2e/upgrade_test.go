@@ -1,3 +1,5 @@
+// +build all upgrade
+
 package e2e
 
 import (

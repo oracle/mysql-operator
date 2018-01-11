@@ -1,3 +1,5 @@
+// +build all default
+
 package e2e
 
 import (

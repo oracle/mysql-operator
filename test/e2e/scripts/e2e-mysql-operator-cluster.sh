@@ -7,8 +7,14 @@ if [ "${USE_GLOBAL_NAMESPACE}" = true ]; then
     REGISTER_CRD=true
 else
     NEW_NAMESPACE=${NEW_NAMESPACE:-"e2etest-$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 10 | head -n 1)"}
-    OPERATOR_NAMESPACE=$(echo ${NEW_NAMESPACE}-${E2E_TEST_RUN} | tr "[:upper:]" "[:lower:]")
-    TEST_NAMESPACE=$(echo ${NEW_NAMESPACE}-${E2E_TEST_RUN} | tr "[:upper:]" "[:lower:]")
+    if [[ -z "${E2E_TEST_RUN}" ]]; then
+        __assert_var_set E2E_TEST_TAG
+        OPERATOR_NAMESPACE=$(echo ${NEW_NAMESPACE}-${E2E_TEST_TAG} | tr "[:upper:]" "[:lower:]")
+        TEST_NAMESPACE=$(echo ${NEW_NAMESPACE}-${E2E_TEST_TAG} | tr "[:upper:]" "[:lower:]")
+    else    
+        OPERATOR_NAMESPACE=$(echo ${NEW_NAMESPACE}-${E2E_TEST_RUN} | tr "[:upper:]" "[:lower:]")
+        TEST_NAMESPACE=$(echo ${NEW_NAMESPACE}-${E2E_TEST_RUN} | tr "[:upper:]" "[:lower:]")
+    fi
     REGISTER_CRD=false
 fi
 
@@ -246,10 +252,14 @@ function setup() {
     create_mysql_operator
 }
 
-
 function run() {
-    log "E2E_TEST_RUN:${E2E_TEST_RUN}"
-    cmd_or_exit go test -timeout 45m -v ./test/e2e/ --kubeconfig=${KUBECONFIG} --namespace=${TEST_NAMESPACE} -run ${E2E_TEST_RUN}
+    if [[ -z "${E2E_TEST_RUN}" ]]; then
+        log "E2E_TEST_TAG:${E2E_TEST_TAG}"
+        cmd_or_exit go test -timeout 45m -v ./test/e2e/ --kubeconfig=${KUBECONFIG} --namespace=${TEST_NAMESPACE} -tags ${E2E_TEST_TAG} -parallel ${E2E_PARALLEL}
+    else
+        log "E2E_TEST_RUN:${E2E_TEST_RUN}"
+        cmd_or_exit go test -timeout 45m -v ./test/e2e/ --kubeconfig=${KUBECONFIG} --namespace=${TEST_NAMESPACE} -run ${E2E_TEST_RUN} -parallel ${E2E_PARALLEL} -tags all
+    fi    
 }
 
 function teardown() {
