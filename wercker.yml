@@ -78,57 +78,17 @@ push-agent-image:
       entrypoint: /mysql-agent
       user: mysql
 
-e2e-test-TestCreateCluster:
+e2e-test-default:
   base-path: "/go/src/github.com/oracle/mysql-operator"
   box:
     registry: https://wcr.io/v2
     id: wcr.io/oracle/mysql-operator-ci-e2e:1.0.0
   steps:
     - script:
-      name: e2e create cluster test
-      code: make e2e-TestCreateCluster
+      name: e2e default tests
+      code: make e2e-suite-default
 
-e2e-test-TestContainerCrashRecovery:
-  base-path: "/go/src/github.com/oracle/mysql-operator"
-  box:
-    registry: https://wcr.io/v2
-    id: wcr.io/oracle/mysql-operator-ci-e2e:1.0.0
-  steps:
-    - script:
-      name: e2e container crash recovery Test
-      code: make e2e-TestContainerCrashRecovery
-
-e2e-test-TestPodCrashRecovery:
-  base-path: "/go/src/github.com/oracle/mysql-operator"
-  box:
-    registry: https://wcr.io/v2
-    id: wcr.io/oracle/mysql-operator-ci-e2e:1.0.0
-  steps:
-    - script:
-      name: e2e pod crash recovery Test
-      code: make e2e-TestPodCrashRecovery
-
-e2e-test-TestBackUpRestore:
-  base-path: "/go/src/github.com/oracle/mysql-operator"
-  box:
-    registry: https://wcr.io/v2
-    id: wcr.io/oracle/mysql-operator-ci-e2e:1.0.0
-  steps:
-    - script:
-      name: e2e backup restore test
-      code: make e2e-TestBackUpRestore
-
-e2e-test-TestScheduledBackup:
-  base-path: "/go/src/github.com/oracle/mysql-operator"
-  box:
-    registry: https://wcr.io/v2
-    id: wcr.io/oracle/mysql-operator-ci-e2e:1.0.0
-  steps:
-    - script:
-      name: e2e scheduled backup test
-      code: make e2e-TestScheduledBackup
-
-e2e-test-TestUpgrade:
+e2e-test-upgrade:
   base-path: "/go/src/github.com/oracle/mysql-operator"
   box:
     registry: https://wcr.io/v2
@@ -137,12 +97,12 @@ e2e-test-TestUpgrade:
     - script:
       name: e2e upgrade test
       code: |
-        make e2e-teardown-TestUpgrade
+        make e2e-suite-teardown-upgrade
         if [ $(git log -1 --pretty=format:"%H" HEAD) == $(git log -1 --pretty=format:"%H" origin/master) ]; then
-            make e2e-setup-TestUpgrade MYSQL_OPERATOR_VERSION=$(git log -1 --pretty=format:"%H" origin/master~1)
+            make e2e-suite-setup-upgrade MYSQL_OPERATOR_VERSION=$(git log -1 --pretty=format:"%H" origin/master~1)
         else
-            make e2e-setup-TestUpgrade MYSQL_OPERATOR_VERSION=$(git log -1 --pretty=format:"%H" origin/master)
+            make e2e-suite-setup-upgrade MYSQL_OPERATOR_VERSION=$(git log -1 --pretty=format:"%H" origin/master)
         fi
-        make e2e-run-TestUpgrade
-        make e2e-teardown-TestUpgrade
+        E2E_NON_BUFFERED_LOGS=true make e2e-suite-run-upgrade
+        make e2e-suite-teardown-upgrade
         

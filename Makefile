@@ -5,12 +5,15 @@ ifdef WERCKER
     NEW_NAMESPACE ?= e2e-$(shell echo ${WERCKER_GIT_COMMIT} | fold -w 8 | head -n1)
     VERSION := ${WERCKER_GIT_COMMIT}
     E2E_FUNC := e2efunc-wercker
+    E2E_NON_BUFFERED_LOGS ?= false
 else
     NEW_NAMESPACE ?= e2e-${USER}
     VERSION := ${USER}-$(shell  date +%Y%m%d%H%M%S)
     E2E_FUNC := e2efunc-docker
+    E2E_NON_BUFFERED_LOGS ?= true
 endif
 
+E2E_PARALLEL    ?= 10
 ROOT_DIR        := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 PKG             := github.com/oracle/mysql-operator
 REGISTRY        := wcr.io/oracle
@@ -127,7 +130,8 @@ define e2efunc-wercker
 	if [ -z "$$MYSQL_OPERATOR_VERSION" ]; then export MYSQL_OPERATOR_VERSION=`cat dist/version.txt`; fi && \
 	export NEW_NAMESPACE=$(NEW_NAMESPACE) && \
 	export USE_GLOBAL_NAMESPACE=$(USE_GLOBAL_NAMESPACE) && \
-	export E2E_NON_BUFFERED_LOGS=true && \
+	export E2E_NON_BUFFERED_LOGS=$(E2E_NON_BUFFERED_LOGS) && \
+	export E2E_PARALLEL=$(E2E_PARALLEL) && \
 	./test/e2e/scripts/e2e-mysql-operator-cluster.sh $(1)
 endef
 
@@ -158,25 +162,43 @@ define e2efunc-docker
 	   -e HTTPS_PROXY="$$HTTPS_PROXY"                                                \
 	   -e NO_PROXY="$$NO_PROXY"                                                      \
 	   -e E2E_TEST_RUN="$$E2E_TEST_RUN"                                              \
+	   -e E2E_TEST_TAG="$$E2E_TEST_TAG"                                              \
 	   -e USE_GLOBAL_NAMESPACE=$(USE_GLOBAL_NAMESPACE)                               \
 	   -e NEW_NAMESPACE=$(NEW_NAMESPACE)                                             \
-	   -e E2E_NON_BUFFERED_LOGS=true                                                 \
+	   -e E2E_NON_BUFFERED_LOGS=$(E2E_NON_BUFFERED_LOGS)                             \
+	   -e E2E_PARALLEL=$(E2E_PARALLEL)                                               \
 	   -e HOME=/tmp                                                                  \
 	   $(TEST_E2E_IMAGE)                                                             \
 	   /bin/sh -c "./test/e2e/scripts/e2e-mysql-operator-cluster.sh $(1)"
 endef
 
-e2e-setup-%: build-dirs e2econfig
+# Runs test set specified by regex (i.e. go test -run <regex>) 
+
+e2e-test-setup-%: build-dirs e2econfig
 	export E2E_TEST_RUN=$* && $(call $(E2E_FUNC), setup)
 
-e2e-run-%: build-dirs e2econfig
+e2e-test-run-%: build-dirs e2econfig
 	export E2E_TEST_RUN=$* && $(call $(E2E_FUNC), run)
 
-e2e-teardown-%: build-dirs e2econfig
+e2e-test-teardown-%: build-dirs e2econfig
 	export E2E_TEST_RUN=$* && $(call $(E2E_FUNC), teardown)
 
-e2e-%: build-dirs e2econfig
+e2e-test-%: build-dirs e2econfig
 	export E2E_TEST_RUN=$* && $(call $(E2E_FUNC), teardown setup run teardown)
+
+# Runs test set specified by tags (i.e. go test -tags <tag>)
+
+e2e-suite-setup-%: build-dirs e2econfig
+	export E2E_TEST_TAG=$* && $(call $(E2E_FUNC), setup)
+
+e2e-suite-run-%: build-dirs e2econfig
+	export E2E_TEST_TAG=$* && $(call $(E2E_FUNC), run)
+
+e2e-suite-teardown-%: build-dirs e2econfig
+	export E2E_TEST_TAG=$* && $(call $(E2E_FUNC), teardown)
+
+e2e-suite-%: build-dirs e2econfig
+	export E2E_TEST_TAG=$* && $(call $(E2E_FUNC), teardown setup run teardown)
 
 .PHONY: clean
 clean: container-clean bin-clean
