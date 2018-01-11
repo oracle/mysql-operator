@@ -43,11 +43,10 @@ func Run(opts *options.MySQLAgentOpts) error {
 		return err
 	}
 
-	// Create a new root context.
-	ctx := context.Background()
+	ctx, cancelFunc := context.WithCancel(context.Background())
 
 	// Set up signals so we handle the first shutdown signal gracefully.
-	stopCh := signals.SetupSignalHandler()
+	signals.SetupSignalHandler(cancelFunc)
 
 	// Set up healthchecks (liveness and readiness).
 	health := healthcheck.NewHandler()
@@ -82,7 +81,7 @@ func Run(opts *options.MySQLAgentOpts) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		manager.Run(ctx, stopCh)
+		manager.Run(ctx)
 	}()
 
 	backupController := backupcontroller.NewAgentController(
@@ -96,7 +95,7 @@ func Run(opts *options.MySQLAgentOpts) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		backupController.Run(5, stopCh)
+		backupController.Run(ctx, 5)
 	}()
 
 	restoreController := restorecontroller.NewAgentController(
@@ -111,14 +110,14 @@ func Run(opts *options.MySQLAgentOpts) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		restoreController.Run(5, stopCh)
+		restoreController.Run(ctx, 5)
 	}()
 
 	// Shared informers have to be started after ALL controllers.
-	go sharedInformerFactory.Start(stopCh)
-	go kubeInformerFactory.Start(stopCh)
+	go sharedInformerFactory.Start(ctx.Done())
+	go kubeInformerFactory.Start(ctx.Done())
 
-	<-stopCh
+	<-ctx.Done()
 
 	glog.Info("Waiting for all controllers to shut down gracefully")
 	wg.Wait()

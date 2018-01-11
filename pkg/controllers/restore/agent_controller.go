@@ -1,6 +1,7 @@
 package restore
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -138,7 +139,7 @@ func NewAgentController(
 // Run is a blocking function that runs the specified number of worker
 // goroutines to process items in the work queue. It will return when it
 // receives on the stopCh channel.
-func (controller *AgentController) Run(numWorkers int, stopCh <-chan struct{}) error {
+func (controller *AgentController) Run(ctx context.Context, numWorkers int) error {
 	var wg sync.WaitGroup
 
 	defer func() {
@@ -160,7 +161,7 @@ func (controller *AgentController) Run(numWorkers int, stopCh <-chan struct{}) e
 	defer glog.Info("Shutting down AgentController")
 
 	glog.Info("Waiting for caches to sync")
-	if !controllerutils.WaitForCacheSync(controllerAgentName, stopCh,
+	if !controllerutils.WaitForCacheSync(controllerAgentName, ctx.Done(),
 		controller.restoreListerSynced,
 		controller.clusterListerSynced,
 		controller.backupListerSynced,
@@ -172,12 +173,12 @@ func (controller *AgentController) Run(numWorkers int, stopCh <-chan struct{}) e
 	wg.Add(numWorkers)
 	for i := 0; i < numWorkers; i++ {
 		go func() {
-			wait.Until(controller.runWorker, time.Second, stopCh)
+			wait.Until(controller.runWorker, time.Second, ctx.Done())
 			wg.Done()
 		}()
 	}
 
-	<-stopCh
+	<-ctx.Done()
 
 	return nil
 }

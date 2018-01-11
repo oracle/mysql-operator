@@ -194,7 +194,7 @@ run-dev:
 	    cmd/mysql-operator/main.go \
 	    --kubeconfig=${KUBECONFIG} \
 	    --v=4 \
-	    --namespace=default
+	    --namespace=${USER}
 
 .PHONY: generate
 generate:

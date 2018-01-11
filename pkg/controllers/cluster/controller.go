@@ -15,6 +15,7 @@
 package cluster
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -247,7 +248,7 @@ func NewController(
 // as syncing informer caches and starting workers. It will block until stopCh
 // is closed, at which point it will shutdown the workqueue and wait for
 // workers to finish processing their current work items.
-func (m *MySQLController) Run(threadiness int, stopCh <-chan struct{}) {
+func (m *MySQLController) Run(ctx context.Context, threadiness int) {
 	defer utilruntime.HandleCrash()
 	defer m.queue.ShutDown()
 
@@ -255,7 +256,7 @@ func (m *MySQLController) Run(threadiness int, stopCh <-chan struct{}) {
 
 	// Wait for the caches to be synced before starting workers
 	glog.Info("Waiting for MySQLCluster controller informer caches to sync")
-	if !controllerutils.WaitForCacheSync("mysql cluster", stopCh,
+	if !controllerutils.WaitForCacheSync("mysql cluster", ctx.Done(),
 		m.clusterListerSynced,
 		m.statefulSetListerSynced,
 		m.podListerSynced,
@@ -267,12 +268,12 @@ func (m *MySQLController) Run(threadiness int, stopCh <-chan struct{}) {
 	glog.Info("Starting MySQLCluster controller workers")
 	// Launch two workers to process Foo resources
 	for i := 0; i < threadiness; i++ {
-		go wait.Until(m.runWorker, time.Second, stopCh)
+		go wait.Until(m.runWorker, time.Second, ctx.Done())
 	}
 
 	glog.Info("Started MySQLCluster controller workers")
 	defer glog.Info("Shutting down MySQLCluster controller workers")
-	<-stopCh
+	<-ctx.Done()
 }
 
 // worker runs a worker goroutine that invokes processNextWorkItem until the
@@ -545,6 +546,8 @@ func (m *MySQLController) deleteClusterResources(obj interface{}) error {
 		}
 	}
 
+	// TODO(apryde): This needs to be modified to check for user-defined my.cnf
+	// ConfigMap as by default one is no longer created.
 	glog.V(4).Infof("Ensuring my.cnf ConfigMap deleted for MySQLCLuster %s/%s", cluster.Namespace, cluster.Name)
 	mycnf, err := m.configMapLister.ConfigMaps(cluster.Namespace).Get(cluster.Name)
 	if err != nil {

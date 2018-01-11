@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"math/rand"
 	"sync"
 	"time"
@@ -37,8 +38,10 @@ func Run(s *options.MySQLOperatorServer) error {
 		return err
 	}
 
+	ctx, cancelFunc := context.WithCancel(context.Background())
+
 	// Set up signals so we handle the first shutdown signal gracefully.
-	stopCh := signals.SetupSignalHandler()
+	signals.SetupSignalHandler(cancelFunc)
 
 	kubeClient := kubernetes.NewForConfigOrDie(kubeconfig)
 	mysqlopClient := mysqlop.NewForConfigOrDie(kubeconfig)
@@ -69,7 +72,7 @@ func Run(s *options.MySQLOperatorServer) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		clusterController.Run(5, stopCh)
+		clusterController.Run(ctx, 5)
 	}()
 
 	backupController := backupcontroller.NewOperatorController(
@@ -82,7 +85,7 @@ func Run(s *options.MySQLOperatorServer) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		backupController.Run(5, stopCh)
+		backupController.Run(ctx, 5)
 	}()
 
 	restoreController := restorecontroller.NewOperatorController(
@@ -96,7 +99,7 @@ func Run(s *options.MySQLOperatorServer) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		restoreController.Run(5, stopCh)
+		restoreController.Run(ctx, 5)
 	}()
 
 	backupScheduleController := backupschedule.NewController(
@@ -109,14 +112,14 @@ func Run(s *options.MySQLOperatorServer) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		backupScheduleController.Run(1, stopCh)
+		backupScheduleController.Run(ctx, 1)
 	}()
 
 	// Shared informers have to be started after ALL controllers.
-	go kubeInformerFactory.Start(stopCh)
-	go operatorInformerFactory.Start(stopCh)
+	go kubeInformerFactory.Start(ctx.Done())
+	go operatorInformerFactory.Start(ctx.Done())
 
-	<-stopCh
+	<-ctx.Done()
 
 	glog.Info("Waiting for all controllers to shut down gracefully")
 	wg.Wait()

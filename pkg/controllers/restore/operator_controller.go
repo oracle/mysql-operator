@@ -1,6 +1,7 @@
 package restore
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -133,7 +134,7 @@ func NewOperatorController(
 // Run is a blocking function that runs the specified number of worker
 // goroutines to process items in the work queue. It will return when it
 // receives on the stopCh channel.
-func (controller *OperatorController) Run(numWorkers int, stopCh <-chan struct{}) error {
+func (controller *OperatorController) Run(ctx context.Context, numWorkers int) error {
 	var wg sync.WaitGroup
 
 	defer func() {
@@ -155,7 +156,7 @@ func (controller *OperatorController) Run(numWorkers int, stopCh <-chan struct{}
 	defer glog.Info("Shutting down OperatorController")
 
 	glog.Info("Waiting for caches to sync")
-	if !controllerutils.WaitForCacheSync(controllerAgentName, stopCh,
+	if !controllerutils.WaitForCacheSync(controllerAgentName, ctx.Done(),
 		controller.restoreListerSynced,
 		controller.clusterListerSynced,
 		controller.backupListerSynced,
@@ -167,12 +168,12 @@ func (controller *OperatorController) Run(numWorkers int, stopCh <-chan struct{}
 	wg.Add(numWorkers)
 	for i := 0; i < numWorkers; i++ {
 		go func() {
-			wait.Until(controller.runWorker, time.Second, stopCh)
+			wait.Until(controller.runWorker, time.Second, ctx.Done())
 			wg.Done()
 		}()
 	}
 
-	<-stopCh
+	<-ctx.Done()
 
 	return nil
 }
