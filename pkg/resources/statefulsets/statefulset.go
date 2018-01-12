@@ -337,6 +337,10 @@ func NewForCluster(cluster *api.MySQLCluster, serviceName string) *apps.Stateful
 					Labels: map[string]string{
 						constants.MySQLClusterLabel: cluster.Name,
 					},
+					Annotations: map[string]string{
+						"prometheus.io/scrape": "true",
+						"prometheus.io/port":   "8080",
+					},
 				},
 				Spec: v1.PodSpec{
 					// FIXME: LIMITED TO DEFAULT NAMESPACE. Need to dynamically

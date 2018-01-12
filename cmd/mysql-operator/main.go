@@ -16,10 +16,8 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/pflag"
 
 	flags "k8s.io/apiserver/pkg/util/flag"
@@ -27,12 +25,7 @@ import (
 
 	"github.com/oracle/mysql-operator/cmd/mysql-operator/app"
 	"github.com/oracle/mysql-operator/cmd/mysql-operator/app/options"
-	"github.com/oracle/mysql-operator/pkg/controllers/cluster"
 	"github.com/oracle/mysql-operator/pkg/version"
-)
-
-const (
-	metricsEndpoint = "0.0.0.0:8080"
 )
 
 func main() {
@@ -43,10 +36,6 @@ func main() {
 	flags.InitFlags()
 	logs.InitLogs()
 	defer logs.FlushLogs()
-
-	cluster.RegisterMetrics()
-	http.Handle("/metrics", prometheus.Handler())
-	go http.ListenAndServe(metricsEndpoint, nil)
 
 	if err := app.Run(opts); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)

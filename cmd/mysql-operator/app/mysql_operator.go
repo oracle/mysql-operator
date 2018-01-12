@@ -3,14 +3,16 @@ package app
 import (
 	"context"
 	"math/rand"
+	"net/http"
 	"sync"
 	"time"
+
+	"github.com/golang/glog"
+	"github.com/prometheus/client_golang/prometheus"
 
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-
-	"github.com/golang/glog"
 
 	options "github.com/oracle/mysql-operator/cmd/mysql-operator/app/options"
 	backupcontroller "github.com/oracle/mysql-operator/pkg/controllers/backup"
@@ -19,7 +21,12 @@ import (
 	restorecontroller "github.com/oracle/mysql-operator/pkg/controllers/restore"
 	mysqlop "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 	informers "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions"
+	metrics "github.com/oracle/mysql-operator/pkg/util/metrics"
 	signals "github.com/oracle/mysql-operator/pkg/util/signals"
+)
+
+const (
+	metricsEndpoint = "0.0.0.0:8080"
 )
 
 // resyncPeriod computes the time interval a shared informer waits before
@@ -37,6 +44,12 @@ func Run(s *options.MySQLOperatorServer) error {
 	if err != nil {
 		return err
 	}
+
+	// Initialise the operator metrics.
+	metrics.RegisterPodName(s.Hostname)
+	cluster.RegisterMetrics()
+	http.Handle("/metrics", prometheus.Handler())
+	go http.ListenAndServe(metricsEndpoint, nil)
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 

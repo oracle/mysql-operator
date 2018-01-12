@@ -53,6 +53,7 @@ import (
 	secrets "github.com/oracle/mysql-operator/pkg/resources/secrets"
 	services "github.com/oracle/mysql-operator/pkg/resources/services"
 	statefulsets "github.com/oracle/mysql-operator/pkg/resources/statefulsets"
+	metrics "github.com/oracle/mysql-operator/pkg/util/metrics"
 	buildversion "github.com/oracle/mysql-operator/pkg/version"
 )
 
@@ -646,12 +647,12 @@ func (m *MySQLController) handleObject(obj interface{}) {
 
 func (m *MySQLController) onClusterReady(clusterName string) {
 	glog.V(2).Infof("Cluster %s ready", clusterName)
-	clustersCreated.Inc()
-	clustersTotal.Inc()
+	metrics.IncEventCounter(clustersCreatedCount)
+	metrics.IncEventGauge(clustersTotalCount)
 }
 
 func (m *MySQLController) onClusterDeleted(clusterName string) {
 	glog.V(2).Infof("Cluster %s deleted", clusterName)
-	clustersDeleted.Inc()
-	clustersTotal.Dec()
+	metrics.IncEventCounter(clustersDeletedCount)
+	metrics.DecEventGauge(clustersTotalCount)
 }

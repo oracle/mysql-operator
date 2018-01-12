@@ -21,6 +21,7 @@ const (
 	InstanceStatusMissing                   = "(MISSING)"
 	InstanceStatusRecovering                = "RECOVERING"
 	InstanceStatusNotFound                  = ""
+	InstanceStatusUnknown                   = "UNKNOWN"
 )
 
 // instanceState denotes the state of a MySQL Instance.
