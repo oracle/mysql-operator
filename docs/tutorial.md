@@ -1,12 +1,12 @@
-# MySQL Operator Setup
+# Tutorial
 
-This guide provides a quick start for users of the Oracle MySQL Operator
+This guide provides a quick-start guide for users of the Oracle MySQL Operator.
 
 ## Prerequisites
 
 * Kubernetes
 * Password for ODX docker registry
-* The mysql-operator repo checked out locally 
+* The mysql-operator repo checked out locally
 
 #### Create a namespace and Docker secret for the registry username/password
 
@@ -44,15 +44,15 @@ The MySQL Operator is installed into your cluster via a Helm chart
 
 Install the helm tool locally by following [these instructions](https://docs.helm.sh/using_helm/#installing-helm)
 
-If you  have not already installed tiller to your cluster set it up with: 
+If you  have not already installed tiller to your cluster set it up with:
 
 ```bash
 helm init
 ```
 
-Verify helm is installed : 
+Verify helm is installed :
 ```bash
-helm version                                                                             
+helm version
 
 Client: &version.Version{SemVer:"v2.5.0", GitCommit:"012cb0ac1a1b2f888144ef5a67b8dab6c2d45be6", GitTreeState:"clean"}
 Server: &version.Version{SemVer:"v2.5.0", GitCommit:"012cb0ac1a1b2f888144ef5a67b8dab6c2d45be6", GitTreeState:"clean"}
@@ -60,7 +60,7 @@ Server: &version.Version{SemVer:"v2.5.0", GitCommit:"012cb0ac1a1b2f888144ef5a67b
 
 ### Installing the Chart
 
-The helm chart for the  operator is [included in this git repo](../mysql-operator), run the following in the root of the checked out `mysql-operator` repo. 
+The helm chart for the  operator is [included in this git repo](../mysql-operator), run the following in the root of the checked out `mysql-operator` repo.
 
 To install the chart with the release name `my-release`:
 
@@ -117,7 +117,7 @@ NAME      KIND
 myappdb   MySQLCluster.v1.mysql.oracle.com
 ```
 
-To find out how to create larger clusters, and configure storage see [Clusters](Clusters.md). 
+To find out how to create larger clusters, and configure storage see [Clusters](Clusters.md).
 
 #### Verify that you can connect to MySQL
 
@@ -142,7 +142,7 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +---+
 ```
 
-You can then execute any further commands via 'kubectl exec' against the 'mysql' 
+You can then execute any further commands via 'kubectl exec' against the 'mysql'
 container:
 
 ```
@@ -155,7 +155,7 @@ $ kubectl exec -it -c mysql  \
 +---+
 ```
 
-# Troubleshooting 
+# Troubleshooting
 
 ## cannot list configmaps in the namspace "kube-system"
 
