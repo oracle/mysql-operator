@@ -1,5 +1,7 @@
 # Backups
 
+A guide to performing manual and automated cluster backups using the MySQL Operator.
+
 ## Introduction
 
 The MySQL Operator allows for on-demand and scheduled backups to be created.
@@ -30,7 +32,7 @@ secretKey: secretKey
 Now create a secret with the contents of the above yaml file.
 
 ```bash
-$ kubectl create secret generic oci-upload-credentials --from-file=./examples/oci-backup-credentials.yaml
+$ kubectl create secret generic s3-credentials --from-file=./examples/backup-credentials-s3.yaml
 ```
 
 ## On-demand backups
@@ -50,55 +52,55 @@ spec:
     databases:
       - db1
   storage:
-    provider: s3  
+    provider: s3
     clusterRef:
       name: mycluster
     secretRef:
       name: s3-credentials
     config:
       endpoint: s3-endpoint
-      region: us-phoenix-1 
+      region: us-phoenix-1
       bucket: your-bucket
 ```
 
 ### On-demand backups - executor configuration
 
-A backup spec requires an 'executor' to support the backup and restore of 
+A backup spec requires an 'executor' to support the backup and restore of
 database content.
 
-Currently, the 'mysqldump' utility is provided, although further providers may 
+Currently, the 'mysqldump' utility is provided, although further providers may
 be added in the future.
 
-You may additionaly configure the list of database tables to include in the 
+You may additionaly configure the list of database tables to include in the
 backup.
 
 ### On-demand backups - storage configuration
 
-A backup spec requires an 'storage' mechanism to safely save the backed up 
+A backup spec requires a 'storage' mechanism to safely save the backed up
 content of a database.
 
-Currently, 'S3' based object storage is provided, although further providers 
+Currently, 'S3' based object storage is provided, although further providers
 may be added in the future.
 
 #### On-demand backups - OCI S3 storage configuration
 
-When configuring an S3 endpoint you should ensure that it is correct for your 
-backing provider and that you have pre-created the desired bucket. 
+When configuring an S3 endpoint you should ensure that it is correct for your
+backing provider and that you have pre-created the desired bucket.
 
-For example, An Oracle OCI backend for the tenancy 'mytenancy', region 
-'us-phoenix-1', and bucket 'mybucket', should have the storage element 
+For example, An Oracle OCI backend for the tenancy 'mytenancy', region
+'us-phoenix-1', and bucket 'mybucket', should have the storage element
 configured as follows:
 
 ```yaml
   ...
-  config:					
+  config:
     endpoint: mytenancy.compat.objectstorage.us-phoenix-1.oraclecloud.com
-		region:   us-phoenix-1
-		bucket:   mybucket
+    region:   us-phoenix-1
+    bucket:   mybucket
   ...
 ```
 
-The bucket should also be valid for the secret credentials specified previously. 
+The bucket should also be valid for the secret credentials specified previously.
 
 #### On-demand backups - Amazon S3 storage configuration
 
@@ -106,10 +108,10 @@ An AWS storage endpoint can also be configured. For example:
 
 ```yaml
   ...
-  config:					
+  config:
     endpoint: s3.eu-west-2.amazonaws.com
-		region:   eu-west-2
-		bucket:   mybucket
+    region:   eu-west-2
+    bucket:   mybucket
   ...
 ```
 
@@ -127,10 +129,10 @@ A GCE storage endpoints can then be configured as follows:
 
 ```yaml
   ...
-  config:					
+  config:
     endpoint: storage.googleapis.com
-		region:   europe-west1
-		bucket:   mybucket
+    region:   europe-west1
+    bucket:   mybucket
   ...
 ```
 
@@ -151,12 +153,12 @@ kind: MySQLBackupSchedule
 metadata:
   name: example-backup-schedule
 spec:
-  schedule: '30 * * * *'
+  schedule: '*/30 * * * *'
   backupTemplate:
     clusterRef:
       name: mycluster
     secretRef:
-      name: oci-upload-credentials
+      name: s3-credentials
     databases:
         - employees
 ```
