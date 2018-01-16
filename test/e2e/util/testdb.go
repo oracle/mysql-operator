@@ -107,6 +107,7 @@ func (testDB *TestDB) install() {
 func (testDB *TestDB) Populate() {
 	clusterName := testDB.cluster.Name
 	podname := string(clusterName + "-0")
+	testDB.t.Logf("Populating test db on cluster: %s from pod: %s", clusterName, podname)
 	username := "root"
 	password := GetMySQLPassword(testDB.t, podname, testDB.cluster.Namespace)
 	executor := NewKubectlSimpleSQLExecutor(testDB.t, podname, username, password, testDB.cluster.Namespace)
@@ -116,9 +117,9 @@ func (testDB *TestDB) Populate() {
 	testDB.t.Logf("Loading test db data")
 	output, err := executor.ExecuteCMD(fmt.Sprintf("cd test_db && mysql -uroot -p%s < employees.sql", password))
 	if err != nil {
-		testDB.t.Fatalf("Failed load db:%s", output)
+		testDB.t.Log(output)
+		testDB.t.Fatalf("Failed load db data, err: %v", err)
 	}
-	testDB.t.Logf(output)
 }
 
 func (testDB *TestDB) GetClusterName() string {
@@ -145,6 +146,7 @@ func (testDB *TestDB) GetPassword() (string, error) {
 func (testDB *TestDB) Test() {
 	clusterName := testDB.cluster.Name
 	podname := string(clusterName + "-0")
+	testDB.t.Logf("Validating test db on cluster: %s from pod: %s", clusterName, podname)
 	username := "root"
 	password := GetMySQLPassword(testDB.t, podname, testDB.cluster.Namespace)
 	executor := NewKubectlSimpleSQLExecutor(testDB.t, podname, username, password, testDB.cluster.Namespace)
@@ -168,12 +170,11 @@ func (testDB *TestDB) Test() {
 	testDB.t.Logf("Testing db data")
 	output, err = executor.ExecuteCMD(fmt.Sprintf("/sql_test.sh 'mysql -uroot -p%s'", password))
 	if err != nil {
-		testDB.t.Fatalf("Test db md5 failed:%s", output)
+		testDB.t.Fatalf("Test db md5 failed\n%s", output)
 	}
 	if !testOK(output, "employees") {
 		testDB.t.Error("'employees' database integrity checksum failed.")
 	}
-	testDB.t.Logf(output)
 }
 
 func testOK(output string, target string) bool {
