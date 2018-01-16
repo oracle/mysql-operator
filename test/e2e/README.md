@@ -8,9 +8,9 @@ Prerequisites:
  - A running k8s cluster and kube config:
    - The environment variable KUBECONFIG should be set to point to the cluster config.
    - OR The environment variable KUBECONFIG_VAR should be set to contain the cluster config.
- - OCI upload yaml configuration:
-   - The environment variable S3_UPLOAD_CREDS should be set to point to a file containing the backup creds as documented.
-   - OR The environment variable S3_UPLOAD_CREDS_VAR should contain the backup creds as documented.
+ - OCI upload configuration:
+   - The environment variable S3_ACCESS_KEY should be set to the value of your S3 access key.
+   - The environment variable S3_SECRET_KEY should be set to the value of your S3 secret key.
  - OCI SSH Key - This is required to SSH onto the cluster nodes and must be set-up when the OCI cluster machines are provisioned.
   - The environment variable CLUSTER_INSTANCE_SSH_KEY should be set to point to a valid key for the OCI instances the k8s cluster is running on.
    - OR The environment variable CLUSTER_INSTANCE_SSH_KEY_VAR should contain the key as documented.
