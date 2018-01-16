@@ -55,16 +55,6 @@ else
 endif
 endif
 
-ifndef S3_UPLOAD_CREDS
-ifndef S3_UPLOAD_CREDS_VAR
-	$(error "S3_UPLOAD_CREDS or S3_UPLOAD_CREDS_VAR must be defined")
-else
-	$(eval S3_UPLOAD_CREDS:=/tmp/s3_upload_creds-$(shell date +'%d%m%y%H%M%S%N').yaml)
-	$(eval export S3_UPLOAD_CREDS)
-	$(shell echo "$${S3_UPLOAD_CREDS_VAR}" | openssl enc -base64 -d -A > $(S3_UPLOAD_CREDS))
-endif
-endif
-
 ifndef CLUSTER_INSTANCE_SSH_KEY
 ifndef CLUSTER_INSTANCE_SSH_KEY_VAR
 	$(error "CLUSTER_INSTANCE_SSH_KEY or CLUSTER_INSTANCE_SSH_KEY_VAR must be defined")
