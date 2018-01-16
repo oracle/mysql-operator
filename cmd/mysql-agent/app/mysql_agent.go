@@ -12,6 +12,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 
 	kubeinformers "k8s.io/client-go/informers"
 	kubernetes "k8s.io/client-go/kubernetes"
@@ -24,7 +25,12 @@ import (
 	restorecontroller "github.com/oracle/mysql-operator/pkg/controllers/restore"
 	mysqlop "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 	informers "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions"
+	metrics "github.com/oracle/mysql-operator/pkg/util/metrics"
 	signals "github.com/oracle/mysql-operator/pkg/util/signals"
+)
+
+const (
+	metricsEndpoint = "0.0.0.0:8080"
 )
 
 // resyncPeriod computes the time interval a shared informer waits before
@@ -74,6 +80,16 @@ func Run(opts *options.MySQLAgentOpts) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create new local MySQL InnoDB cluster manager")
 	}
+
+	// Initialise the agent metrics.
+	metrics.RegisterPodName(opts.Hostname)
+	metrics.RegisterClusterName(manager.Instance.ClusterName)
+	clustermgr.RegisterMetrics()
+	backupcontroller.RegisterMetrics()
+	restorecontroller.RegisterMetrics()
+	http.Handle("/metrics", prometheus.Handler())
+	go http.ListenAndServe(metricsEndpoint, nil)
+
 	// Block until local instance successfully initialised.
 	for !manager.Sync(ctx) {
 		time.Sleep(10 * time.Second)

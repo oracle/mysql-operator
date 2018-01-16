@@ -31,6 +31,7 @@ import (
 	informers "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions/mysql/v1"
 	listers "github.com/oracle/mysql-operator/pkg/generated/listers/mysql/v1"
 	kubeutil "github.com/oracle/mysql-operator/pkg/util/kube"
+	metrics "github.com/oracle/mysql-operator/pkg/util/metrics"
 )
 
 const agentControllerAgentName = "agent-backup-controller"
@@ -330,6 +331,7 @@ func (controller *AgentController) performBackup(backup *api.MySQLBackup, creds 
 		return errors.Wrapf(err, "failed to mark MySQLBackup %q as complete", kubeutil.NamespaceAndName(backup))
 	}
 
+	metrics.IncEventCounter(clusterBackupCount)
 	glog.Infof("MySQLBackup %q succeeded in %v", backup.Name, finished.Sub(started))
 	controller.recorder.Event(backup, corev1.EventTypeNormal, "Success", "Backup complete")
 
