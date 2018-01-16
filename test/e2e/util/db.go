@@ -245,7 +245,7 @@ func hasRowColumnValue(out string, value string) bool {
 func executeCmd(t *T, cmd *exec.Cmd) (string, error) {
 	output, e := cmd.CombinedOutput()
 	if e != nil {
-		t.Logf("failed to execute command:%v: %v", cmd.Args, e)
+		t.Logf("Failed to execute command:%v: %v", cmd.Args, e)
 	}
 	return string(output), e
 }

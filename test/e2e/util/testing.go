@@ -94,5 +94,5 @@ func decorate(s string) string {
 		file = "???"
 		line = 1
 	}
-	return fmt.Sprintf("%30s:%d: %s\n", file, line, s)
+	return fmt.Sprintf("%30s:%-3d %s\n", file, line, s)
 }

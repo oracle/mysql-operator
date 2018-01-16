@@ -19,14 +19,14 @@ func TestScheduledBackup(test *testing.T) {
 	f := framework.Global
 
 	// ---------------------------------------------------------------------- //
-	t.Log("creating cluster..")
+	t.Log("Creating cluster..")
 	// ---------------------------------------------------------------------- //
 	testdb := e2eutil.CreateTestDB(t, "e2e-br-", 1, f.DestroyAfterFailure)
 	defer testdb.Delete()
 	clusterName := testdb.Cluster().Name
 
 	// ---------------------------------------------------------------------- //
-	t.Log("populating database..")
+	t.Log("Populating database..")
 	// ---------------------------------------------------------------------- //
 	testDatabaseName := "test"
 	podName := clusterName + "-0"
@@ -37,7 +37,7 @@ func TestScheduledBackup(test *testing.T) {
 	dbHelper.EnsureDBTableValue(testDatabaseName, "people", "name", "kris")
 
 	// ---------------------------------------------------------------------- //
-	t.Logf("creating backup schedule for cluster '%s' that runs every minute...", clusterName)
+	t.Logf("Creating backup schedule for cluster '%s' that runs every minute...", clusterName)
 	// ---------------------------------------------------------------------- //
 	backupScheduleName := "e2e-test-backup-schedule-"
 	s3StorageCredentials := "s3-upload-credentials"
@@ -49,7 +49,7 @@ func TestScheduledBackup(test *testing.T) {
 	}
 
 	// ---------------------------------------------------------------------- //
-	t.Log("checking that 1 complete backup exists, and is labelled correctly..")
+	t.Log("Checking that 1 complete backup exists, and is labelled correctly..")
 	// ---------------------------------------------------------------------- //
 	time.Sleep(5 * time.Second)
 	n := numCompletedBackups(t, f, backupSchedule.Name)
@@ -58,7 +58,7 @@ func TestScheduledBackup(test *testing.T) {
 	}
 
 	// ---------------------------------------------------------------------- //
-	t.Log("checking that 2 complete backups exist, and are labelled correctly..")
+	t.Log("Checking that 2 complete backups exist, and are labelled correctly..")
 	// ---------------------------------------------------------------------- //
 	time.Sleep(95 * time.Second)
 	n = numCompletedBackups(t, f, backupSchedule.Name)
@@ -67,7 +67,7 @@ func TestScheduledBackup(test *testing.T) {
 	}
 
 	// ---------------------------------------------------------------------- //
-	t.Log("validating operator version label on the backup schedule..")
+	t.Log("Validating operator version label on the backup schedule..")
 	// ---------------------------------------------------------------------- //
 	backupSchedule, err = f.MySQLOpClient.MysqlV1().MySQLBackupSchedules(f.Namespace).Get(backupSchedule.Name, metav1.GetOptions{})
 	if backupSchedule.Labels[constants.MySQLOperatorVersionLabel] != f.BuildVersion {
@@ -77,7 +77,7 @@ func TestScheduledBackup(test *testing.T) {
 	}
 
 	// ---------------------------------------------------------------------- //
-	t.Logf("deleteing backup schedule: %s", backupSchedule.Name)
+	t.Logf("Deleteing backup schedule: %s", backupSchedule.Name)
 	// ---------------------------------------------------------------------- //
 	err = f.MySQLOpClient.MysqlV1().MySQLBackupSchedules(f.Namespace).Delete(backupSchedule.Name, &metav1.DeleteOptions{})
 	if err != nil {

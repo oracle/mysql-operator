@@ -19,24 +19,17 @@ func TestBackUpRestore(test *testing.T) {
 	var err error
 
 	// ---------------------------------------------------------------------- //
-	t.Log("creating mysqlcluster...")
+	t.Log("Creating mysqlcluster...")
 	// ---------------------------------------------------------------------- //
 	testdb := e2eutil.CreateTestDB(t, "e2e-br-", 1, f.DestroyAfterFailure)
 	defer testdb.Delete()
 	clusterName := testdb.Cluster().Name
 
-	// ---------------------------------------------------------------------- //
-	t.Log("populating database..")
-	// ---------------------------------------------------------------------- //
 	testdb.Populate()
-
-	// ---------------------------------------------------------------------- //
-	t.Log("validating database..")
-	// ---------------------------------------------------------------------- //
 	testdb.Test()
 
 	// ---------------------------------------------------------------------- //
-	t.Logf("creating mysqlbackup for mysqlcluster '%s'...", clusterName)
+	t.Logf("Creating mysqlbackup for mysqlcluster '%s'...", clusterName)
 	// ---------------------------------------------------------------------- //
 	backupName := "e2e-test-snapshot-backup-"
 	s3StorageCredentials := "s3-upload-credentials"
@@ -67,7 +60,7 @@ func TestBackUpRestore(test *testing.T) {
 	t.Logf("created backup at location: %s", backup.Status.Outcome.Location)
 
 	// ---------------------------------------------------------------------- //
-	t.Log("trying connection to container")
+	t.Log("Trying connection to container")
 	// ---------------------------------------------------------------------- //
 	err = e2eutil.Retry(e2eutil.DefaultRetry, func() (bool, error) {
 		passwd, err := testdb.GetPassword()
@@ -78,12 +71,12 @@ func TestBackUpRestore(test *testing.T) {
 	}
 
 	// ---------------------------------------------------------------------- //
-	t.Log("validating database..")
+	t.Log("Validating database..")
 	// ---------------------------------------------------------------------- //
 	testdb.Test()
 
 	// ---------------------------------------------------------------------- //
-	t.Log("deleting the %s database..", testDatabaseName)
+	t.Log("Deleting the %s database..", testDatabaseName)
 	// ---------------------------------------------------------------------- //
 	podName := clusterName + "-0"
 	username := "root"
