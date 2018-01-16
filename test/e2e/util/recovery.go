@@ -68,7 +68,6 @@ func TestMySQLPodCrash(t *T, namespace string, podName string,
 // testMySQLContainerCrash delete the sql-agent container of specified pod by
 // name and then checks it recovers.
 func TestMySQLContainerCrash(t *T, namespace string, podName string, containerName string, f *framework.Framework, clusterName string, numInstances int32) {
-
 	podHostInstanceSSHAddress, podHostInstanceSSHKeyPath := getSSHInfo(t, namespace, podName, f)
 
 	t.Logf("waiting for pod phase: %v", v1.PodRunning)

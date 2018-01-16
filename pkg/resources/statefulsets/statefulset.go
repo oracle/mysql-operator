@@ -17,6 +17,7 @@ package statefulsets
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	apps "k8s.io/api/apps/v1beta1"
@@ -104,6 +105,13 @@ func replicationGroupSeedsEnvVar(replicationGroupSeeds string) v1.EnvVar {
 	return v1.EnvVar{
 		Name:  "REPLICATION_GROUP_SEEDS",
 		Value: replicationGroupSeeds,
+	}
+}
+
+func multiMasterEnvVar(enabled bool) v1.EnvVar {
+	return v1.EnvVar{
+		Name:  "MYSQL_CLUSTER_MULTI_MASTER",
+		Value: strconv.FormatBool(enabled),
 	}
 }
 
@@ -229,6 +237,7 @@ func mysqlOperatorContainer(cluster *api.MySQLCluster, rootPassword v1.EnvVar, s
 			namespaceEnvVar(),
 			serviceNameEnvVar(serviceName),
 			replicationGroupSeedsEnvVar(replicationGroupSeeds),
+			multiMasterEnvVar(cluster.Spec.MultiMaster),
 			rootPassword,
 			v1.EnvVar{
 				Name:  "MYSQL_ROOT_HOST",
@@ -256,6 +265,7 @@ func mysqlAgentContainer(cluster *api.MySQLCluster, rootPassword v1.EnvVar, serv
 			namespaceEnvVar(),
 			serviceNameEnvVar(serviceName),
 			replicationGroupSeedsEnvVar(replicationGroupSeeds),
+			multiMasterEnvVar(cluster.Spec.MultiMaster),
 			rootPassword,
 		},
 		LivenessProbe: &v1.Probe{
@@ -314,6 +324,13 @@ func NewForCluster(cluster *api.MySQLCluster, serviceName string) *apps.Stateful
 		mysqlOperatorContainer(cluster, rootPassword, serviceName, replicas),
 		mysqlAgentContainer(cluster, rootPassword, serviceName, replicas)}
 
+	podLabels := map[string]string{
+		constants.MySQLClusterLabel: cluster.Name,
+	}
+	if cluster.Spec.MultiMaster {
+		podLabels[constants.LabelMySQLClusterRole] = constants.MySQLClusterRolePrimary
+	}
+
 	ss := &apps.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cluster.Namespace,
@@ -334,9 +351,7 @@ func NewForCluster(cluster *api.MySQLCluster, serviceName string) *apps.Stateful
 			Replicas: &cluster.Spec.Replicas,
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						constants.MySQLClusterLabel: cluster.Name,
-					},
+					Labels: podLabels,
 					Annotations: map[string]string{
 						"prometheus.io/scrape": "true",
 						"prometheus.io/port":   "8080",

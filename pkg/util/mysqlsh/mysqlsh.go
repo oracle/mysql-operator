@@ -21,7 +21,7 @@ type Interface interface {
 	IsClustered(ctx context.Context) bool
 	// CreateCluster creates a new InnoDB cluster called
 	// innodb.DefaultClusterName.
-	CreateCluster(ctx context.Context) (*innodb.ClusterStatus, error)
+	CreateCluster(ctx context.Context, multiMaster bool) (*innodb.ClusterStatus, error)
 	// GetClusterStatus gets the status of the innodb.DefaultClusterName InnoDB
 	// cluster.
 	GetClusterStatus(ctx context.Context) (*innodb.ClusterStatus, error)
@@ -60,8 +60,13 @@ func (r *runner) IsClustered(ctx context.Context) bool {
 	return err == nil
 }
 
-func (r *runner) CreateCluster(ctx context.Context) (*innodb.ClusterStatus, error) {
-	python := fmt.Sprintf("dba.create_cluster('%s')", innodb.DefaultClusterName)
+func (r *runner) CreateCluster(ctx context.Context, multiMaster bool) (*innodb.ClusterStatus, error) {
+	var python string
+	if multiMaster {
+		python = fmt.Sprintf("dba.create_cluster('%s', {'force':True,'multiMaster':True})", innodb.DefaultClusterName)
+	} else {
+		python = fmt.Sprintf("dba.create_cluster('%s')", innodb.DefaultClusterName)
+	}
 	_, err := r.run(ctx, python)
 	if err != nil {
 		return nil, fmt.Errorf("creating cluster: %v", err)

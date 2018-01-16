@@ -143,7 +143,12 @@ func (m *ClusterManager) Sync(ctx context.Context) bool {
 
 	case innodb.InstanceStatusMissing:
 		metrics.IncStatusCounter(instanceStatusCount, innodb.InstanceStatusMissing)
-		online = m.handleInstanceMissing(ctx, clusterStatus.DefaultReplicaSet.Primary)
+		primaryAddr, err := clusterStatus.GetPrimaryAddr()
+		if err != nil {
+			glog.Errorf("%v", err)
+			return false
+		}
+		online = m.handleInstanceMissing(ctx, primaryAddr)
 		if online {
 			metrics.IncEventCounter(instanceRejoinCount)
 		} else {
@@ -152,7 +157,12 @@ func (m *ClusterManager) Sync(ctx context.Context) bool {
 
 	case innodb.InstanceStatusNotFound:
 		metrics.IncStatusCounter(instanceStatusCount, innodb.InstanceStatusNotFound)
-		online = m.handleInstanceNotFound(ctx, clusterStatus.DefaultReplicaSet.Primary)
+		primaryAddr, err := clusterStatus.GetPrimaryAddr()
+		if err != nil {
+			glog.Errorf("%v", err)
+			return false
+		}
+		online = m.handleInstanceNotFound(ctx, primaryAddr)
 		if online {
 			metrics.IncEventCounter(instanceAddCount)
 		} else {
@@ -164,7 +174,7 @@ func (m *ClusterManager) Sync(ctx context.Context) bool {
 		glog.Errorf("Received unrecognised cluster membership status: %q", instanceStatus)
 	}
 
-	if online {
+	if online && !m.Instance.MultiMaster {
 		m.ensurePrimaryControllerState(ctx, clusterStatus)
 	}
 	return online
@@ -174,7 +184,12 @@ func (m *ClusterManager) Sync(ctx context.Context) bool {
 // running if the local MySQL instance is the primary.
 func (m *ClusterManager) ensurePrimaryControllerState(ctx context.Context, status *innodb.ClusterStatus) {
 	// Are we the primary?
-	if !strings.HasPrefix(status.DefaultReplicaSet.Primary, m.Instance.Name()) {
+	primaryAddr, err := status.GetPrimaryAddr()
+	if err != nil {
+		glog.Errorf("%v", err)
+		return
+	}
+	if !strings.HasPrefix(primaryAddr, m.Instance.Name()) {
 		if m.primaryCancelFunc != nil {
 			glog.V(4).Info("Calling primaryCancelFunc()")
 			m.primaryCancelFunc()
@@ -263,7 +278,7 @@ func (m *ClusterManager) bootstrap(ctx context.Context) (*innodb.ClusterStatus, 
 	}
 
 	glog.V(4).Infof("Creating the cluster on the primary instance")
-	status, err := m.mysqlshFactory(m.Instance.GetShellURI()).CreateCluster(ctx)
+	status, err := m.mysqlshFactory(m.Instance.GetShellURI()).CreateCluster(ctx, m.Instance.MultiMaster)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create new cluster")
 	}

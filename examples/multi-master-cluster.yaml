@@ -1,0 +1,7 @@
+apiVersion: "mysql.oracle.com/v1"
+kind: MySQLCluster
+metadata:
+  name: mysql-multimaster-cluster
+spec:
+  multiMaster: true
+  replicas: 3

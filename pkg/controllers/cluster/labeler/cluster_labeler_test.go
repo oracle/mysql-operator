@@ -20,7 +20,7 @@ import (
 func alwaysReady() bool { return true }
 
 func newLocalInstance(ordinal int) *cluster.Instance {
-	return cluster.NewInstance(metav1.NamespaceDefault, "test-cluster", "test-cluster", ordinal, 3306)
+	return cluster.NewInstance(metav1.NamespaceDefault, "test-cluster", "test-cluster", ordinal, 3306, false)
 }
 
 func newFakeClusterLabelerController(instance *cluster.Instance, pods []corev1.Pod) (*fake.Clientset, *ClusterLabelerController) {
@@ -132,8 +132,8 @@ func TestClusterLabelerLabelsPrimaryAndSecondaries(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	role, ok := pod.Labels[LabelMySQLClusterRole]
-	if !ok || role != MySQLClusterRolePrimary {
+	role, ok := pod.Labels[constants.LabelMySQLClusterRole]
+	if !ok || role != constants.MySQLClusterRolePrimary {
 		t.Errorf("test-cluster-0 not labeled as primary labels=%+v", pod.Labels)
 	}
 
@@ -142,8 +142,8 @@ func TestClusterLabelerLabelsPrimaryAndSecondaries(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	role, ok = pod.Labels[LabelMySQLClusterRole]
-	if !ok || role != MySQLClusterRoleSecondary {
+	role, ok = pod.Labels[constants.LabelMySQLClusterRole]
+	if !ok || role != constants.MySQLClusterRoleSecondary {
 		t.Errorf("test-cluster-1 not labeled as secondary labels=%+v", pod.Labels)
 	}
 
@@ -152,8 +152,8 @@ func TestClusterLabelerLabelsPrimaryAndSecondaries(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	role, ok = pod.Labels[LabelMySQLClusterRole]
-	if !ok || role != MySQLClusterRoleSecondary {
+	role, ok = pod.Labels[constants.LabelMySQLClusterRole]
+	if !ok || role != constants.MySQLClusterRoleSecondary {
 		t.Errorf("test-cluster-1 not labeled as secondary labels=%+v", pod.Labels)
 	}
 }
@@ -169,8 +169,8 @@ func TestClusterLabelerRelabelsOldPrimary(t *testing.T) {
 				Name:      "test-cluster-0",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel: "test-cluster",
-					LabelMySQLClusterRole:       MySQLClusterRolePrimary,
+					constants.MySQLClusterLabel:     "test-cluster",
+					constants.LabelMySQLClusterRole: constants.MySQLClusterRolePrimary,
 				},
 			},
 		},
@@ -183,8 +183,8 @@ func TestClusterLabelerRelabelsOldPrimary(t *testing.T) {
 				Name:      "test-cluster-1",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel: "test-cluster",
-					LabelMySQLClusterRole:       MySQLClusterRoleSecondary,
+					constants.MySQLClusterLabel:     "test-cluster",
+					constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
 				},
 			},
 		},
@@ -197,8 +197,8 @@ func TestClusterLabelerRelabelsOldPrimary(t *testing.T) {
 				Name:      "test-cluster-2",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel: "test-cluster",
-					LabelMySQLClusterRole:       MySQLClusterRoleSecondary,
+					constants.MySQLClusterLabel:     "test-cluster",
+					constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
 				},
 			},
 		},
@@ -248,8 +248,8 @@ func TestClusterLabelerRelabelsOldPrimary(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	role, ok := pod.Labels[LabelMySQLClusterRole]
-	if !ok || role != MySQLClusterRoleSecondary {
+	role, ok := pod.Labels[constants.LabelMySQLClusterRole]
+	if !ok || role != constants.MySQLClusterRoleSecondary {
 		t.Errorf("test-cluster-0 not labeled as secondary labels=%+v", pod.Labels)
 	}
 
@@ -258,8 +258,8 @@ func TestClusterLabelerRelabelsOldPrimary(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	role, ok = pod.Labels[LabelMySQLClusterRole]
-	if !ok || role != MySQLClusterRolePrimary {
+	role, ok = pod.Labels[constants.LabelMySQLClusterRole]
+	if !ok || role != constants.MySQLClusterRolePrimary {
 		t.Errorf("test-cluster-1 not labeled as primary labels=%+v", pod.Labels)
 	}
 }
@@ -275,8 +275,8 @@ func TestClusterLabelerDoesntRelabelCorrectlyLabeledPods(t *testing.T) {
 				Name:      "test-cluster-0",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel: "test-cluster",
-					LabelMySQLClusterRole:       MySQLClusterRolePrimary,
+					constants.MySQLClusterLabel:     "test-cluster",
+					constants.LabelMySQLClusterRole: constants.MySQLClusterRolePrimary,
 				},
 			},
 		},
@@ -289,8 +289,8 @@ func TestClusterLabelerDoesntRelabelCorrectlyLabeledPods(t *testing.T) {
 				Name:      "test-cluster-1",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel: "test-cluster",
-					LabelMySQLClusterRole:       MySQLClusterRoleSecondary,
+					constants.MySQLClusterLabel:     "test-cluster",
+					constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
 				},
 			},
 		},
@@ -303,8 +303,8 @@ func TestClusterLabelerDoesntRelabelCorrectlyLabeledPods(t *testing.T) {
 				Name:      "test-cluster-2",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel: "test-cluster",
-					LabelMySQLClusterRole:       MySQLClusterRoleSecondary,
+					constants.MySQLClusterLabel:     "test-cluster",
+					constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
 				},
 			},
 		},
@@ -361,8 +361,8 @@ func TestClusterLabelerRemovesLabelFromInstanceInMissingState(t *testing.T) {
 				Name:      "test-cluster-0",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel: "test-cluster",
-					LabelMySQLClusterRole:       MySQLClusterRolePrimary,
+					constants.MySQLClusterLabel:     "test-cluster",
+					constants.LabelMySQLClusterRole: constants.MySQLClusterRolePrimary,
 				},
 			},
 		},
@@ -375,8 +375,8 @@ func TestClusterLabelerRemovesLabelFromInstanceInMissingState(t *testing.T) {
 				Name:      "test-cluster-1",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel: "test-cluster",
-					LabelMySQLClusterRole:       MySQLClusterRoleSecondary,
+					constants.MySQLClusterLabel:     "test-cluster",
+					constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
 				},
 			},
 		},
@@ -389,8 +389,8 @@ func TestClusterLabelerRemovesLabelFromInstanceInMissingState(t *testing.T) {
 				Name:      "test-cluster-2",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel: "test-cluster",
-					LabelMySQLClusterRole:       MySQLClusterRoleSecondary,
+					constants.MySQLClusterLabel:     "test-cluster",
+					constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
 				},
 			},
 		},
@@ -440,7 +440,7 @@ func TestClusterLabelerRemovesLabelFromInstanceInMissingState(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	role, _ := pod.Labels[LabelMySQLClusterRole]
+	role, _ := pod.Labels[constants.LabelMySQLClusterRole]
 	if role != "" {
 		t.Errorf("label not removed from test-cluster-2 labels=%+v", pod.Labels)
 	}

@@ -41,10 +41,19 @@ const (
 	instanceReasonRecoverable instanceReason = "recoverable"
 )
 
+// InstanceMode denotes the mode of a MySQL Instance.
+type InstanceMode string
+
+// Instance modes.
+const (
+	ReadWrite InstanceMode = "R/W"
+	ReadOnly               = "R/O"
+)
+
 // Instance represents an individual MySQL instance in an InnoDB cluster.
 type Instance struct {
 	Address string         `json:"address"`
-	Mode    string         `json:"mode"`
+	Mode    InstanceMode   `json:"mode"`
 	Role    string         `json:"role"`
 	Status  InstanceStatus `json:"status"`
 }
@@ -91,6 +100,21 @@ func (s *ClusterStatus) GetInstanceStatus(name string) InstanceStatus {
 		return is.Status
 	}
 	return InstanceStatusNotFound
+}
+
+// GetPrimary returns a primary in the given cluster.
+func (s *ClusterStatus) GetPrimaryAddr() (string, error) {
+	if s.DefaultReplicaSet.Primary != "" {
+		// Single-primary mode.
+		return s.DefaultReplicaSet.Primary, nil
+	}
+	for _, instance := range s.DefaultReplicaSet.Topology {
+		// Multi-primary mode.
+		if instance.Mode == ReadWrite {
+			return instance.Address, nil
+		}
+	}
+	return "", fmt.Errorf("unable to find primary for cluster: %s", s.ClusterName)
 }
 
 // DeepCopy takes a deep copy of a ClusterStatus object.

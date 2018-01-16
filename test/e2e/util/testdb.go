@@ -27,10 +27,10 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func CreateTestDB(t *T, prefix string, replicas int32, destroyAfterFailure bool) *TestDB {
+func CreateTestDB(t *T, prefix string, replicas int32, multiMaster bool, destroyAfterFailure bool) *TestDB {
 	f := framework.Global
 
-	res, err := f.MySQLOpClient.MysqlV1().MySQLClusters(f.Namespace).Create(NewMySQLCluster(prefix, replicas))
+	res, err := f.MySQLOpClient.MysqlV1().MySQLClusters(f.Namespace).Create(NewMySQLCluster(prefix, replicas, multiMaster))
 	if err != nil {
 		t.Fatalf("Failed to create cluster: %v", err)
 	}
@@ -210,4 +210,14 @@ func (testDB *TestDB) Delete() {
 		testDB.t.Fatalf("Failed clean up cluster: %v", err)
 	}
 	testDB.t.Log("Delete db finished")
+}
+
+func (testDB *TestDB) CheckConnection(t *T) {
+	err := Retry(DefaultRetry, func() (bool, error) {
+		passwd, err := testDB.GetPassword()
+		return passwd != "", err
+	})
+	if err != nil {
+		t.Fatalf("Failed to connect to the database")
+	}
 }

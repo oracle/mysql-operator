@@ -9,12 +9,12 @@ import (
 	e2eutil "github.com/oracle/mysql-operator/test/e2e/util"
 )
 
-func TestBackUpRestore(test *testing.T) {
+func TestMultiMasterBackUpRestore(test *testing.T) {
 	t := e2eutil.NewT(test)
 	f := framework.Global
 
 	t.Log("Creating mysqlcluster...")
-	testdb := e2eutil.CreateTestDB(t, "e2e-br-", 1, false, f.DestroyAfterFailure)
+	testdb := e2eutil.CreateTestDB(t, "e2e-mb-", 1, true, f.DestroyAfterFailure)
 	defer testdb.Delete()
 	clusterName := testdb.Cluster().Name
 
@@ -24,7 +24,7 @@ func TestBackUpRestore(test *testing.T) {
 	databaseName := "employees"
 
 	t.Logf("Creating mysqlbackup for mysqlcluster '%s'...", clusterName)
-	backupName := e2eutil.Backup(t, f, clusterName, "e2e-br-backup-", databaseName)
+	backupName := e2eutil.Backup(t, f, clusterName, "e2e-mb-backup-", databaseName)
 
 	t.Log("Trying connection to container")
 	testdb.CheckConnection(t)

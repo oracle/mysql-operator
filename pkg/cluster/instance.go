@@ -23,16 +23,19 @@ type Instance struct {
 	Ordinal int
 	// Port is the port on which MySQLDB is listening.
 	Port int
+	// MultiMaster specifies if all, or just a single, instance is configured to be read/write.
+	MultiMaster bool
 }
 
 // NewInstance creates a new Instance.
-func NewInstance(namespace, clusterName, parentName string, ordinal, port int) *Instance {
+func NewInstance(namespace, clusterName, parentName string, ordinal, port int, multiMaster bool) *Instance {
 	return &Instance{
 		Namespace:   namespace,
 		ClusterName: clusterName,
 		ParentName:  parentName,
 		Ordinal:     ordinal,
 		Port:        port,
+		MultiMaster: multiMaster,
 	}
 }
 
@@ -44,12 +47,14 @@ func NewLocalInstance() (*Instance, error) {
 		return nil, err
 	}
 	name, ordinal := getParentNameAndOrdinal(hostname)
+	multiMaster, _ := strconv.ParseBool(os.Getenv("MYSQL_CLUSTER_MULTI_MASTER"))
 	return &Instance{
 		Namespace:   os.Getenv("POD_NAMESPACE"),
 		ClusterName: os.Getenv("MYSQL_CLUSTER_NAME"),
 		ParentName:  name,
 		Ordinal:     ordinal,
 		Port:        innodb.MySQLDBPort,
+		MultiMaster: multiMaster,
 	}, nil
 }
 
@@ -63,12 +68,14 @@ func NewInstanceFromGroupSeed(seed string) (*Instance, error) {
 		return nil, err
 	}
 	parentName, ordinal := getParentNameAndOrdinal(host)
+	multiMaster, _ := strconv.ParseBool(os.Getenv("MYSQL_CLUSTER_MULTI_MASTER"))
 	return &Instance{
 		ClusterName: os.Getenv("MYSQL_CLUSTER_NAME"),
 		Namespace:   os.Getenv("POD_NAMESPACE"),
 		ParentName:  parentName,
 		Ordinal:     ordinal,
 		Port:        innodb.MySQLDBPort,
+		MultiMaster: multiMaster,
 	}, nil
 }
 
