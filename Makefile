@@ -18,7 +18,7 @@ ROOT_DIR        := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 PKG             := github.com/oracle/mysql-operator
 REGISTRY        := wcr.io/oracle
 SRC_DIRS        := cmd pkg
-TEST_E2E_IMAGE  := wcr.io/oracle/mysql-operator-gitlab-ci-e2e:1.0.0
+TEST_E2E_IMAGE  := wcr.io/oracle/mysql-operator-ci-e2e:1.0.0
 REGISTRY_STRING := $(subst /,_,$(REGISTRY))
 CMD_DIRECTORIES := $(sort $(dir $(wildcard ./cmd/*/)))
 COMMANDS        := $(CMD_DIRECTORIES:./cmd/%/=%)
