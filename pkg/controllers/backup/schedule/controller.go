@@ -244,6 +244,7 @@ func (controller *Controller) processSchedule(key string) error {
 	err = bs.Validate()
 	if err != nil {
 		glog.Errorf("Backup schedule validation failed, err: %v", err)
+		controller.recorder.Event(bs, corev1.EventTypeWarning, "FailedValidation", err.Error())
 		return err
 	}
 
