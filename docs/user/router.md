@@ -30,7 +30,7 @@ spec:
 Create this with
 
 ```
-kubectl apply -f examples/wordpress-router/wordpress-database.yaml
+kubectl apply -f examples/demo/wordpress-router/wordpress-database.yaml
 ```
 
 ### Create an application + router
@@ -105,7 +105,7 @@ spec:
 Create this with
 
 ```
-kubectl apply -f examples/wordpress-router/wordpress-deployment.yaml
+kubectl apply -f examples/demo/wordpress-router/wordpress-deployment.yaml
 ```
 
 ### Verify

@@ -3,7 +3,7 @@
 ---
 ## A. Configure k8s cluster for mysqloperator
 
-To develop the mysqloperator and mysqlagent you will need access to a functioning kubernetes cluster with a defined set of namespaces and secrets configured. 
+To develop the mysqloperator and mysqlagent you will need access to a functioning kubernetes cluster with a defined set of namespaces and secrets configured.
 
 The following steps will initialise these resources and should be run against your vanilla k8s cluster.
 
@@ -91,7 +91,7 @@ make run-dev
 ### 2b. Build and run as a docker image (requires docker secrets)
 
 ```
-make deploy 
+make deploy
 ```
 or
 ```
@@ -110,14 +110,14 @@ We should now have a configured k8s environment for: creating clusters, taking b
 
 ## C. Create a MySQLCluster using the mysql operator
 
-The simplest cluster required for devlopment consists of one node cluster with an associated persistent volume to mount the database. 
+The simplest cluster required for devlopment consists of one node cluster with an associated persistent volume to mount the database.
 
 ### 1. Create a cluster
 
-A suitable template for this can be found [here](../examples/cluster-with-volume.yaml). This uses the names k8s secrets we have previously configured. Now create the cluster:
+A suitable template for this can be found [here](../examples/cluster/cluster-with-volume.yaml). This uses the names k8s secrets we have previously configured. Now create the cluster:
 
 ```
-kubectl create -f examples/cluster-with-volume.yaml
+kubectl create -f examples/cluster/cluster-with-volume.yaml
 ```
 
 ### NB: Create k8s instance local mount directory:
@@ -167,10 +167,10 @@ kubectl logs -f example-mysql-cluster-with-volume-0 -c mysql-agent
 
 ### 1. Create a Backup resource
 
-A backup can be created for this cluster from the specification [here](../examples/backup.yaml), which has been configured to use the cluster and secrets defined in the previous steps. You can create the backup as follows:
+A backup can be created for this cluster from the specification [here](../examples/backup/backup.yaml), which has been configured to use the cluster and secrets defined in the previous steps. You can create the backup as follows:
 
 ```
-kubectl create -f examples/backup.yaml
+kubectl create -f examples/backup/backup.yaml
 ```
 
 ### 2. Investigate the backup
