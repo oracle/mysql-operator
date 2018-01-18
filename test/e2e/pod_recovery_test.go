@@ -32,7 +32,7 @@ func TestPodCrashRecovery(test *testing.T) {
 	var numInstances int32 = 3
 	var testdb *e2eutil.TestDB
 
-	testdb = e2eutil.CreateTestDB(t, "e2e-pr-", numInstances, f.DestroyAfterFailure)
+	testdb = e2eutil.CreateTestDB(t, "e2e-pr-", numInstances, false, f.DestroyAfterFailure)
 	defer testdb.Delete()
 
 	t.Log("=============== Populating the database ===============")

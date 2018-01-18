@@ -32,7 +32,7 @@ func TestContainerCrashRecovery(test *testing.T) {
 	var numInstances int32 = 3
 	var testdb *e2eutil.TestDB
 
-	testdb = e2eutil.CreateTestDB(t, "e2e-cr-", numInstances, f.DestroyAfterFailure)
+	testdb = e2eutil.CreateTestDB(t, "e2e-cr-", numInstances, false, f.DestroyAfterFailure)
 	defer testdb.Delete()
 
 	t.Log("=============== Populating the database ===============")

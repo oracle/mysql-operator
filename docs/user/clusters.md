@@ -15,6 +15,20 @@ spec:
   replicas: 3
 ```
 
+### Create a cluster with 3 replicas in multi-master mode
+
+The following example will create a MySQL Cluster with 3 primary (read/write) replicas:
+
+```yaml
+apiVersion: "mysql.oracle.com/v1"
+kind: MySQLCluster
+metadata:
+  name: mysql-multimaster-cluster
+spec:
+  multiMaster: true
+  replicas: 3
+```
+
 ### Create a cluster with a custom "MYSQL_ROOT_PASSWORD"
 
 Create your own secret with a password field

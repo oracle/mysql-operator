@@ -35,7 +35,7 @@ func TestScheduledBackup(test *testing.T) {
 	// ---------------------------------------------------------------------- //
 	t.Log("Creating cluster..")
 	// ---------------------------------------------------------------------- //
-	testdb := e2eutil.CreateTestDB(t, "e2e-br-", 1, f.DestroyAfterFailure)
+	testdb := e2eutil.CreateTestDB(t, "e2e-br-", 1, false, f.DestroyAfterFailure)
 	defer testdb.Delete()
 	clusterName := testdb.Cluster().Name
 

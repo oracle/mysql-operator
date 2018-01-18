@@ -49,7 +49,7 @@ func TestUpgrade(test *testing.T) {
 	}
 
 	// Create a cluster using the old version.
-	testdb := e2eutil.CreateTestDB(t, "e2e-up-", int32(3), f.DestroyAfterFailure)
+	testdb := e2eutil.CreateTestDB(t, "e2e-up-", int32(3), false, f.DestroyAfterFailure)
 	cluster := testdb.Cluster()
 	t.Logf("Created cluster: %s", cluster.Name)
 	testdb.Populate()

@@ -34,7 +34,7 @@ func TestCreateCluster(test *testing.T) {
 
 	var err error
 
-	testdb := e2eutil.CreateTestDB(t, "e2e-cc-biglongnametocheckitstillworks", replicas, f.DestroyAfterFailure)
+	testdb := e2eutil.CreateTestDB(t, "e2e-cc-biglongnametocheckitstillworks", replicas, false, f.DestroyAfterFailure)
 	defer testdb.Delete()
 
 	testdb.Populate()

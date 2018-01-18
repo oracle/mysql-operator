@@ -25,8 +25,8 @@ import (
 // MySQLCluster's Pods.
 func PrimarySelector(name string) labels.Selector {
 	return labels.SelectorFromSet(labels.Set{
-		constants.MySQLClusterLabel: name,
-		LabelMySQLClusterRole:       MySQLClusterRolePrimary,
+		constants.MySQLClusterLabel:     name,
+		constants.LabelMySQLClusterRole: constants.MySQLClusterRolePrimary,
 	})
 }
 
@@ -34,8 +34,8 @@ func PrimarySelector(name string) labels.Selector {
 // MySQLCluster's Pods.
 func SecondarySelector(name string) labels.Selector {
 	return labels.SelectorFromSet(labels.Set{
-		constants.MySQLClusterLabel: name,
-		LabelMySQLClusterRole:       MySQLClusterRoleSecondary,
+		constants.MySQLClusterLabel:     name,
+		constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
 	})
 }
 
@@ -43,7 +43,7 @@ func SecondarySelector(name string) labels.Selector {
 // primaries of a MySQLCluster.
 func NonPrimarySelector(name string) labels.Selector {
 	s := labels.SelectorFromSet(labels.Set{constants.MySQLClusterLabel: name})
-	requirement, _ := labels.NewRequirement(LabelMySQLClusterRole, selection.NotIn, []string{MySQLClusterRolePrimary})
+	requirement, _ := labels.NewRequirement(constants.LabelMySQLClusterRole, selection.NotIn, []string{constants.MySQLClusterRolePrimary})
 	return s.Add(*requirement)
 }
 
@@ -51,6 +51,6 @@ func NonPrimarySelector(name string) labels.Selector {
 // MySQLCluster that have been labeled as having a role.
 func HasRoleSelector(name string) labels.Selector {
 	s := labels.SelectorFromSet(labels.Set{constants.MySQLClusterLabel: name})
-	requirement, _ := labels.NewRequirement(LabelMySQLClusterRole, selection.Exists, []string{})
+	requirement, _ := labels.NewRequirement(constants.LabelMySQLClusterRole, selection.Exists, []string{})
 	return s.Add(*requirement)
 }

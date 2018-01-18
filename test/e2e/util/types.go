@@ -21,7 +21,7 @@ import (
 	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
 )
 
-func NewMySQLCluster(genName string, replicas int32) *api.MySQLCluster {
+func NewMySQLCluster(genName string, replicas int32, multiMaster bool) *api.MySQLCluster {
 	return &api.MySQLCluster{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       api.MySQLClusterCRDResourceKind,
@@ -31,7 +31,8 @@ func NewMySQLCluster(genName string, replicas int32) *api.MySQLCluster {
 			GenerateName: genName,
 		},
 		Spec: api.MySQLClusterSpec{
-			Replicas: replicas,
+			Replicas:    replicas,
+			MultiMaster: multiMaster,
 		},
 	}
 }

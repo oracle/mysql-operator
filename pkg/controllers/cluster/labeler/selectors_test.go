@@ -33,22 +33,22 @@ func TestPrimarySelector(t *testing.T) {
 		{
 			name: "primary",
 			labels: map[string]string{
-				constants.MySQLClusterLabel: "primary",
-				LabelMySQLClusterRole:       MySQLClusterRolePrimary,
+				constants.MySQLClusterLabel:     "primary",
+				constants.LabelMySQLClusterRole: constants.MySQLClusterRolePrimary,
 			},
 			matches: 1,
 		}, {
 			name: "secondary",
 			labels: map[string]string{
-				constants.MySQLClusterLabel: "secondary",
-				LabelMySQLClusterRole:       MySQLClusterRoleSecondary,
+				constants.MySQLClusterLabel:     "secondary",
+				constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
 			},
 			matches: 0,
 		}, {
 			name: "blank",
 			labels: map[string]string{
-				constants.MySQLClusterLabel: "blank",
-				LabelMySQLClusterRole:       "",
+				constants.MySQLClusterLabel:     "blank",
+				constants.LabelMySQLClusterRole: "",
 			},
 			matches: 0,
 		}, {
@@ -85,22 +85,22 @@ func TestSecondarySelector(t *testing.T) {
 		{
 			name: "secondary",
 			labels: map[string]string{
-				constants.MySQLClusterLabel: "secondary",
-				LabelMySQLClusterRole:       MySQLClusterRoleSecondary,
+				constants.MySQLClusterLabel:     "secondary",
+				constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
 			},
 			matches: 1,
 		}, {
 			name: "primary",
 			labels: map[string]string{
-				constants.MySQLClusterLabel: "primary",
-				LabelMySQLClusterRole:       MySQLClusterRolePrimary,
+				constants.MySQLClusterLabel:     "primary",
+				constants.LabelMySQLClusterRole: constants.MySQLClusterRolePrimary,
 			},
 			matches: 0,
 		}, {
 			name: "blank",
 			labels: map[string]string{
-				constants.MySQLClusterLabel: "blank",
-				LabelMySQLClusterRole:       "",
+				constants.MySQLClusterLabel:     "blank",
+				constants.LabelMySQLClusterRole: "",
 			},
 			matches: 0,
 		}, {
@@ -137,22 +137,22 @@ func TestNonPrimarySelector(t *testing.T) {
 		{
 			name: "secondary",
 			labels: map[string]string{
-				constants.MySQLClusterLabel: "secondary",
-				LabelMySQLClusterRole:       MySQLClusterRoleSecondary,
+				constants.MySQLClusterLabel:     "secondary",
+				constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
 			},
 			matches: 1,
 		}, {
 			name: "primary",
 			labels: map[string]string{
-				constants.MySQLClusterLabel: "primary",
-				LabelMySQLClusterRole:       MySQLClusterRolePrimary,
+				constants.MySQLClusterLabel:     "primary",
+				constants.LabelMySQLClusterRole: constants.MySQLClusterRolePrimary,
 			},
 			matches: 0,
 		}, {
 			name: "blank",
 			labels: map[string]string{
-				constants.MySQLClusterLabel: "blank",
-				LabelMySQLClusterRole:       "",
+				constants.MySQLClusterLabel:     "blank",
+				constants.LabelMySQLClusterRole: "",
 			},
 			matches: 1,
 		}, {
@@ -189,22 +189,22 @@ func TestHasRoleSelector(t *testing.T) {
 		{
 			name: "secondary",
 			labels: map[string]string{
-				constants.MySQLClusterLabel: "secondary",
-				LabelMySQLClusterRole:       MySQLClusterRoleSecondary,
+				constants.MySQLClusterLabel:     "secondary",
+				constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
 			},
 			matches: 1,
 		}, {
 			name: "primary",
 			labels: map[string]string{
-				constants.MySQLClusterLabel: "primary",
-				LabelMySQLClusterRole:       MySQLClusterRolePrimary,
+				constants.MySQLClusterLabel:     "primary",
+				constants.LabelMySQLClusterRole: constants.MySQLClusterRolePrimary,
 			},
 			matches: 1,
 		}, {
 			name: "blank",
 			labels: map[string]string{
-				constants.MySQLClusterLabel: "blank",
-				LabelMySQLClusterRole:       "",
+				constants.MySQLClusterLabel:     "blank",
+				constants.LabelMySQLClusterRole: "",
 			},
 			matches: 1,
 		}, {
