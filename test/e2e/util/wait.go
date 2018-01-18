@@ -121,7 +121,7 @@ func WaitForBackupPhase(
 		}
 		t.Logf("waiting for backup %s to reach phase: '%s', currently: '%s'...", backup.Name, phase, latest.Status.Phase)
 		if latest.Status.Phase == api.BackupPhaseFailed {
-			return true, fmt.Errorf("Backup '%s' phase reached %s.", backup.Name, api.BackupPhaseFailed)
+			return true, fmt.Errorf("backup '%s' phase reached %s", backup.Name, api.BackupPhaseFailed)
 		}
 		return latest.Status.Phase == phase, err
 	})
@@ -148,7 +148,7 @@ func WaitForRestorePhase(
 		}
 		t.Logf("waiting for restore %s to reach phase: '%s', currently: '%s'...", restore.Name, phase, latest.Status.Phase)
 		if latest.Status.Phase == api.RestorePhaseFailed {
-			return true, fmt.Errorf("Restore '%s' phase reached %s.", restore.Name, api.RestorePhaseFailed)
+			return true, fmt.Errorf("restore '%s' phase reached %s", restore.Name, api.RestorePhaseFailed)
 		}
 		return latest.Status.Phase == phase, err
 	})
