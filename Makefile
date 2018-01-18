@@ -31,7 +31,7 @@ E2E_PARALLEL    ?= 10
 ROOT_DIR        := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 PKG             := github.com/oracle/mysql-operator
 REGISTRY        := wcr.io/oracle
-SRC_DIRS        := cmd pkg
+SRC_DIRS        := cmd pkg test/examples
 TEST_E2E_IMAGE  := wcr.io/oracle/mysql-operator-ci-e2e:1.0.0
 REGISTRY_STRING := $(subst /,_,$(REGISTRY))
 CMD_DIRECTORIES := $(sort $(dir $(wildcard ./cmd/*/)))
@@ -61,7 +61,7 @@ all: build
 e2econfig:
 ifndef KUBECONFIG
 ifndef KUBECONFIG_VAR
-	$(error "KUBECONFIG or KUBCONFIG_VAR must be defined")
+	$(error "KUBECONFIG or KUBECONFIG_VAR must be defined")
 else
 	$(eval KUBECONFIG:=/tmp/kubeconf-$(shell date +'%d%m%y%H%M%S%N').conf)
 	$(eval export KUBECONFIG)
