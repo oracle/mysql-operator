@@ -86,16 +86,6 @@ func NewMySQLBackupSchedule(clusterName string, backupScheduleName string, sched
 		},
 		Spec: api.BackupScheduleSpec{
 			Schedule: schedule,
-			// trjl
-			// BackupTemplate: api.BackupSpec{
-			// 	Cluster: &v1.LocalObjectReference{
-			// 		Name: clusterName,
-			// 	},
-			// 	SecretRef: &v1.LocalObjectReference{
-			// 		Name: ossCredsSecretRef,
-			// 	},
-			// 	Databases: databases,
-			// },
 			BackupTemplate: api.BackupSpec{
 				Executor: &api.Executor{
 					Provider:  "mysqldump",

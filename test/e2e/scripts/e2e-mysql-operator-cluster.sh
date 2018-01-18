@@ -192,8 +192,7 @@ function create_upload_credentials() {
         -n ${OPERATOR_NAMESPACE} \
         create secret generic s3-upload-credentials \
         --from-literal=accessKey=${S3_ACCESS_KEY} \
-        --from-literal=secretKey=${S3_SECRET_KEY} \
-        --from-literal=tenancy="bristoldev"
+        --from-literal=secretKey=${S3_SECRET_KEY}
 }
 
 function delete_upload_credentials() {

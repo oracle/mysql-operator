@@ -1,7 +1,7 @@
 apiVersion: "mysql.oracle.com/v1"
 kind: MySQLBackupSchedule
 metadata:
-  name: mysql
+  name: mysql-backup-schedule
 spec:
   schedule: '30 * * * *'
   backupTemplate:
@@ -11,11 +11,11 @@ spec:
         - test
     storage:
       provider: s3  
-      clusterRef:
-        name: mysql
       secretRef:
-        name: oci-s3-credentials
+        name: s3-credentials
       config:
         endpoint: ocitenancy.compat.objectstorage.ociregion.oraclecloud.com
         region: ociregion
         bucket: mybucket
+    clusterRef:
+      name: mysql-cluster
