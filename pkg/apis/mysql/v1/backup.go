@@ -54,7 +54,7 @@ type Storage struct {
 	SecretRef *corev1.LocalObjectReference `json:"secretRef,omitempty"`
 	// Config is generic string based key-value map that defines non-secret configuration values for
 	// uploading the backup to storage w.r.t the configured storage provider.
-	Config map[string]string `json:"nodeSelector,omitempty"`
+	Config map[string]string `json:"config,omitempty"`
 }
 
 // BackupPhase represents the current life-cycle phase of a MySQLBackup.
