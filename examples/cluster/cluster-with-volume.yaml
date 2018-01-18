@@ -4,7 +4,7 @@ kind: PersistentVolume
 metadata:
   labels:
     type: local
-  name: mysql-local-volume
+  name: mysql-cluster-with-volume
 spec:
   accessModes:
   - ReadWriteMany

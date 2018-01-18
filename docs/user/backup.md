@@ -30,7 +30,7 @@ secretKey: secretKey
 Now create a secret with the contents of the above yaml file.
 
 ```bash
-$ kubectl create secret generic oci-upload-credentials --from-file=./examples/oci-backup-credentials.yaml
+$ kubectl create secret generic s3-credentials --from-literal=accessKey=${S3_ACCESS_KEY} --from-literal=secretKey=${S3_SECRET_KEY}
 ```
 
 ## On-demand backups
@@ -43,22 +43,22 @@ Storage credentials. Note: The databases field is mandatory.
 apiVersion: "mysql.oracle.com/v1"
 kind: MySQLBackup
 metadata:
-  name: example-backup
+  name: mysql-backup
 spec:
   executor:
     provider: mysqldump
     databases:
-      - db1
+      - test
   storage:
-    provider: s3  
-    clusterRef:
-      name: mycluster
+    provider: s3
     secretRef:
       name: s3-credentials
     config:
-      endpoint: s3-endpoint
-      region: us-phoenix-1 
-      bucket: your-bucket
+      endpoint: ocitenancy.compat.objectstorage.ociregion.oraclecloud.com
+      region:   ociregion
+      bucket:   mybucket
+  clusterRef:
+    name: mysql-cluster
 ```
 
 ### On-demand backups - executor configuration
@@ -66,15 +66,15 @@ spec:
 A backup spec requires an 'executor' to support the backup and restore of 
 database content.
 
-Currently, the 'mysqldump' utility is provided, although further providers may 
+Currently, the 'mysqldump' utility is provided, although further executors may 
 be added in the future.
 
-You may additionaly configure the list of database tables to include in the 
+You should additionally configure the list of databases to include in the 
 backup.
 
 ### On-demand backups - storage configuration
 
-A backup spec requires an 'storage' mechanism to safely save the backed up 
+A backup spec requires a 'storage' mechanism to save the backed up 
 content of a database.
 
 Currently, 'S3' based object storage is provided, although further providers 
@@ -91,10 +91,10 @@ configured as follows:
 
 ```yaml
   ...
-  config:					
+  config:
     endpoint: mytenancy.compat.objectstorage.us-phoenix-1.oraclecloud.com
-		region:   us-phoenix-1
-		bucket:   mybucket
+    region:   us-phoenix-1
+    bucket:   mybucket
   ...
 ```
 
@@ -106,10 +106,10 @@ An AWS storage endpoint can also be configured. For example:
 
 ```yaml
   ...
-  config:					
+  config:
     endpoint: s3.eu-west-2.amazonaws.com
-		region:   eu-west-2
-		bucket:   mybucket
+    region:   eu-west-2
+    bucket:   mybucket
   ...
 ```
 
@@ -127,10 +127,10 @@ A GCE storage endpoints can then be configured as follows:
 
 ```yaml
   ...
-  config:					
+  config:
     endpoint: storage.googleapis.com
-		region:   europe-west1
-		bucket:   mybucket
+    region:   europe-west1
+    bucket:   mybucket
   ...
 ```
 
@@ -149,14 +149,22 @@ of the employees database every 30 minutes:
 apiVersion: "mysql.oracle.com/v1"
 kind: MySQLBackupSchedule
 metadata:
-  name: example-backup-schedule
+  name: mysql-backup-schedule
 spec:
   schedule: '30 * * * *'
   backupTemplate:
+    executor:
+      provider: mysqldump
+      databases:
+        - test
+    storage:
+      provider: s3
+      secretRef:
+        name: s3-credentials
+      config:
+        endpoint: ocitenancy.compat.objectstorage.ociregion.oraclecloud.com
+        region: ociregion
+        bucket: mybucket
     clusterRef:
-      name: mycluster
-    secretRef:
-      name: oci-upload-credentials
-    databases:
-        - employees
+      name: mysql-cluster
 ```
