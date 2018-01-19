@@ -262,7 +262,8 @@ func (controller *OperatorController) processBackup(key string) error {
 		if err != nil {
 			return errors.Wrapf(err, "failed to update (phase=%q)", api.BackupPhaseFailed)
 		}
-		controller.recorder.Eventf(backup, corev1.EventTypeWarning, "FailedValidation", validationErr.Error())
+
+		controller.recorder.Event(backup, corev1.EventTypeWarning, "FailedValidation", validationErr.Error())
 
 		return nil // We don't return an error as we don't want to re-queue.
 	}
