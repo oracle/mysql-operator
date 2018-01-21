@@ -21,6 +21,7 @@ import (
 	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
 )
 
+// NewMySQLCluster will build a MySQLCluster.
 func NewMySQLCluster(genName string, replicas int32, multiMaster bool) *api.MySQLCluster {
 	return &api.MySQLCluster{
 		TypeMeta: metav1.TypeMeta{
@@ -70,6 +71,7 @@ func NewMySQLBackup(clusterName string, backupName string, ossCredsSecretRef str
 	}
 }
 
+// NewMySQLRestore will build a new MySQLRestore.
 func NewMySQLRestore(clusterName string, backupName string, restoreName string) *api.MySQLRestore {
 	return &api.MySQLRestore{
 		TypeMeta: metav1.TypeMeta{
@@ -90,6 +92,7 @@ func NewMySQLRestore(clusterName string, backupName string, restoreName string) 
 	}
 }
 
+// NewMySQLBackupSchedule will build a new MySQLBackupSchedule.
 func NewMySQLBackupSchedule(clusterName string, backupScheduleName string, schedule string, ossCredsSecretRef string, databases []string) *api.MySQLBackupSchedule {
 	return &api.MySQLBackupSchedule{
 		TypeMeta: metav1.TypeMeta{
