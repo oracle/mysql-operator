@@ -96,6 +96,18 @@ func (c *FakeMySQLBackupSchedules) Update(mySQLBackupSchedule *mysql_v1.MySQLBac
 	return obj.(*mysql_v1.MySQLBackupSchedule), err
 }
 
+// UpdateStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+func (c *FakeMySQLBackupSchedules) UpdateStatus(mySQLBackupSchedule *mysql_v1.MySQLBackupSchedule) (*mysql_v1.MySQLBackupSchedule, error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewUpdateSubresourceAction(mysqlbackupschedulesResource, "status", c.ns, mySQLBackupSchedule), &mysql_v1.MySQLBackupSchedule{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*mysql_v1.MySQLBackupSchedule), err
+}
+
 // Delete takes name of the mySQLBackupSchedule and deletes it. Returns an error if one occurs.
 func (c *FakeMySQLBackupSchedules) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.

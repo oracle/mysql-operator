@@ -33,6 +33,7 @@ type MySQLClustersGetter interface {
 type MySQLClusterInterface interface {
 	Create(*v1.MySQLCluster) (*v1.MySQLCluster, error)
 	Update(*v1.MySQLCluster) (*v1.MySQLCluster, error)
+	UpdateStatus(*v1.MySQLCluster) (*v1.MySQLCluster, error)
 	Delete(name string, options *meta_v1.DeleteOptions) error
 	DeleteCollection(options *meta_v1.DeleteOptions, listOptions meta_v1.ListOptions) error
 	Get(name string, options meta_v1.GetOptions) (*v1.MySQLCluster, error)
@@ -110,6 +111,22 @@ func (c *mySQLClusters) Update(mySQLCluster *v1.MySQLCluster) (result *v1.MySQLC
 		Namespace(c.ns).
 		Resource("mysqlclusters").
 		Name(mySQLCluster.Name).
+		Body(mySQLCluster).
+		Do().
+		Into(result)
+	return
+}
+
+// UpdateStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+
+func (c *mySQLClusters) UpdateStatus(mySQLCluster *v1.MySQLCluster) (result *v1.MySQLCluster, err error) {
+	result = &v1.MySQLCluster{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("mysqlclusters").
+		Name(mySQLCluster.Name).
+		SubResource("status").
 		Body(mySQLCluster).
 		Do().
 		Into(result)

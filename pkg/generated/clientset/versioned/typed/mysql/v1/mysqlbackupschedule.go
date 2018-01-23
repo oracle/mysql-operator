@@ -33,6 +33,7 @@ type MySQLBackupSchedulesGetter interface {
 type MySQLBackupScheduleInterface interface {
 	Create(*v1.MySQLBackupSchedule) (*v1.MySQLBackupSchedule, error)
 	Update(*v1.MySQLBackupSchedule) (*v1.MySQLBackupSchedule, error)
+	UpdateStatus(*v1.MySQLBackupSchedule) (*v1.MySQLBackupSchedule, error)
 	Delete(name string, options *meta_v1.DeleteOptions) error
 	DeleteCollection(options *meta_v1.DeleteOptions, listOptions meta_v1.ListOptions) error
 	Get(name string, options meta_v1.GetOptions) (*v1.MySQLBackupSchedule, error)
@@ -110,6 +111,22 @@ func (c *mySQLBackupSchedules) Update(mySQLBackupSchedule *v1.MySQLBackupSchedul
 		Namespace(c.ns).
 		Resource("mysqlbackupschedules").
 		Name(mySQLBackupSchedule.Name).
+		Body(mySQLBackupSchedule).
+		Do().
+		Into(result)
+	return
+}
+
+// UpdateStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+
+func (c *mySQLBackupSchedules) UpdateStatus(mySQLBackupSchedule *v1.MySQLBackupSchedule) (result *v1.MySQLBackupSchedule, err error) {
+	result = &v1.MySQLBackupSchedule{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("mysqlbackupschedules").
+		Name(mySQLBackupSchedule.Name).
+		SubResource("status").
 		Body(mySQLBackupSchedule).
 		Do().
 		Into(result)

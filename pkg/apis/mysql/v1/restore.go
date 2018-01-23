@@ -15,10 +15,11 @@
 package v1
 
 import (
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/oracle/mysql-operator/pkg/constants"
 	"github.com/oracle/mysql-operator/pkg/version"
-	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -35,10 +36,10 @@ const (
 type RestoreSpec struct {
 	// ClusterRef is a refeference to the MySQLCluster to which the MySQLRestore
 	// belongs.
-	ClusterRef *v1.LocalObjectReference `json:"clusterRef"`
+	ClusterRef *corev1.LocalObjectReference `json:"clusterRef"`
 
 	// BackupRef is a reference to the MySQLBackup object to be restored.
-	BackupRef *v1.LocalObjectReference `json:"backupRef"`
+	BackupRef *corev1.LocalObjectReference `json:"backupRef"`
 
 	// AgentScheduled is the agent hostname to run the backup on
 	AgentScheduled string `json:"agentscheduled"`
@@ -80,27 +81,27 @@ type RestoreStatus struct {
 	TimeCompleted metav1.Time `json:"timeCompleted"`
 }
 
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// MySQLRestoreList is a list of MySQLRestores.
+type MySQLRestoreList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+
+	Items []MySQLRestore `json:"items"`
+}
+
 // +genclient
-// +genclient:noStatus
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // MySQLRestore is a MySQL Operator resource that represents the restoration of
 // backup of a MySQL cluster.
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type MySQLRestore struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 
 	Spec   RestoreSpec   `json:"spec"`
 	Status RestoreStatus `json:"status"`
-}
-
-// MySQLRestoreList is a list of MySQLRestores.
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type MySQLRestoreList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata"`
-
-	Items []MySQLRestore `json:"items"`
 }
 
 // EnsureDefaults can be invoked to ensure the default values are present.

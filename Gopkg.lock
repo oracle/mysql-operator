@@ -269,7 +269,7 @@
 [[projects]]
   branch = "release-1.9"
   name = "k8s.io/apimachinery"
-  packages = ["pkg/api/errors","pkg/api/meta","pkg/api/resource","pkg/apimachinery","pkg/apimachinery/registered","pkg/apis/meta/internalversion","pkg/apis/meta/v1","pkg/apis/meta/v1/unstructured","pkg/apis/meta/v1alpha1","pkg/conversion","pkg/conversion/queryparams","pkg/fields","pkg/labels","pkg/runtime","pkg/runtime/schema","pkg/runtime/serializer","pkg/runtime/serializer/json","pkg/runtime/serializer/protobuf","pkg/runtime/serializer/recognizer","pkg/runtime/serializer/streaming","pkg/runtime/serializer/versioning","pkg/selection","pkg/types","pkg/util/cache","pkg/util/clock","pkg/util/diff","pkg/util/errors","pkg/util/framer","pkg/util/intstr","pkg/util/json","pkg/util/mergepatch","pkg/util/net","pkg/util/runtime","pkg/util/sets","pkg/util/strategicpatch","pkg/util/validation","pkg/util/validation/field","pkg/util/wait","pkg/util/yaml","pkg/version","pkg/watch","third_party/forked/golang/json","third_party/forked/golang/reflect"]
+  packages = ["pkg/api/errors","pkg/api/meta","pkg/api/resource","pkg/apimachinery","pkg/apimachinery/announced","pkg/apimachinery/registered","pkg/apis/meta/internalversion","pkg/apis/meta/v1","pkg/apis/meta/v1/unstructured","pkg/apis/meta/v1alpha1","pkg/conversion","pkg/conversion/queryparams","pkg/fields","pkg/labels","pkg/runtime","pkg/runtime/schema","pkg/runtime/serializer","pkg/runtime/serializer/json","pkg/runtime/serializer/protobuf","pkg/runtime/serializer/recognizer","pkg/runtime/serializer/streaming","pkg/runtime/serializer/versioning","pkg/selection","pkg/types","pkg/util/cache","pkg/util/clock","pkg/util/diff","pkg/util/errors","pkg/util/framer","pkg/util/intstr","pkg/util/json","pkg/util/mergepatch","pkg/util/net","pkg/util/runtime","pkg/util/sets","pkg/util/strategicpatch","pkg/util/validation","pkg/util/validation/field","pkg/util/wait","pkg/util/yaml","pkg/version","pkg/watch","third_party/forked/golang/json","third_party/forked/golang/reflect"]
   revision = "68f9c3a1feb3140df59c67ced62d3a5df8e6c9c2"
 
 [[projects]]
@@ -287,14 +287,14 @@
 [[projects]]
   branch = "release-1.9"
   name = "k8s.io/code-generator"
-  packages = ["cmd/client-gen","cmd/client-gen/args","cmd/client-gen/generators","cmd/client-gen/generators/fake","cmd/client-gen/generators/scheme","cmd/client-gen/generators/util","cmd/client-gen/path","cmd/client-gen/types","cmd/deepcopy-gen","cmd/defaulter-gen","cmd/informer-gen","cmd/informer-gen/generators","cmd/lister-gen","cmd/lister-gen/generators"]
+  packages = ["cmd/client-gen","cmd/client-gen/args","cmd/client-gen/generators","cmd/client-gen/generators/fake","cmd/client-gen/generators/scheme","cmd/client-gen/generators/util","cmd/client-gen/path","cmd/client-gen/types","cmd/conversion-gen","cmd/conversion-gen/generators","cmd/deepcopy-gen","cmd/defaulter-gen","cmd/informer-gen","cmd/informer-gen/generators","cmd/lister-gen","cmd/lister-gen/generators"]
   revision = "91d3f6a57905178524105a085085901bb73bd3dc"
 
 [[projects]]
   branch = "master"
   name = "k8s.io/gengo"
   packages = ["args","examples/deepcopy-gen/generators","examples/defaulter-gen/generators","examples/set-gen/sets","generator","namer","parser","types"]
-  revision = "1ef560bbde5195c01629039ad3b337ce63e7b321"
+  revision = "93fa717586400daaf96f9c88d0e708c80272627f"
 
 [[projects]]
   branch = "master"
@@ -311,6 +311,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "37383226ed6a091aead0a58ba81576d6613623e02524ddc821ec837fc1261f3e"
+  inputs-digest = "0a661856b4f615f46bbcafbcf550b68a12efb71a8bb09c99488c37c77caf57ac"
   solver-name = "gps-cdcl"
   solver-version = 1

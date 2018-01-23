@@ -33,6 +33,7 @@ type MySQLRestoresGetter interface {
 type MySQLRestoreInterface interface {
 	Create(*v1.MySQLRestore) (*v1.MySQLRestore, error)
 	Update(*v1.MySQLRestore) (*v1.MySQLRestore, error)
+	UpdateStatus(*v1.MySQLRestore) (*v1.MySQLRestore, error)
 	Delete(name string, options *meta_v1.DeleteOptions) error
 	DeleteCollection(options *meta_v1.DeleteOptions, listOptions meta_v1.ListOptions) error
 	Get(name string, options meta_v1.GetOptions) (*v1.MySQLRestore, error)
@@ -110,6 +111,22 @@ func (c *mySQLRestores) Update(mySQLRestore *v1.MySQLRestore) (result *v1.MySQLR
 		Namespace(c.ns).
 		Resource("mysqlrestores").
 		Name(mySQLRestore.Name).
+		Body(mySQLRestore).
+		Do().
+		Into(result)
+	return
+}
+
+// UpdateStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+
+func (c *mySQLRestores) UpdateStatus(mySQLRestore *v1.MySQLRestore) (result *v1.MySQLRestore, err error) {
+	result = &v1.MySQLRestore{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("mysqlrestores").
+		Name(mySQLRestore.Name).
+		SubResource("status").
 		Body(mySQLRestore).
 		Do().
 		Into(result)

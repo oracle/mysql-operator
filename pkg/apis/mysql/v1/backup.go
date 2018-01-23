@@ -116,27 +116,27 @@ type BackupStatus struct {
 	TimeCompleted metav1.Time `json:"timeCompleted"`
 }
 
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// MySQLBackupList is a list of MySQLBackups.
+type MySQLBackupList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+
+	Items []MySQLBackup `json:"items"`
+}
+
 // +genclient
-// +genclient:noStatus
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // MySQLBackup is a MySQL Operator resource that represents a backup of a MySQL
 // cluster.
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type MySQLBackup struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 
 	Spec   BackupSpec   `json:"spec"`
 	Status BackupStatus `json:"status"`
-}
-
-// MySQLBackupList is a list of MySQLBackups.
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type MySQLBackupList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata"`
-
-	Items []MySQLBackup `json:"items"`
 }
 
 // EnsureDefaults can be invoked to ensure the default values are present.

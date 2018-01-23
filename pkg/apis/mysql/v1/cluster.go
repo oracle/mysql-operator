@@ -17,7 +17,6 @@ package v1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 const (
@@ -127,24 +126,24 @@ type MySQLClusterStatus struct {
 	Errors            []string          `json:"errors"`
 }
 
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// MySQLClusterList is a placeholder type for a list of MySQL clusters
+type MySQLClusterList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+	Items           []MySQLCluster `json:"items"`
+}
+
 // +genclient
-// +genclient:noStatus
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // MySQLCluster represents a cluster spec and associated metadata
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type MySQLCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 	Spec              MySQLClusterSpec   `json:"spec"`
 	Status            MySQLClusterStatus `json:"status"`
-}
-
-// MySQLClusterList is a placeholder type for a list of MySQL clusters
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type MySQLClusterList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata"`
-	Items           []MySQLCluster `json:"items"`
 }
 
 // Validate returns an error if a cluster is invalid
@@ -178,19 +177,4 @@ func (c *MySQLCluster) RequiresConfigMount() bool {
 // for a MySQL cluster else false
 func (c *MySQLCluster) RequiresSecret() bool {
 	return c.Spec.SecretRef == nil
-}
-
-// GetObjectKind is required for codegen
-func (c *MySQLCluster) GetObjectKind() schema.ObjectKind {
-	return &c.TypeMeta
-}
-
-// GetObjectKind is required for codegen
-func (c *MySQLClusterStatus) GetObjectKind() schema.ObjectKind {
-	return &c.TypeMeta
-}
-
-// GetObjectKind is required for codegen
-func (c *MySQLClusterList) GetObjectKind() schema.ObjectKind {
-	return &c.TypeMeta
 }

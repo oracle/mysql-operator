@@ -22,17 +22,18 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
+// GroupName is the group name for the MySQL Operator API.
+const GroupName = "mysql.oracle.com"
+
 var (
 	// SchemeBuilder collects the scheme builder functions for the MySQL
 	// Operator API.
-	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
+	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes, addDefaultingFuncs)
 
 	// AddToScheme applies the SchemeBuilder functions to a specified scheme.
-	AddToScheme = SchemeBuilder.AddToScheme
+	AddToScheme        = SchemeBuilder.AddToScheme
+	localSchemeBuilder = &SchemeBuilder
 )
-
-// GroupName is the group name for the MySQL Operator API.
-const GroupName = "mysql.oracle.com"
 
 // SchemeGroupVersion  is the GroupVersion for the MySQL Operator API.
 var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: "v1"}
@@ -48,6 +49,11 @@ const (
 	MySQLBackupScheduleCRDResourceKind = "MySQLBackupSchedule"
 )
 
+// Kind takes an unqualified kind and returns back a Group qualified GroupKind
+func Kind(kind string) schema.GroupKind {
+	return SchemeGroupVersion.WithKind(kind).GroupKind()
+}
+
 // Resource gets a MySQL Operator GroupResource for a specified resource.
 func Resource(resource string) schema.GroupResource {
 	return SchemeGroupVersion.WithResource(resource).GroupResource()
@@ -55,8 +61,8 @@ func Resource(resource string) schema.GroupResource {
 
 // addKnownTypes adds the set of types defined in this package to the supplied
 // scheme.
-func addKnownTypes(s *runtime.Scheme) error {
-	s.AddKnownTypes(SchemeGroupVersion,
+func addKnownTypes(scheme *runtime.Scheme) error {
+	scheme.AddKnownTypes(SchemeGroupVersion,
 		&MySQLCluster{},
 		&MySQLClusterList{},
 		&MySQLBackup{},
@@ -65,6 +71,14 @@ func addKnownTypes(s *runtime.Scheme) error {
 		&MySQLRestoreList{},
 		&MySQLBackupSchedule{},
 		&MySQLBackupScheduleList{})
-	metav1.AddToGroupVersion(s, SchemeGroupVersion)
+	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
+	scheme.AddKnownTypes(SchemeGroupVersion, &metav1.Status{})
 	return nil
+}
+
+func init() {
+	// We only register manually written functions here. The registration of the
+	// generated functions takes place in the generated files. The separation
+	// makes the code compile even when the generated files are missing.
+	localSchemeBuilder.Register(addKnownTypes)
 }

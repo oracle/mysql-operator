@@ -58,27 +58,27 @@ type ScheduleStatus struct {
 	LastBackup metav1.Time `json:"lastBackup"`
 }
 
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// MySQLBackupScheduleList is a list of MySQLBackupSchedules.
+type MySQLBackupScheduleList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+
+	Items []MySQLBackupSchedule `json:"items"`
+}
+
 // +genclient
-// +genclient:noStatus
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // MySQLBackupSchedule is a MySQL Operator resource that represents a backup
 // schedule of a MySQL cluster.
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type MySQLBackupSchedule struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 
 	Spec   BackupScheduleSpec `json:"spec"`
 	Status ScheduleStatus     `json:"status,omitempty"`
-}
-
-// MySQLBackupScheduleList is a list of MySQLBackupSchedules.
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type MySQLBackupScheduleList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata"`
-
-	Items []MySQLBackupSchedule `json:"items"`
 }
 
 // EnsureDefaults can be invoked to ensure the default values are present.

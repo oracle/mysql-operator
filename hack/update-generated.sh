@@ -1,11 +1,16 @@
-#!/bin/bash -e
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
 
 HACK_DIR=$(dirname "${BASH_SOURCE}")
 REPO_ROOT=${HACK_DIR}/..
 
-${REPO_ROOT}/vendor/k8s.io/code-generator/generate-groups.sh \
+${REPO_ROOT}/vendor/k8s.io/code-generator/generate-internal-groups.sh \
   all \
   github.com/oracle/mysql-operator/pkg/generated \
+  github.com/oracle/mysql-operator/pkg/apis \
   github.com/oracle/mysql-operator/pkg/apis \
   mysql:v1 \
   --go-header-file hack/boilerplate/boilerplate.go.txt \
