@@ -18,6 +18,7 @@ package proto
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	openapi_v2 "github.com/googleapis/gnostic/OpenAPIv2"
@@ -55,20 +56,18 @@ func VendorExtensionToMap(e []*openapi_v2.NamedAny) map[string]interface{} {
 	return values
 }
 
-// Definitions is an implementation of `Resources`. It looks for
-// resources in an openapi Schema.
+// Definitions is an implementation of `Models`. It looks for
+// models in an openapi Schema.
 type Definitions struct {
-	models    map[string]Schema
-	resources map[string]string
+	models map[string]Schema
 }
 
-var _ Resources = &Definitions{}
+var _ Models = &Definitions{}
 
-// NewOpenAPIData creates a new `Resources` out of the openapi document.
-func NewOpenAPIData(doc *openapi_v2.Document, getIdFromSchema func(s *openapi_v2.Schema) string) (Resources, error) {
+// NewOpenAPIData creates a new `Models` out of the openapi document.
+func NewOpenAPIData(doc *openapi_v2.Document) (Models, error) {
 	definitions := Definitions{
-		models:    map[string]Schema{},
-		resources: map[string]string{},
+		models: map[string]Schema{},
 	}
 
 	// Save the list of all models first. This will allow us to
@@ -85,8 +84,6 @@ func NewOpenAPIData(doc *openapi_v2.Document, getIdFromSchema func(s *openapi_v2
 			return nil, err
 		}
 		definitions.models[namedSchema.GetName()] = schema
-		id := getIdFromSchema(namedSchema.GetValue())
-		definitions.resources[id] = namedSchema.GetName()
 	}
 
 	return &definitions, nil
@@ -213,11 +210,18 @@ func (d *Definitions) parseKind(s *openapi_v2.Schema, path *Path) (Schema, error
 	}, nil
 }
 
+func (d *Definitions) parseArbitrary(s *openapi_v2.Schema, path *Path) (Schema, error) {
+	return &Arbitrary{
+		BaseSchema: d.parseBaseSchema(s, path),
+	}, nil
+}
+
 // ParseSchema creates a walkable Schema from an openapi schema. While
 // this function is public, it doesn't leak through the interface.
 func (d *Definitions) ParseSchema(s *openapi_v2.Schema, path *Path) (Schema, error) {
-	if len(s.GetType().GetValue()) == 1 {
-		t := s.GetType().GetValue()[0]
+	objectTypes := s.GetType().GetValue()
+	if len(objectTypes) == 1 {
+		t := objectTypes[0]
 		switch t {
 		case object:
 			return d.parseMap(s, path)
@@ -232,21 +236,27 @@ func (d *Definitions) ParseSchema(s *openapi_v2.Schema, path *Path) (Schema, err
 	if s.GetProperties() != nil {
 		return d.parseKind(s, path)
 	}
+	if len(objectTypes) == 0 || (len(objectTypes) == 1 && objectTypes[0] == "") {
+		return d.parseArbitrary(s, path)
+	}
 	return d.parsePrimitive(s, path)
 }
 
-// LookupResource is public through the interface of Resources. It
-// returns a visitable schema from the given group-version-kind.
-func (d *Definitions) LookupResource(gvk string) Schema {
-	modelName, found := d.resources[gvk]
-	if !found {
-		return nil
+// LookupModel is public through the interface of Models. It
+// returns a visitable schema from the given model name.
+func (d *Definitions) LookupModel(model string) Schema {
+	return d.models[model]
+}
+
+func (d *Definitions) ListModels() []string {
+	models := []string{}
+
+	for model := range d.models {
+		models = append(models, model)
 	}
-	model, found := d.models[modelName]
-	if !found {
-		return nil
-	}
-	return model
+
+	sort.Strings(models)
+	return models
 }
 
 type Ref struct {

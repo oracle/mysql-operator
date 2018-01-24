@@ -15,12 +15,15 @@
 package healthcheck
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
 	"strings"
 	"time"
+
+	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -54,6 +57,34 @@ func Example() {
 	// Content-Type: application/json; charset=utf-8
 	//
 	// {}
+}
+
+func Example_database() {
+	// Connect to a database/sql database
+	var database *sql.DB
+	database = connectToDatabase()
+
+	// Create a Handler that we can use to register liveness and readiness checks.
+	health := NewHandler()
+
+	// Add a readiness check to we don't receive requests unless we can reach
+	// the database with a ping in <1 second.
+	health.AddReadinessCheck("database", DatabasePingCheck(database, 1*time.Second))
+
+	// Serve http://0.0.0.0:8080/live and http://0.0.0.0:8080/ready endpoints.
+	// go http.ListenAndServe("0.0.0.0:8080", health)
+
+	// Make a request to the readiness endpoint and print the response.
+	fmt.Print(dumpRequest(health, "GET", "/ready?full=1"))
+
+	// Output:
+	// HTTP/1.1 200 OK
+	// Connection: close
+	// Content-Type: application/json; charset=utf-8
+	//
+	// {
+	//     "database": "OK"
+	// }
 }
 
 func Example_advanced() {
@@ -163,4 +194,12 @@ func dumpRequest(handler http.Handler, method string, path string) string {
 		panic(err)
 	}
 	return strings.Replace(string(dump), "\r\n", "\n", -1)
+}
+
+func connectToDatabase() *sql.DB {
+	db, _, err := sqlmock.New()
+	if err != nil {
+		panic(err)
+	}
+	return db
 }

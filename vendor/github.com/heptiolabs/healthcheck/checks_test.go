@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func TestTCPDialCheck(t *testing.T) {
@@ -30,6 +31,14 @@ func TestHTTPGetCheck(t *testing.T) {
 	assert.NoError(t, HTTPGetCheck("https://heptio.com", 5*time.Second)())
 	assert.Error(t, HTTPGetCheck("http://heptio.com", 5*time.Second)(), "redirect should fail")
 	assert.Error(t, HTTPGetCheck("https://heptio.com/nonexistent", 5*time.Second)(), "404 should fail")
+}
+
+func TestDatabasePingCheck(t *testing.T) {
+	assert.Error(t, DatabasePingCheck(nil, 1*time.Second)(), "nil DB should fail")
+
+	db, _, err := sqlmock.New()
+	assert.NoError(t, err)
+	assert.NoError(t, DatabasePingCheck(db, 1*time.Second)(), "ping should succeed")
 }
 
 func TestDNSResolveCheck(t *testing.T) {

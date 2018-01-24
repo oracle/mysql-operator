@@ -29,19 +29,18 @@ import (
 var fakeSchema = testing.Fake{Path: filepath.Join("testing", "swagger.json")}
 
 var _ = Describe("Reading apps/v1beta1/Deployment from openAPIData", func() {
-	var resources proto.Resources
+	var models proto.Models
 	BeforeEach(func() {
 		s, err := fakeSchema.OpenAPISchema()
 		Expect(err).To(BeNil())
-		resources, err = proto.NewOpenAPIData(s, testing.ParseGroupVersionKind)
+		models, err = proto.NewOpenAPIData(s)
 		Expect(err).To(BeNil())
 	})
 
-	id := testing.GvkString("apps", "v1beta1", "Deployment")
-
+	model := "io.k8s.api.apps.v1beta1.Deployment"
 	var schema proto.Schema
-	It("should lookup the Schema by its GroupVersionKind", func() {
-		schema = resources.LookupResource(id)
+	It("should lookup the Schema by its model name", func() {
+		schema = models.LookupModel(model)
 		Expect(schema).ToNot(BeNil())
 	})
 
@@ -134,19 +133,18 @@ var _ = Describe("Reading apps/v1beta1/Deployment from openAPIData", func() {
 })
 
 var _ = Describe("Reading authorization.k8s.io/v1/SubjectAccessReview from openAPIData", func() {
-	var resources proto.Resources
+	var models proto.Models
 	BeforeEach(func() {
 		s, err := fakeSchema.OpenAPISchema()
 		Expect(err).To(BeNil())
-		resources, err = proto.NewOpenAPIData(s, testing.ParseGroupVersionKind)
+		models, err = proto.NewOpenAPIData(s)
 		Expect(err).To(BeNil())
 	})
 
-	id := testing.GvkString("authorization.k8s.io", "v1", "SubjectAccessReview")
-
+	model := "io.k8s.api.authorization.v1.LocalSubjectAccessReview"
 	var schema proto.Schema
-	It("should lookup the Schema by its GroupVersionKind", func() {
-		schema = resources.LookupResource(id)
+	It("should lookup the Schema by its model", func() {
+		schema = models.LookupModel(model)
 		Expect(schema).ToNot(BeNil())
 	})
 

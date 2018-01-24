@@ -13,7 +13,7 @@ Healthcheck is a library for implementing Kubernetes [liveness and readiness](ht
 
  - Supports asynchronous checks, which run in a background goroutine at a fixed interval. These are useful for expensive checks that you don't want to add latency to the liveness and readiness endpoints.
 
- - Includes a small library of generically useful checks for validating upstream DNS, TCP, and HTTP dependencies as well as checking basic health of the Go runtime.
+ - Includes a small library of generically useful checks for validating upstream DNS, TCP, HTTP, and database dependencies as well as checking basic health of the Go runtime.
 
 ## Usage
 
@@ -39,7 +39,10 @@ See the [GoDoc examples](https://godoc.org/github.com/heptiolabs/healthcheck) fo
    // Our app is not ready if we can't resolve our upstream dependency in DNS.
    health.AddReadinessCheck(
        "upstream-dep-dns",
-   	   healthcheck.DNSResolveCheck("upstream.example.com", 50*time.Millisecond))
+       healthcheck.DNSResolveCheck("upstream.example.com", 50*time.Millisecond))
+
+   // Our app is not ready if we can't connect to our database (`var db *sql.DB`) in <1s.
+   health.AddReadinessCheck("database", healthcheck.DatabasePingCheck(db, 1*time.Second))
    ```
 
  - Expose the `/live` and `/ready` endpoints over HTTP (on port 8086):
