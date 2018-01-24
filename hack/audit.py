@@ -1,11 +1,7 @@
-# Audit.py
-#
-# A script to verify the exact SHA of explicit third party dependencies.
-#
-# Run with: python hack/audit.py && open audit.csv
-#
+#!/usr/bin/env python
+"""This script will gather the exact Git SHA for all explicit third party dependencies"""
+
 import pytoml as toml
-import os
 
 ALIASES = {
     'gopkg.in/ini.v1': 'github.com/go-ini/ini',
@@ -16,10 +12,10 @@ NORMALIZATIONS = {
     'gopkg.in/yaml.v2': 'github.com/go-yaml/yaml'
 }
 
-# Returns a map of dependency to Git SHA
 def third_party_constraints(locked):
-    with open('Gopkg.toml', 'rb') as f:
-        obj = toml.load(f)
+    """ Generates a map of dep : SHA for third party depedencies """
+    with open('Gopkg.toml', 'rb') as fio:
+        obj = toml.load(fio)
         result = {}
         for constraint in obj['constraint']:
             dep = constraint['name']
@@ -33,31 +29,35 @@ def third_party_constraints(locked):
 
 
 def locked_versions():
-    with open('Gopkg.lock', 'rb') as f:
-      obj = toml.load(f)
-      return {project['name']: project['revision'] for project in obj['projects']}
+    """ Extracts the dependency name and Git SHA revision for all locked dependencies """
+    with open('Gopkg.lock', 'rb') as fio:
+        obj = toml.load(fio)
+        return {project['name']: project['revision'] for project in obj['projects']}
 
 
-# Returns a dict of dependency name => SHA revision
-def generate_dependency_revision_mapping():
+def generate_revision_mapping():
+    """ Returns a dict of dependency name => SHA revision """
     locked = locked_versions()
     return third_party_constraints(locked)
 
 
 def normalize_dependency_name(dep):
-    for k,v in NORMALIZATIONS.iteritems():
-        if dep.startswith(k):
-            return dep.replace(k,v)
+    """ Normalise a dependency name so that we use the Github project name rather than
+        something like k8s.io """
+    for key, value in NORMALIZATIONS.iteritems():
+        if dep.startswith(key):
+            return dep.replace(key, value)
     return dep
 
 
 def generate_dependency_csv():
-    deps = generate_dependency_revision_mapping()
-    with open('audit.csv', 'wb') as f:
-        f.write('dependency,SHA\n')
-        for dep,sha in deps.iteritems():
+    """ Generates a CSV file """
+    deps = generate_revision_mapping()
+    with open('audit.csv', 'wb') as fio:
+        fio.write('dependency,SHA\n')
+        for dep, sha in deps.iteritems():
             dependency_name = normalize_dependency_name(dep)
-            f.write('%s,%s\n' % (dependency_name,sha))
+            fio.write('%s,%s\n' % (dependency_name, sha))
 
 
 if __name__ == '__main__':
