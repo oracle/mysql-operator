@@ -270,7 +270,6 @@ function teardown() {
     delete_mysql_operator_namespace
 }
 
-
 # ------------------------------------------------------------------------------
 USE_RBAC=${USE_RBAC:-true}
 

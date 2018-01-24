@@ -25,7 +25,7 @@ import (
 
 	"github.com/oracle/mysql-operator/pkg/constants"
 	"github.com/oracle/mysql-operator/pkg/controllers/util"
-	statefulsets "github.com/oracle/mysql-operator/pkg/resources/statefulsets"
+	"github.com/oracle/mysql-operator/pkg/resources/statefulsets"
 )
 
 // StatefulSetControlInterface defines the interface that the
@@ -68,18 +68,18 @@ func (rssc *realStatefulSetControl) PatchStatefulSet(old *apps.StatefulSet, new 
 	return err
 }
 
-// updateStatefulSetToOperatorVersion sets the specified MySQLOperator version on all valid parts
-// of the StatefulSet.
-func updateStatefulSetToOperatorVersion(ss *apps.StatefulSet, version string) *apps.StatefulSet {
-	newAgentImage := fmt.Sprintf("%s:%s", statefulsets.AgentImageName, version)
-
+// updateStatefulSetToOperatorVersion sets the specified MySQLOperator version on:
+//   1. The StatefulSet operator version label.
+//   2. The MySQLAgent container image version
+func updateStatefulSetToOperatorVersion(ss *apps.StatefulSet, mysqlAgentImage string, version string) *apps.StatefulSet {
+	targetContainer := statefulsets.MySQLAgentName
+	newAgentImage := fmt.Sprintf("%s:%s", mysqlAgentImage, version)
 	ss.ObjectMeta.Labels[constants.MySQLOperatorVersionLabel] = version
 	for idx, container := range ss.Spec.Template.Spec.Containers {
-		if container.Name == statefulsets.MySQLAgentContainerName {
+		if container.Name == targetContainer {
 			ss.Spec.Template.Spec.Containers[idx].Image = newAgentImage
 			break
 		}
 	}
-
 	return ss
 }

@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/golang/glog"
 	"github.com/spf13/pflag"
 
 	flags "k8s.io/apiserver/pkg/util/flag"
@@ -28,14 +29,22 @@ import (
 	"github.com/oracle/mysql-operator/pkg/version"
 )
 
-func main() {
-	fmt.Fprintf(os.Stderr, "Starting mysql-operator version %s\n", version.GetBuildVersion())
-	opts := options.NewMySQLOperatorServer()
-	opts.AddFlags(pflag.CommandLine)
+const (
+	configPath      = "/etc/mysql-operator/mysql-operator-config.yaml"
+	metricsEndpoint = "0.0.0.0:8080"
+)
 
-	flags.InitFlags()
+func main() {
+	fmt.Fprintf(os.Stderr, "Starting mysql-operator version '%s'\n", version.GetBuildVersion())
 	logs.InitLogs()
 	defer logs.FlushLogs()
+
+	opts, err := options.NewMySQLOperatorServer(configPath)
+	if err != nil {
+		glog.Fatalf("Unable to start MySQLOperator: %v.", err)
+	}
+	opts.AddFlags(pflag.CommandLine)
+	flags.InitFlags()
 
 	if err := app.Run(opts); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
