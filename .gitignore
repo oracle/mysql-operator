@@ -14,6 +14,8 @@ test/system/terraform/cluster/master.pub
 test/system/terraform/cluster/terraform.tfstate
 test/system/terraform/cluster/terraform.tfstate.backup
 
+audit.csv
+
 # Binaries for programs and plugins
 *.exe
 *.dll
@@ -44,6 +46,6 @@ test/e2e/manifests/e2e-mysql-operator-controller.yaml
 *.sw[op]
 .go
 
-# Goland 
+# Goland
 .idea
 *.iml
