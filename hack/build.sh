@@ -41,5 +41,5 @@ export GOOS="${OS}"
 go install                                                   \
    -v                                                        \
     -installsuffix "static"                                  \
-    -ldflags "-X ${PKG}/pkg/version.buildVersion=${VERSION}" \
+    -ldflags "-X ${PKG}/pkg/version.VERSION=${VERSION}"      \
     ./cmd/...
