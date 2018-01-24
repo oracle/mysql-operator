@@ -50,14 +50,20 @@ def normalize_dependency_name(dep):
     return dep
 
 
+def short_name(dep):
+    """ Returns the short name of a dependency i.e github.com/go-yaml/yaml => yaml """
+    return dep.split('/')[-1]
+
+
 def generate_dependency_csv():
     """ Generates a CSV file """
     deps = generate_revision_mapping()
     with open('audit.csv', 'wb') as fio:
-        fio.write('dependency,SHA\n')
+        fio.write('Dependency,Short Name,SHA\n')
         for dep, sha in deps.iteritems():
             dependency_name = normalize_dependency_name(dep)
-            fio.write('%s,%s\n' % (dependency_name, sha))
+            dependency_short_name = short_name(dependency_name)
+            fio.write('%s,%s,%s\n' % (dependency_name, dependency_short_name, sha))
 
 
 if __name__ == '__main__':
