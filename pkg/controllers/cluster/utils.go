@@ -23,7 +23,6 @@ import (
 
 	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
 	"github.com/oracle/mysql-operator/pkg/constants"
-	statefulsets "github.com/oracle/mysql-operator/pkg/resources/statefulsets"
 )
 
 // SelectorForCluster creates a labels.Selector to match a given clusters
@@ -38,25 +37,29 @@ func SelectorForClusterOperatorVersion(operatorVersion string) labels.Selector {
 	return labels.SelectorFromSet(labels.Set{constants.MySQLOperatorVersionLabel: operatorVersion})
 }
 
-func requiresMySQLAgentStatefulSetUpgrade(ss *apps.StatefulSet, operatorVersion string) bool {
+func requiresMySQLAgentStatefulSetUpgrade(ss *apps.StatefulSet, targetContainer string, operatorVersion string) bool {
 	if !SelectorForClusterOperatorVersion(operatorVersion).Matches(labels.Set(ss.Labels)) {
 		return true
 	}
 	for _, container := range ss.Spec.Template.Spec.Containers {
-		if container.Name == statefulsets.MySQLAgentContainerName {
-			return extractAgentImageVersion(container.Image) != operatorVersion
+		if container.Name == targetContainer {
+			parts := strings.Split(container.Image, ":")
+			version := parts[len(parts)-1]
+			return version != operatorVersion
 		}
 	}
 	return false
 }
 
-func requiresMySQLAgentPodUpgrade(pod *v1.Pod, operatorVersion string) bool {
+func requiresMySQLAgentPodUpgrade(pod *v1.Pod, targetContainer string, operatorVersion string) bool {
 	if !SelectorForClusterOperatorVersion(operatorVersion).Matches(labels.Set(pod.Labels)) {
 		return true
 	}
 	for _, container := range pod.Spec.Containers {
-		if container.Name == statefulsets.MySQLAgentContainerName {
-			return extractAgentImageVersion(container.Image) != operatorVersion
+		if container.Name == targetContainer {
+			parts := strings.Split(container.Image, ":")
+			version := parts[len(parts)-1]
+			return version != operatorVersion
 		}
 	}
 	return false
@@ -66,11 +69,4 @@ func requiresMySQLAgentPodUpgrade(pod *v1.Pod, operatorVersion string) bool {
 // TODO: Implement.
 func canUpgradeMySQLAgent(pod *v1.Pod) bool {
 	return true
-}
-
-func extractAgentImageVersion(agentImage string) string {
-	if strings.HasPrefix(agentImage, statefulsets.AgentImageName+":") {
-		return strings.TrimPrefix(agentImage, statefulsets.AgentImageName+":")
-	}
-	return ""
 }

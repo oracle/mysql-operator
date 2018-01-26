@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	agentopts "github.com/oracle/mysql-operator/cmd/mysql-agent/app/options"
+	operatoropts "github.com/oracle/mysql-operator/cmd/mysql-operator/app/options"
 	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
 	"github.com/oracle/mysql-operator/pkg/constants"
 	"github.com/oracle/mysql-operator/pkg/resources/secrets"
@@ -34,14 +35,12 @@ import (
 )
 
 const (
-	// BaseImageName is the base Docker image for the operator (mysql-ee-server).
-	BaseImageName = "mysql/mysql-server"
-	// AgentImageName is the base Docker image for the MySQL backup/restore agent
-	AgentImageName = "wcr.io/oracle/mysql-agent"
+	// MySQLServerName is the static name of all 'mysql(-server)' containers.
+	MySQLServerName = "mysql"
+	// MySQLAgentName is the static name of all 'mysql-agent' containers.
+	MySQLAgentName = "mysql-agent"
 	// MySQLAgentBasePath defines the volume mount path for the MySQL agent
 	MySQLAgentBasePath = "/var/lib/mysql-agent"
-	// MySQLAgentContainerName is the name of the MySQL agent container
-	MySQLAgentContainerName = "mysql-agent"
 
 	mySQLBackupVolumeName = "mysqlbackupvolume"
 	mySQLVolumeName       = "mysqlvolume"
@@ -155,8 +154,10 @@ func getReplicationGroupSeeds(serviceName string, replicas int) string {
 	return strings.Join(seeds, ",")
 }
 
-// Builds the MySQL operator container for a cluster
-func mysqlOperatorContainer(cluster *api.MySQLCluster, rootPassword v1.EnvVar, serviceName string, replicas int) v1.Container {
+// Builds the MySQL operator container for a cluster.
+// The 'mysqlImage' parameter is the image name of the mysql server to use with
+// no version information.. e.g. 'mysql/mysql-server'
+func mysqlServerContainer(cluster *api.MySQLCluster, mysqlServerImage string, rootPassword v1.EnvVar, serviceName string, replicas int) v1.Container {
 	replicationGroupSeeds := getReplicationGroupSeeds(serviceName, replicas)
 
 	args := []string{
@@ -226,9 +227,9 @@ func mysqlOperatorContainer(cluster *api.MySQLCluster, rootPassword v1.EnvVar, s
 		serviceName, entryPointArgs)
 
 	return v1.Container{
-		Name: "mysql",
+		Name: MySQLServerName,
 		// TODO(apryde): Add BaseImage to cluster CRD.
-		Image:        fmt.Sprintf("%s:%s", BaseImageName, cluster.Spec.Version),
+		Image:        fmt.Sprintf("%s:%s", mysqlServerImage, cluster.Spec.Version),
 		Ports:        []v1.ContainerPort{{ContainerPort: 3306}},
 		VolumeMounts: volumeMounts(cluster),
 		Command:      []string{"/bin/bash", "-ecx", cmd},
@@ -247,7 +248,7 @@ func mysqlOperatorContainer(cluster *api.MySQLCluster, rootPassword v1.EnvVar, s
 	}
 }
 
-func mysqlAgentContainer(cluster *api.MySQLCluster, rootPassword v1.EnvVar, serviceName string, replicas int) v1.Container {
+func mysqlAgentContainer(cluster *api.MySQLCluster, mysqlAgentImage string, rootPassword v1.EnvVar, serviceName string, replicas int) v1.Container {
 	agentVersion := version.GetBuildVersion()
 	if version := os.Getenv("MYSQL_AGENT_VERSION"); version != "" {
 		agentVersion = version
@@ -256,8 +257,8 @@ func mysqlAgentContainer(cluster *api.MySQLCluster, rootPassword v1.EnvVar, serv
 	replicationGroupSeeds := getReplicationGroupSeeds(serviceName, replicas)
 
 	return v1.Container{
-		Name:         MySQLAgentContainerName,
-		Image:        fmt.Sprintf("%s:%s", AgentImageName, agentVersion),
+		Name:         MySQLAgentName,
+		Image:        fmt.Sprintf("%s:%s", mysqlAgentImage, agentVersion),
 		Args:         []string{"--v=4"},
 		VolumeMounts: volumeMounts(cluster),
 		Env: []v1.EnvVar{
@@ -288,9 +289,7 @@ func mysqlAgentContainer(cluster *api.MySQLCluster, rootPassword v1.EnvVar, serv
 }
 
 // NewForCluster creates a new StatefulSet for the given MySQLCluster.
-func NewForCluster(cluster *api.MySQLCluster, serviceName string) *apps.StatefulSet {
-	// TODO: statefulSet.Spec.ServiceName
-
+func NewForCluster(cluster *api.MySQLCluster, images operatoropts.Images, serviceName string) *apps.StatefulSet {
 	rootPassword := mysqlRootPassword(cluster)
 	replicas := int(cluster.Spec.Replicas)
 
@@ -321,8 +320,8 @@ func NewForCluster(cluster *api.MySQLCluster, serviceName string) *apps.Stateful
 	}
 
 	containers := []v1.Container{
-		mysqlOperatorContainer(cluster, rootPassword, serviceName, replicas),
-		mysqlAgentContainer(cluster, rootPassword, serviceName, replicas)}
+		mysqlServerContainer(cluster, images.MySQLServerImage, rootPassword, serviceName, replicas),
+		mysqlAgentContainer(cluster, images.MySQLAgentImage, rootPassword, serviceName, replicas)}
 
 	podLabels := map[string]string{
 		constants.MySQLClusterLabel: cluster.Name,

@@ -50,6 +50,7 @@ import (
 	opinformers "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions/mysql/v1"
 	oplisters "github.com/oracle/mysql-operator/pkg/generated/listers/mysql/v1"
 
+	options "github.com/oracle/mysql-operator/cmd/mysql-operator/app/options"
 	secrets "github.com/oracle/mysql-operator/pkg/resources/secrets"
 	services "github.com/oracle/mysql-operator/pkg/resources/services"
 	statefulsets "github.com/oracle/mysql-operator/pkg/resources/statefulsets"
@@ -78,6 +79,9 @@ const (
 
 // The MySQLController watches the Kubernetes API for changes to MySQL resources
 type MySQLController struct {
+	// Global MySQLOperator configuration options.
+	opConfig options.MySQLOperatorServer
+
 	kubeClient kubernetes.Interface
 	opClient   mysqlop.Interface
 
@@ -150,6 +154,7 @@ type MySQLController struct {
 
 // NewController creates a new MySQLController.
 func NewController(
+	opConfig options.MySQLOperatorServer,
 	opClient mysqlop.Interface,
 	kubeClient kubernetes.Interface,
 	apiServerVersion *version.Info,
@@ -171,8 +176,10 @@ func NewController(
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: controllerAgentName})
 
 	m := MySQLController{
-		kubeClient: kubeClient,
+		opConfig: opConfig,
+
 		opClient:   opClient,
+		kubeClient: kubeClient,
 
 		clusterLister:       clusterInformer.Lister(),
 		clusterListerSynced: clusterInformer.Informer().HasSynced,
@@ -402,7 +409,7 @@ func (m *MySQLController) syncHandler(key string) error {
 	// If the resource doesn't exist, we'll create it
 	if apierrors.IsNotFound(err) {
 		glog.V(2).Infof("Creating a new StatefulSet for cluster %s/%s", cluster.Namespace, cluster.Name)
-		ss = statefulsets.NewForCluster(cluster, svc.Name)
+		ss = statefulsets.NewForCluster(cluster, m.opConfig.Images, svc.Name)
 		err = m.statefulSetControl.CreateStatefulSet(ss)
 	}
 
@@ -433,7 +440,7 @@ func (m *MySQLController) syncHandler(key string) error {
 	if cluster.Spec.Replicas != *ss.Spec.Replicas {
 		glog.V(4).Infof("Updating %q: clusterReplicas=%d statefulSetReplicas=%d",
 			cluster.Spec.Replicas, ss.Spec.Replicas)
-		ss = statefulsets.NewForCluster(cluster, svc.Name)
+		ss = statefulsets.NewForCluster(cluster, m.opConfig.Images, svc.Name)
 		ss, err = m.kubeClient.AppsV1beta1().StatefulSets(cluster.Namespace).Update(ss)
 		// If an error occurs during Update, we'll requeue the item so we can
 		// attempt processing again later. This could have been caused by a
@@ -457,11 +464,12 @@ func (m *MySQLController) syncHandler(key string) error {
 // ensureMySQLOperatorVersion updates the MySQLOperator resource types that require it to make it consistent with the specifed operator version.
 func (m *MySQLController) ensureMySQLOperatorVersion(c *api.MySQLCluster, ss *apps.StatefulSet, operatorVersion string) error {
 	// Ensure the Pods belonging to the MySQLCluster are updated to the correct 'mysql-agent' image for the current MySQLOperator version.
+	container := statefulsets.MySQLAgentName
 	pods, err := m.podLister.List(SelectorForCluster(c))
 	for _, pod := range pods {
-		if requiresMySQLAgentPodUpgrade(pod, operatorVersion) && canUpgradeMySQLAgent(pod) {
+		if requiresMySQLAgentPodUpgrade(pod, container, operatorVersion) && canUpgradeMySQLAgent(pod) {
 			glog.Infof("Upgrading cluster pod '%s/%s' to latest operator version: %s", pod.Namespace, pod.Name, operatorVersion)
-			updated := updatePodToOperatorVersion(pod.DeepCopy(), operatorVersion)
+			updated := updatePodToOperatorVersion(pod.DeepCopy(), m.opConfig.Images.MySQLAgentImage, operatorVersion)
 			err = m.podControl.PatchPod(pod, updated)
 			if err != nil {
 				return errors.Wrap(err, "upgrade operator version: PatchPod failed")
@@ -470,9 +478,9 @@ func (m *MySQLController) ensureMySQLOperatorVersion(c *api.MySQLCluster, ss *ap
 	}
 
 	// Ensure the StatefulSet is updated with the correct template 'mysql-agent' image for the current MySQLOperator version.
-	if requiresMySQLAgentStatefulSetUpgrade(ss, operatorVersion) {
+	if requiresMySQLAgentStatefulSetUpgrade(ss, container, operatorVersion) {
 		glog.Infof("Upgrading cluster statefulset '%s/%s' to latest operator version: %s", ss.Namespace, ss.Name, operatorVersion)
-		updated := updateStatefulSetToOperatorVersion(ss.DeepCopy(), operatorVersion)
+		updated := updateStatefulSetToOperatorVersion(ss.DeepCopy(), m.opConfig.Images.MySQLAgentImage, operatorVersion)
 		err = m.statefulSetControl.PatchStatefulSet(ss, updated)
 		if err != nil {
 			return errors.Wrap(err, "upgrade operator version: PatchStatefulSet failed")
@@ -489,7 +497,6 @@ func (m *MySQLController) ensureMySQLOperatorVersion(c *api.MySQLCluster, ss *ap
 			return errors.Wrap(err, "upgrade operator version: MySQLClusterUpdate failed")
 		}
 	}
-
 	return nil
 }
 

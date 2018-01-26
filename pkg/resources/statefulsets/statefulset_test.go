@@ -21,8 +21,15 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	options "github.com/oracle/mysql-operator/cmd/mysql-operator/app/options"
 	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
 )
+
+func mockOperatorConfig() options.MySQLOperatorServer {
+	opts := options.MySQLOperatorServer{}
+	opts.EnsureDefaults()
+	return opts
+}
 
 func TestMySQLRootPasswordNoSecretRef(t *testing.T) {
 	cluster := &api.MySQLCluster{
@@ -58,7 +65,7 @@ func TestClusterWithoutPVCHasBackupContainerAndVolumes(t *testing.T) {
 		},
 	}
 
-	statefulSet := NewForCluster(cluster, "mycluster")
+	statefulSet := NewForCluster(cluster, mockOperatorConfig().Images, "mycluster")
 	containers := statefulSet.Spec.Template.Spec.Containers
 	volumes := statefulSet.Spec.Template.Spec.Volumes
 	if len(volumes) != 2 {
@@ -79,7 +86,7 @@ func TestClusterWithPVCHasBackupContainerAndVolumes(t *testing.T) {
 		},
 	}
 
-	statefulSet := NewForCluster(cluster, "mycluster")
+	statefulSet := NewForCluster(cluster, mockOperatorConfig().Images, "mycluster")
 	containers := statefulSet.Spec.Template.Spec.Containers
 	volumes := statefulSet.Spec.Template.Spec.Volumes
 	if len(volumes) != 0 {
@@ -99,7 +106,7 @@ func TestClusterHasNodeSelector(t *testing.T) {
 		},
 	}
 
-	statefulSet := NewForCluster(cluster, "mycluster")
+	statefulSet := NewForCluster(cluster, mockOperatorConfig().Images, "mycluster")
 
 	if !reflect.DeepEqual(statefulSet.Spec.Template.Spec.NodeSelector, nvmeSelector) {
 		t.Errorf("Expected cluster with NVMe node selector")
@@ -115,7 +122,7 @@ func TestClusterCustomConfig(t *testing.T) {
 		},
 	}
 
-	statefulSet := NewForCluster(cluster, "mycluster")
+	statefulSet := NewForCluster(cluster, mockOperatorConfig().Images, "mycluster")
 	containers := statefulSet.Spec.Template.Spec.Containers
 
 	var hasExpectedVolumeMount = false

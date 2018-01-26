@@ -85,6 +85,7 @@ func Run(s *options.MySQLOperatorServer) error {
 	var wg sync.WaitGroup
 
 	clusterController := cluster.NewController(
+		*s,
 		mysqlopClient,
 		kubeClient,
 		serverVersion,

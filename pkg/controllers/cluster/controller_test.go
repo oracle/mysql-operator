@@ -32,6 +32,7 @@ import (
 
 	"github.com/golang/glog"
 
+	options "github.com/oracle/mysql-operator/cmd/mysql-operator/app/options"
 	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
 	"github.com/oracle/mysql-operator/pkg/constants"
 	"github.com/oracle/mysql-operator/pkg/controllers/util"
@@ -43,6 +44,12 @@ import (
 	buildversion "github.com/oracle/mysql-operator/pkg/version"
 )
 
+func mockOperatorConfig() options.MySQLOperatorServer {
+	opts := options.MySQLOperatorServer{}
+	opts.EnsureDefaults()
+	return opts
+}
+
 func TestMessageResourceExistsFormatString(t *testing.T) {
 	ss := statefulsets.NewForCluster(
 		&api.MySQLCluster{
@@ -51,6 +58,7 @@ func TestMessageResourceExistsFormatString(t *testing.T) {
 				Namespace: "default",
 			},
 		},
+		mockOperatorConfig().Images,
 		"test-cluster",
 	)
 	expected := "StatefulSet default/test-cluster already exists and is not managed by MySQLCluster"
@@ -325,7 +333,7 @@ func TestEnsureMySQLOperatorVersionWhenRequired(t *testing.T) {
 
 // test support functions
 func assertOperatorVersionInvariants(t *testing.T, controller *MySQLController, namespace string, name string, version string) {
-	expectedImageVersion := statefulsets.AgentImageName + ":" + version
+	expectedImageVersion := mockOperatorConfig().Images.MySQLAgentImage + ":" + version
 
 	// Check MySQLCluster has the correct operator version
 	updatedCluster, err := controller.opClient.MysqlV1().MySQLClusters(namespace).Get(name, metav1.GetOptions{})
@@ -346,8 +354,9 @@ func assertOperatorVersionInvariants(t *testing.T, controller *MySQLController, 
 		ssVersion := updatedStatefulSet.ObjectMeta.Labels[constants.MySQLOperatorVersionLabel]
 		t.Errorf("Expected StatefulSet to have version label '%s', got '%s'.", version, ssVersion)
 	}
+	agentContainerName := statefulsets.MySQLAgentName
 	for _, container := range updatedStatefulSet.Spec.Template.Spec.Containers {
-		if container.Name == statefulsets.MySQLAgentContainerName {
+		if container.Name == agentContainerName {
 			updatedImageVersion := container.Image
 			if expectedImageVersion != updatedImageVersion {
 				t.Errorf("Expected StatefulSet pod to have template image '%s', got '%s'.", expectedImageVersion, updatedImageVersion)
@@ -366,8 +375,9 @@ func assertOperatorVersionInvariants(t *testing.T, controller *MySQLController, 
 			podVersion := updatedPod.ObjectMeta.Labels[constants.MySQLOperatorVersionLabel]
 			t.Errorf("Expected Pod to have version label '%s', got '%s'.", version, podVersion)
 		}
+		agentContainerName := statefulsets.MySQLAgentName
 		for _, container := range updatedPod.Spec.Containers {
-			if container.Name == statefulsets.MySQLAgentContainerName {
+			if container.Name == agentContainerName {
 				updatedImageVersion := container.Image
 				if expectedImageVersion != updatedImageVersion {
 					t.Errorf("Expected Pod to have image '%s', got '%s'.", expectedImageVersion, updatedImageVersion)
@@ -443,7 +453,7 @@ func mockMySQLCluster(operatorVersion string, name string, namespace string, rep
 }
 
 func mockClusterStatefulSet(cluster *api.MySQLCluster) *apps.StatefulSet {
-	return statefulsets.NewForCluster(cluster, cluster.Name)
+	return statefulsets.NewForCluster(cluster, mockOperatorConfig().Images, cluster.Name)
 }
 
 func mockClusterPods(ss *apps.StatefulSet) []*v1.Pod {
@@ -459,7 +469,7 @@ func mockClusterPods(ss *apps.StatefulSet) []*v1.Pod {
 func mockClusterPod(ss *apps.StatefulSet, ordinal int) *v1.Pod {
 	clusterName := ss.Name
 	operatorVersion := ss.ObjectMeta.Labels[constants.MySQLOperatorVersionLabel]
-	image := fmt.Sprintf("%s-%s", statefulsets.AgentImageName, operatorVersion)
+	image := fmt.Sprintf("%s-%s", mockOperatorConfig().Images.MySQLAgentImage, operatorVersion)
 
 	pod := &v1.Pod{
 		TypeMeta: metav1.TypeMeta{
@@ -473,7 +483,7 @@ func mockClusterPod(ss *apps.StatefulSet, ordinal int) *v1.Pod {
 		},
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{
-				v1.Container{Name: statefulsets.MySQLAgentContainerName, Image: image},
+				v1.Container{Name: statefulsets.MySQLAgentName, Image: image},
 			},
 		},
 	}
@@ -517,6 +527,7 @@ func newFakeMySQLController(cluster *api.MySQLCluster, kuberesources ...runtime.
 	}
 
 	fakeController := NewController(
+		mockOperatorConfig(),
 		mysqlopClient,
 		kubeClient,
 		serverVersion,
