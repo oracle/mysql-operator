@@ -33,6 +33,7 @@ required = [
 
 [[constraint]]
   name = "github.com/golang/glog"
+  revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
 
 [[constraint]]
   name = "github.com/spf13/pflag"
