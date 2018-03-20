@@ -361,12 +361,10 @@ func NewForCluster(cluster *api.MySQLCluster, images operatoropts.Images, servic
 					// create service accounts and (cluster role bindings?)
 					// for each namespace.
 					ServiceAccountName: "mysql-agent",
-					// TODO: Remove before open sourcing?
-					ImagePullSecrets: []v1.LocalObjectReference{{Name: "odx-docker-pull-secret"}},
-					NodeSelector:     cluster.Spec.NodeSelector,
-					Affinity:         cluster.Spec.Affinity,
-					Containers:       containers,
-					Volumes:          podVolumes,
+					NodeSelector:       cluster.Spec.NodeSelector,
+					Affinity:           cluster.Spec.Affinity,
+					Containers:         containers,
+					Volumes:            podVolumes,
 				},
 			},
 			ServiceName: serviceName,

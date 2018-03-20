@@ -16,31 +16,11 @@ First create the namespace that the operator will reside in:
 kubectl create ns mysql-operator
 ```
 
-Next, export a docker secret which holds the ODX Docker Registry password. Our images are published to a shared
-private Docker registry. Until there are public repos available, you will need a secret to pull images from this repository.
-
-You will need to create a secret in **both** the default and mysql-operator namespace.
-
-```
-kubectl -n mysql-operator create secret docker-registry odx-docker-pull-secret \
---docker-server="wcr.io" \
---docker-username="XXX" \
---docker-password="XXX" \
---docker-email="k8s@oracle.com"
-
-kubectl create secret docker-registry odx-docker-pull-secret \
---docker-server="wcr.io" \
---docker-username="XXX" \
---docker-password="XXX" \
---docker-email="k8s@oracle.com"
-```
-
 ## Deploy a version of the MySQL Operator using Helm
 
 The MySQL Operator is installed into your cluster via a Helm chart
 
 ### Ensure you have Helm installed and working.
-
 
 Install the helm tool locally by following [these instructions](https://docs.helm.sh/using_helm/#installing-helm)
 

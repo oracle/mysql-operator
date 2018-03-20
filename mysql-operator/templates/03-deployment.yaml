@@ -21,8 +21,6 @@ spec:
         prometheus.io/port: "8080"
     spec:
       serviceAccountName: mysql-operator
-      imagePullSecrets:
-        - name: {{ .Values.docker.pullSecret }}
       containers:
       - name: mysql-operator-controller
         imagePullPolicy: {{ .Values.image.pullPolicy }}

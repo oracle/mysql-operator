@@ -5,7 +5,5 @@ operator:
   global: true
   register_crd: true
 image:
-  tag: 0.3.0
+  tag: 0.1.0
   pullPolicy: Always
-docker:
-  pullSecret: odx-docker-pull-secret
