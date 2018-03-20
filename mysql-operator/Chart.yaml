@@ -1,7 +1,7 @@
 apiVersion: v1
 name: mysql-operator
 version: 0.1.0
-description: A Helm chart for deploying the Oracle mysql-operator
+description: A Helm chart for deploying the Oracle MySQL Operator
 maintainers:
   - name: Owain Lewis
     email: owain.lewis@oracle.com
