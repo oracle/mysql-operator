@@ -12,6 +12,10 @@ availability solution for MySQL running on Kubernetes.
 such.  You are responsible for your data and the operation of your database clusters. There may be backwards incompatible changes up until the first major
 release.**
 
+## Getting started
+
+See the [Tutorial][5] which provides a quick-start guide for users of the Oracle MySQL Operator.
+
 ## Features
 
 The MySQL Operator provides the following core features:
@@ -46,3 +50,4 @@ See [LICENSE](LICENSE) for more details.
 [2]: https://kubernetes.io/docs/tasks/access-kubernetes-api/extend-api-custom-resource-definitions/
 [3]: https://dev.mysql.com/doc/refman/5.7/en/mysql-innodb-cluster-userguide.html
 [4]: https://dev.mysql.com/doc/refman/5.7/en/group-replication.html
+[5]: docs/tutorial.md
