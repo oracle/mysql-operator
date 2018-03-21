@@ -107,3 +107,17 @@ e2e-test-upgrade:
         E2E_NON_BUFFERED_LOGS=true make e2e-suite-run-upgrade
         make e2e-suite-teardown-upgrade
         
+release:
+  box:
+    id: oraclelinux:7-slim
+  steps:
+    - script:
+        name: set ENV vars
+        code: |
+          export VERSION=$(cat VERSION.txt)
+          echo "${VERSION}"
+    - github-create-release:
+      token: $GITHUB_TOKEN
+      tag: $VERSION
+      title: $VERSION
+      draft: false       
