@@ -14,7 +14,7 @@ release.**
 
 ## Getting started
 
-See the [Tutorial][5] which provides a quick-start guide for users of the Oracle MySQL Operator.
+See the [tutorial][5] which provides a quick-start guide for users of the Oracle MySQL Operator.
 
 ## Features
 
