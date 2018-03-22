@@ -115,7 +115,7 @@ release:
     - script:
         name: set ENV vars
         code: |
-          export VERSION=$(cat VERSION.txt)
+          export VERSION=$(cat dist/version.txt)
           echo "${VERSION}"
     - github-create-release:
       token: $GITHUB_TOKEN
