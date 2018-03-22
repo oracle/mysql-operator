@@ -31,6 +31,7 @@ build:
         cp -R pkg ${WERCKER_OUTPUT_DIR}/
         cp -R test ${WERCKER_OUTPUT_DIR}/
         cp -R vendor ${WERCKER_OUTPUT_DIR}/
+        cp -R hack ${WERCKER_OUTPUT_DIR}/
         cp -R mysql-operator ${WERCKER_OUTPUT_DIR}/
         cp -R .git ${WERCKER_OUTPUT_DIR}/
 
@@ -106,7 +107,7 @@ e2e-test-upgrade:
         fi
         E2E_NON_BUFFERED_LOGS=true make e2e-suite-run-upgrade
         make e2e-suite-teardown-upgrade
-        
+
 release:
   box:
     id: oraclelinux:7-slim
@@ -120,4 +121,4 @@ release:
       token: $GITHUB_TOKEN
       tag: $VERSION
       title: $VERSION
-      draft: false       
+      draft: false
