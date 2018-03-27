@@ -102,7 +102,7 @@ NAME      KIND
 myappdb   MySQLCluster.v1.mysql.oracle.com
 ```
 
-To find out how to create larger clusters, and configure storage see [Clusters](Clusters.md).
+To find out how to create larger clusters, and configure storage see [Clusters](user/clusters.md#clusters).
 
 #### Verify that you can connect to MySQL
 
