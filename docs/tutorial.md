@@ -5,12 +5,11 @@ This guide provides a quick-start guide for users of the Oracle MySQL Operator.
 ## Prerequisites
 
 * Kubernetes
-* Password for ODX docker registry
 * The mysql-operator repo checked out locally
 
 #### Create a namespace and Docker secret for the registry username/password
 
-First create the namespace that the operator will reside in:
+First create the namespace that the operator will reside in. By default this is mysql-operator:
 
 ```
 kubectl create ns mysql-operator
@@ -18,7 +17,7 @@ kubectl create ns mysql-operator
 
 ## Deploy a version of the MySQL Operator using Helm
 
-The MySQL Operator is installed into your cluster via a Helm chart
+The MySQL Operator is installed into your cluster with a Helm chart
 
 ### Ensure you have Helm installed and working.
 
@@ -40,15 +39,21 @@ Server: &version.Version{SemVer:"v2.5.0", GitCommit:"012cb0ac1a1b2f888144ef5a67b
 
 ### Installing the Chart
 
-The helm chart for the  operator is [included in this git repo](../mysql-operator), run the following in the root of the checked out `mysql-operator` repo.
+The helm chart for the operator is [included in this git repo](../mysql-operator), run the following in the root of the checked out `mysql-operator` repo.
 
-To install the chart with the release name `my-release`:
+To install the chart in a cluster without RBAC with the release name `my-release`:
 
 ```console
 $ helm install --name my-release mysql-operator
 ```
 
-The command deploys the MySQL Operator on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
+If your cluster has RBAC enabled then you will need to run:
+
+```console
+$ helm install --name my-release mysql-operator --set rbac.enabled=true
+```
+
+The above command deploys the MySQL Operator on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
 
 > **Tip**: List all releases using `helm list`
 
@@ -122,23 +127,9 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +---+
 ```
 
-You can then execute any further commands via 'kubectl exec' against the 'mysql'
-container:
-
-```
-$ kubectl exec -it -c mysql  \
-    -- mysql -h myappdb -uroot -pETdmMKh2UuDq9m7y -e 'SELECT 1'
-+---+
-| 1 |
-+---+
-| 1 |
-+---+
-```
-
 # Troubleshooting
 
 ## cannot list configmaps in the namspace "kube-system"
-
 
 Note: If `helm list` gives the following error
 
