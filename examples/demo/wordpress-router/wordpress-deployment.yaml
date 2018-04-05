@@ -28,26 +28,30 @@ spec:
     spec:
       containers:
       - name: mysqlrouter
-        image: pulsepointinc/mysql-router:2.1.3
+        image: mysql/mysql-router:8.0
         env:
-        - name: MYSQL_ROOT_PASSWORD
+        - name: MYSQL_PASSWORD
           valueFrom:
             secretKeyRef:
               name: wordpress-mysql-root-password
               key: password
+        - name: MYSQL_USER
+          value: root
+        - name: MYSQL_PORT
+          value: "3306"
+        - name: MYSQL_HOST
+          value: mysql-wordpress-0.mysql-wordpress
+        - name: MYSQL_INNODB_NUM_MEMBERS
+          value: "3"
         command:
         - "/bin/bash"
         - "-cx"
         - |
-          echo "Bootstraping the router"
-          echo $MYSQL_ROOT_PASSWORD | mysqlrouter --bootstrap mysql-wordpress-0.mysql-wordpress:3306 --user=root
-
           echo "Updating resolv.conf"
           search=$(grep ^search /etc/resolv.conf)
           echo "$search mysql-wordpress.default.svc.cluster.local" >> /etc/resolv.conf
-
           echo "Running the router"
-          mysqlrouter --user=root
+          exec /run.sh mysqlrouter
       - name: wordpress
         image: wordpress:4.8.0-apache
         env:
