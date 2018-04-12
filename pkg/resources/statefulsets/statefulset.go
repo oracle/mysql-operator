@@ -165,7 +165,6 @@ func mysqlServerContainer(cluster *api.MySQLCluster, mysqlServerImage string, ro
 		// basic process setup options
 		"--user=mysql",
 		"--datadir=/var/lib/mysql",
-		"--log-error=/var/lib/mysql/mysqld.err",
 		// storage engine options
 		"--default-storage-engine=innodb",
 		"--default-tmp-storage-engine=innodb",
@@ -229,8 +228,12 @@ func mysqlServerContainer(cluster *api.MySQLCluster, mysqlServerImage string, ro
 	return v1.Container{
 		Name: MySQLServerName,
 		// TODO(apryde): Add BaseImage to cluster CRD.
-		Image:        fmt.Sprintf("%s:%s", mysqlServerImage, cluster.Spec.Version),
-		Ports:        []v1.ContainerPort{{ContainerPort: 3306}},
+		Image: fmt.Sprintf("%s:%s", mysqlServerImage, cluster.Spec.Version),
+		Ports: []v1.ContainerPort{
+			v1.ContainerPort{
+				ContainerPort: 3306,
+			},
+		},
 		VolumeMounts: volumeMounts(cluster),
 		Command:      []string{"/bin/bash", "-ecx", cmd},
 		Env: []v1.EnvVar{
@@ -243,6 +246,10 @@ func mysqlServerContainer(cluster *api.MySQLCluster, mysqlServerImage string, ro
 			v1.EnvVar{
 				Name:  "MYSQL_ROOT_HOST",
 				Value: "%",
+			},
+			v1.EnvVar{
+				Name:  "MYSQL_LOG_CONSOLE",
+				Value: "true",
 			},
 		},
 	}
