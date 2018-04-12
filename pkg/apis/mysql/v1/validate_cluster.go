@@ -15,6 +15,8 @@
 package v1
 
 import (
+	"strconv"
+
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
@@ -29,6 +31,7 @@ func validateClusterSpec(s MySQLClusterSpec, fldPath *field.Path) field.ErrorLis
 	allErrs := field.ErrorList{}
 
 	allErrs = append(allErrs, validateVersion(s.Version, fldPath.Child("version"))...)
+	allErrs = append(allErrs, validateBaseServerID(s.BaseServerID, fldPath.Child("baseServerId"))...)
 
 	return allErrs
 }
@@ -47,6 +50,14 @@ func validateVersion(version string, fldPath *field.Path) field.ErrorList {
 		}
 	}
 	return append(allErrs, field.Invalid(fldPath, version, "invalid version specified"))
+}
+
+func validateBaseServerID(baseServerID uint32, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+	if baseServerID <= maxBaseServerID {
+		return allErrs
+	}
+	return append(allErrs, field.Invalid(fldPath, strconv.FormatUint(uint64(baseServerID), 10), "invalid baseServerId specified"))
 }
 
 func validatePhase(phase MySQLClusterPhase, fldPath *field.Path) field.ErrorList {

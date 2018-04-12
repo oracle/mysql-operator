@@ -157,11 +157,11 @@ func getReplicationGroupSeeds(serviceName string, replicas int) string {
 // Builds the MySQL operator container for a cluster.
 // The 'mysqlImage' parameter is the image name of the mysql server to use with
 // no version information.. e.g. 'mysql/mysql-server'
-func mysqlServerContainer(cluster *api.MySQLCluster, mysqlServerImage string, rootPassword v1.EnvVar, serviceName string, replicas int) v1.Container {
+func mysqlServerContainer(cluster *api.MySQLCluster, mysqlServerImage string, rootPassword v1.EnvVar, serviceName string, replicas int, baseServerID uint32) v1.Container {
 	replicationGroupSeeds := getReplicationGroupSeeds(serviceName, replicas)
 
 	args := []string{
-		"--server_id=$(expr 1000 + $index)",
+		"--server_id=$(expr $base + $index)",
 		// basic process setup options
 		"--user=mysql",
 		"--datadir=/var/lib/mysql",
@@ -220,11 +220,14 @@ func mysqlServerContainer(cluster *api.MySQLCluster, mysqlServerImage string, ro
          search=$(grep ^search /etc/resolv.conf)
          echo "$search %s.${POD_NAMESPACE}.svc.cluster.local" >> /etc/resolv.conf
 
+         # Set baseServerID
+         base=%d
+
          # Finds the replica index from the hostname, and uses this to define
          # a unique server id for this instance.
          index=$(cat /etc/hostname | grep -o '[^-]*$')
          /entrypoint.sh %s`,
-		serviceName, entryPointArgs)
+		serviceName, baseServerID, entryPointArgs)
 
 	return v1.Container{
 		Name: MySQLServerName,
@@ -292,6 +295,7 @@ func mysqlAgentContainer(cluster *api.MySQLCluster, mysqlAgentImage string, root
 func NewForCluster(cluster *api.MySQLCluster, images operatoropts.Images, serviceName string) *apps.StatefulSet {
 	rootPassword := mysqlRootPassword(cluster)
 	replicas := int(cluster.Spec.Replicas)
+	baseServerID := cluster.Spec.BaseServerID
 
 	// If a PV isn't specified just use a EmptyDir volume
 	var podVolumes = []v1.Volume{}
@@ -320,7 +324,7 @@ func NewForCluster(cluster *api.MySQLCluster, images operatoropts.Images, servic
 	}
 
 	containers := []v1.Container{
-		mysqlServerContainer(cluster, images.MySQLServerImage, rootPassword, serviceName, replicas),
+		mysqlServerContainer(cluster, images.MySQLServerImage, rootPassword, serviceName, replicas, baseServerID),
 		mysqlAgentContainer(cluster, images.MySQLAgentImage, rootPassword, serviceName, replicas)}
 
 	podLabels := map[string]string{
