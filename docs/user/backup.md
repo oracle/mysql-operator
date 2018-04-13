@@ -151,7 +151,7 @@ kind: MySQLBackupSchedule
 metadata:
   name: mysql-backup-schedule
 spec:
-  schedule: '30 * * * *'
+  schedule: '*/30 * * * *'
   backupTemplate:
     executor:
       provider: mysqldump
