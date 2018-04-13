@@ -15,13 +15,14 @@
 package main
 
 import (
+	goflag "flag"
 	"fmt"
 	"os"
 
 	"github.com/golang/glog"
 	"github.com/spf13/pflag"
+	utilflag "k8s.io/apiserver/pkg/util/flag"
 
-	flags "k8s.io/apiserver/pkg/util/flag"
 	"k8s.io/apiserver/pkg/util/logs"
 
 	"github.com/oracle/mysql-operator/cmd/mysql-operator/app"
@@ -36,15 +37,25 @@ const (
 
 func main() {
 	fmt.Fprintf(os.Stderr, "Starting mysql-operator version '%s'\n", version.GetBuildVersion())
-	logs.InitLogs()
-	defer logs.FlushLogs()
 
 	opts, err := options.NewMySQLOperatorServer(configPath)
 	if err != nil {
-		glog.Fatalf("Unable to start MySQLOperator: %v.", err)
+		fmt.Fprintf(os.Stderr, "error reading config: %v\n", err)
+		os.Exit(1)
 	}
+
 	opts.AddFlags(pflag.CommandLine)
-	flags.InitFlags()
+	pflag.CommandLine.SetNormalizeFunc(utilflag.WordSepNormalizeFunc)
+	pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)
+	pflag.Parse()
+	goflag.CommandLine.Parse([]string{})
+
+	logs.InitLogs()
+	defer logs.FlushLogs()
+
+	pflag.VisitAll(func(flag *pflag.Flag) {
+		glog.V(2).Infof("FLAG: --%s=%q", flag.Name, flag.Value)
+	})
 
 	if err := app.Run(opts); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)

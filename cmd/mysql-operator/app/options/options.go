@@ -87,7 +87,6 @@ func NewMySQLOperatorServer(filePath string) (*MySQLOperatorServer, error) {
 			return nil, errors.Wrapf(err, "failed to parse MySQLOperator configuration: '%s'", filePath)
 		}
 	} else {
-		glog.Infof("No '%s' was present.", filePath)
 		config = MySQLOperatorServer{}
 	}
 	config.EnsureDefaults()
