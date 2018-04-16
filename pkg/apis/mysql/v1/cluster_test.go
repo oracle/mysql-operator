@@ -46,6 +46,15 @@ func TestDefaultReplicas(t *testing.T) {
 	}
 }
 
+func TestDefaultBaseServerID(t *testing.T) {
+	cluster := &MySQLCluster{}
+	cluster.EnsureDefaults()
+
+	if cluster.Spec.BaseServerID != defaultBaseServerID {
+		t.Errorf("Expected default BaseServerID to be %d but got %d", defaultBaseServerID, cluster.Spec.BaseServerID)
+	}
+}
+
 func TestDefaultVersion(t *testing.T) {
 	cluster := &MySQLCluster{}
 	cluster.EnsureDefaults()

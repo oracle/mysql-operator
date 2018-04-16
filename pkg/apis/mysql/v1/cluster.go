@@ -22,8 +22,11 @@ import (
 
 const (
 	// The default MySQL version to use if not specified explicitly by user
-	defaultVersion  = "5.7.20-1.1.2"
-	defaultReplicas = 1
+	defaultVersion      = "5.7.20-1.1.2"
+	defaultReplicas     = 1
+	defaultBaseServerID = 1000
+	// Max safe value for BaseServerID calculated as max MySQL server_id value - max Replication Group size
+	maxBaseServerID uint32 = 4294967295 - 9
 )
 
 // ClusterCRDResourcePlural defines the custom resource name for mysqlclusters
@@ -43,6 +46,11 @@ type MySQLClusterSpec struct {
 
 	// Replicas defines the number of running MySQL instances in a cluster
 	Replicas int32 `json:"replicas,omitempty"`
+
+	// BaseServerID defines the base number used to create uniq server_id for MySQL instances in a cluster.
+	// The baseServerId value need to be in range from 1 to 4294967286
+	// If ommited in the manifest file, or set to 0, defaultBaseServerID value will be used.
+	BaseServerID uint32 `json:"baseServerId,omitempty"`
 
 	// MultiMaster defines the mode of the MySQL cluster. If set to true,
 	// all instances will be R/W. If false (the default), only a single instance
@@ -159,6 +167,10 @@ func (c *MySQLCluster) Validate() error {
 func (c *MySQLCluster) EnsureDefaults() *MySQLCluster {
 	if c.Spec.Replicas == 0 {
 		c.Spec.Replicas = defaultReplicas
+	}
+
+	if c.Spec.BaseServerID == 0 {
+		c.Spec.BaseServerID = defaultBaseServerID
 	}
 
 	if c.Spec.Version == "" {

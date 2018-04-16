@@ -187,3 +187,17 @@ metadata:
   configRef:
     name: mycnf
 ```
+
+### Create a cluster with custom server_id values
+
+By default, the MySQL Operator starts a cluster with `--server_id` set to `1000` and increments it by one for each new cluster member. You can change this behavior by setting the `baseServerId` field on your MySQLCluster. `baseServerId` value can be set to anything in the range from `1` to `4294967286`. `0` is also accepted, but then the default value of `1000` will be used.
+
+The following example will create a MySQL Cluster with following `server_id`'s: 42,43,44
+```yaml
+apiVersion: "mysql.oracle.com/v1"
+kind: MySQLCluster
+metadata:
+  name: mysql-cluster-with-custom-serverid
+  replicas: 3
+  baseServerId: 42
+```
