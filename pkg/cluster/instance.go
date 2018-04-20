@@ -21,6 +21,8 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/pkg/errors"
+
 	"github.com/oracle/mysql-operator/pkg/cluster/innodb"
 )
 
@@ -39,6 +41,9 @@ type Instance struct {
 	Port int
 	// MultiMaster specifies if all, or just a single, instance is configured to be read/write.
 	MultiMaster bool
+
+	// IP is the IP address of the Kubernetes Pod.
+	IP net.IP
 }
 
 // NewInstance creates a new Instance.
@@ -69,6 +74,7 @@ func NewLocalInstance() (*Instance, error) {
 		Ordinal:     ordinal,
 		Port:        innodb.MySQLDBPort,
 		MultiMaster: multiMaster,
+		IP:          net.ParseIP(os.Getenv("MY_POD_IP")),
 	}, nil
 }
 
@@ -112,12 +118,31 @@ func (i *Instance) GetShellURI() string {
 
 // Name returns the name of the instance.
 func (i *Instance) Name() string {
+	return fmt.Sprintf("%s.%s", i.PodName(), i.ParentName)
+}
+
+// PodName returns the name of the instance's Pod.
+func (i *Instance) PodName() string {
 	return fmt.Sprintf("%s-%d", i.ParentName, i.Ordinal)
+}
+
+// WhitelistCIDR returns the CIDR range to whitelist for GR based on the Pod's IP.
+func (i *Instance) WhitelistCIDR() (string, error) {
+	switch i.IP.To4()[0] {
+	case 10:
+		return "10.0.0.0/8", nil
+	case 172:
+		return "172.16.0.0/12", nil
+	case 192:
+		return "192.168.0.0/16", nil
+	default:
+		return "", errors.Errorf("pod IP %q is not a private IPv4 address", i.IP.String())
+	}
 }
 
 // statefulPodRegex is a regular expression that extracts the parent StatefulSet
 // and ordinal from StatefulSet Pod's hostname.
-var statefulPodRegex = regexp.MustCompile("(.*)-([0-9]+)$")
+var statefulPodRegex = regexp.MustCompile("(.*)-([0-9]+)")
 
 // getParentNameAndOrdinal gets the name of a Pod's parent StatefulSet and Pod's
 // ordinal as extracted from its hostname. If the Pod was not created by a

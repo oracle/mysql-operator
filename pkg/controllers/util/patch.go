@@ -55,7 +55,7 @@ func PatchStatefulSet(kubeClient kubernetes.Interface, oldData *v1beta1.Stateful
 	if err != nil {
 		return nil, err
 	}
-	glog.V(4).Infof("Patching StatefulSet %s/%s: %s", oldData.Name, oldData.ObjectMeta.Namespace, string(patchBytes))
+	glog.V(4).Infof("Patching StatefulSet %q: %s", types.NamespacedName{Namespace: oldData.Namespace, Name: oldData.Name}, string(patchBytes))
 
 	result, err := kubeClient.AppsV1beta1().StatefulSets(oldData.Namespace).Patch(oldData.Name, types.StrategicMergePatchType, patchBytes)
 	if err != nil {
@@ -92,7 +92,7 @@ func PatchPod(kubeClient kubernetes.Interface, oldData *v1.Pod, newData *v1.Pod)
 	if err != nil {
 		return nil, err
 	}
-	glog.V(4).Infof("Patching Pod %s/%s: %s", oldData.Name, oldData.Namespace, string(patchBytes))
+	glog.V(4).Infof("Patching Pod %q: %s", types.NamespacedName{Namespace: oldData.Namespace, Name: oldData.Name}, string(patchBytes))
 
 	result, err := kubeClient.CoreV1().Pods(oldData.Namespace).Patch(oldData.Name, types.StrategicMergePatchType, patchBytes)
 	if err != nil {

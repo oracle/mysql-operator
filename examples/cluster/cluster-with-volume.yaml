@@ -18,7 +18,7 @@ spec:
 apiVersion: "mysql.oracle.com/v1"
 kind: MySQLCluster
 metadata:
-  name: example-mysql-cluster-with-volume
+  name: mysql
 spec:
   replicas: 1
   secretRef:

@@ -116,7 +116,7 @@ func (s *ClusterStatus) GetInstanceStatus(name string) InstanceStatus {
 	return InstanceStatusNotFound
 }
 
-// GetPrimary returns a primary in the given cluster.
+// GetPrimaryAddr returns a primary in the given cluster.
 func (s *ClusterStatus) GetPrimaryAddr() (string, error) {
 	if s.DefaultReplicaSet.Primary != "" {
 		// Single-primary mode.
@@ -156,9 +156,4 @@ func (i *Instance) DeepCopy() *Instance {
 // CanRejoinCluster returns true if the instance can rejoin the InnoDB cluster.
 func (s *InstanceState) CanRejoinCluster() bool {
 	return s.State == instanceStateOk && s.Reason == instanceReasonRecoverable
-}
-
-// RequiresClearBinaryLogs returns true if the instance needs to clear its binary logs.
-func (s *InstanceState) RequiresClearBinaryLogs() bool {
-	return s.State == instanceStateError
 }

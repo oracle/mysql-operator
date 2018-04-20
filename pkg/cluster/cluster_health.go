@@ -16,47 +16,57 @@ package cluster
 
 import (
 	"context"
-	"errors"
+	"sync"
+	"time"
 
-	"github.com/golang/glog"
-	utilexec "k8s.io/utils/exec"
+	"github.com/heptiolabs/healthcheck"
+	"github.com/pkg/errors"
 
 	"github.com/oracle/mysql-operator/pkg/cluster/innodb"
-	"github.com/oracle/mysql-operator/pkg/util/mysqlsh"
 )
 
-// CheckNodeInCluster checks whether or not the local MySQL instance is a member
-// of an InnoDB cluster.
-func CheckNodeInCluster(ctx context.Context) error {
-	instance, err := NewLocalInstance()
-	if err != nil {
-		return err
-	}
-	mysh := mysqlsh.New(utilexec.New(), instance.GetShellURI())
-	clusterStatus, err := mysh.GetClusterStatus(ctx)
-	if err != nil {
-		return err
-	}
-	if clusterStatus.GetInstanceStatus(instance.Name()) != innodb.InstanceStatusOnline {
-		return errors.New("database still requires management")
-	}
-	return nil
+var (
+	status      *innodb.ClusterStatus
+	statusMutex sync.Mutex
+)
+
+// SetStatus sets the status of the local mysql cluster. The cluster manager
+// controller is responsible for updating.
+func SetStatus(new *innodb.ClusterStatus) {
+	statusMutex.Lock()
+	defer statusMutex.Unlock()
+	status = new.DeepCopy()
 }
 
-// GetClusterStatus returns a JSON string representing the status of the InnoDb
-// MySQL cluster. TODO: Remove me.
-func GetClusterStatus(ctx context.Context) (*innodb.ClusterStatus, error) {
-	pod, err := NewLocalInstance()
+// GetStatus fetches a copy of the latest cluster status.
+func GetStatus() *innodb.ClusterStatus {
+	statusMutex.Lock()
+	defer statusMutex.Unlock()
+	if status == nil {
+		return nil
+	}
+	return status.DeepCopy()
+}
+
+// NewHealthCheck constructs a healthcheck for the local instance which checks
+// cluster status using mysqlsh.
+func NewHealthCheck(ctx context.Context) (healthcheck.Check, error) {
+	instance, err := NewLocalInstance()
 	if err != nil {
-		glog.Errorf("Failed to get the pod details: %+v", err)
-		return nil, err
+		return nil, errors.Wrap(err, "getting local mysql instance")
 	}
 
-	mysh := mysqlsh.New(utilexec.New(), pod.GetShellURI())
-	clusterStatus, err := mysh.GetClusterStatus(ctx)
-	if err != nil {
-		glog.V(4).Info("Failed to get the cluster status")
-		return nil, err
-	}
-	return clusterStatus, nil
+	return healthcheck.AsyncWithContext(ctx,
+		healthcheck.Timeout(
+			func() error {
+				s := GetStatus()
+				if s == nil || s.GetInstanceStatus(instance.Name()) != innodb.InstanceStatusOnline {
+					return errors.New("database still requires management")
+				}
+				return nil
+			},
+			5*time.Second,
+		),
+		10*time.Second,
+	), nil
 }

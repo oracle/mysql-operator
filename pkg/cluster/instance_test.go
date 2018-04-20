@@ -40,6 +40,10 @@ func TestGetParentNameAndOrdinal(t *testing.T) {
 			hostname: "host-string_instead_of_ordinal",
 			name:     "",
 			ordinal:  -1,
+		}, {
+			hostname: "host-99.namespace",
+			name:     "host",
+			ordinal:  99,
 		},
 	}
 

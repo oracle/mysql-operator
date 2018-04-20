@@ -20,6 +20,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"k8s.io/utils/exec"
 	fakeexec "k8s.io/utils/exec/testing"
 )
@@ -98,6 +100,7 @@ func TestGetClusterStatus(t *testing.T) {
 
 	expectedCall := []string{
 		"mysqlsh",
+		"--no-wizard",
 		"--uri", "root:foo@localhost.service.namespace.svc.cluster.local:3306",
 		"--py",
 		"-e", "print dba.get_cluster('MySQLCluster').status()",
@@ -148,6 +151,7 @@ mysqlx: [Warning] Using a password on the command line interface can be insecure
 
 	expectedCall := []string{
 		"mysqlsh",
+		"--no-wizard",
 		"--uri", "root:foo@localhost.service.namespace.svc.cluster.local:3306",
 		"--py",
 		"-e", fmt.Sprintf("print dba.get_cluster('MySQLCluster').check_instance_state('%s')", instanceURI),
@@ -191,6 +195,7 @@ func TestRemoveInstanceFromCluster(t *testing.T) {
 
 	expectedCall := []string{
 		"mysqlsh",
+		"--no-wizard",
 		"--uri", "root:foo@localhost:3306",
 		"--py",
 		"-e", "dba.get_cluster('MySQLCluster').remove_instance('root:foo@mysql-cluster-1:3306', {\"force\":True})",
@@ -201,5 +206,52 @@ func TestRemoveInstanceFromCluster(t *testing.T) {
 
 	if err != nil {
 		t.Fatalf("Expected err = nil, got: %v", err)
+	}
+}
+
+func TestNewErrorFromStderr(t *testing.T) {
+	testCases := []struct {
+		name     string
+		output   string
+		expected *Error
+	}{
+		{
+			name: "create_cluster",
+			output: `Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+mysqlsh.DBError: MySQL Error (1062): Dba.create_cluster: Duplicate entry 'MySQLCluster' for key 'cluster_name'`,
+			expected: &Error{
+				Type:    "mysqlsh.DBError",
+				Message: "MySQL Error (1062): Dba.create_cluster: Duplicate entry 'MySQLCluster' for key 'cluster_name'",
+			},
+		}, {
+			name: "get_cluster",
+			output: `Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+SystemError: RuntimeError: Dba.get_cluster: This function is not available through a session to a standalone instance (metadata exists, but GR is not active)`,
+			expected: &Error{
+				Type:    "SystemError",
+				Message: "RuntimeError: Dba.get_cluster: This function is not available through a session to a standalone instance (metadata exists, but GR is not active)",
+			},
+		}, {
+			name:     "blank",
+			output:   "",
+			expected: nil,
+		}, {
+			name: "incomplete",
+			output: `Traceback (most recent call last):
+  File "<string>", line 1, in <module>`,
+			expected: nil,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := NewErrorFromStderr(tc.output)
+			if tc.expected == nil {
+				assert.Nil(t, err)
+			} else {
+				assert.Equal(t, tc.expected, err)
+			}
+		})
 	}
 }

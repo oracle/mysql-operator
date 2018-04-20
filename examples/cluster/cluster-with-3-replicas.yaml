@@ -1,6 +1,6 @@
 apiVersion: "mysql.oracle.com/v1"
 kind: MySQLCluster
 metadata:
-  name: mysql-cluster-with-3-replicas
+  name: mysql
 spec:
   replicas: 3

@@ -145,11 +145,10 @@ func serviceNameEnvVar(serviceName string) v1.EnvVar {
 	}
 }
 
-func getReplicationGroupSeeds(serviceName string, replicas int) string {
+func getReplicationGroupSeeds(name string, replicas int) string {
 	seeds := []string{}
 	for i := 0; i < replicas; i++ {
-		seeds = append(seeds, fmt.Sprintf("%s-%d:%d",
-			serviceName, i, replicationGroupPort))
+		seeds = append(seeds, fmt.Sprintf("%[1]s-%[2]d.%[1]s:%[3]d", name, i, replicationGroupPort))
 	}
 	return strings.Join(seeds, ",")
 }
@@ -158,7 +157,7 @@ func getReplicationGroupSeeds(serviceName string, replicas int) string {
 // The 'mysqlImage' parameter is the image name of the mysql server to use with
 // no version information.. e.g. 'mysql/mysql-server'
 func mysqlServerContainer(cluster *api.MySQLCluster, mysqlServerImage string, rootPassword v1.EnvVar, serviceName string, replicas int, baseServerID uint32) v1.Container {
-	replicationGroupSeeds := getReplicationGroupSeeds(serviceName, replicas)
+	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Namespace, replicas)
 
 	args := []string{
 		"--server_id=$(expr $base + $index)",
@@ -192,7 +191,7 @@ func mysqlServerContainer(cluster *api.MySQLCluster, mysqlServerImage string, ro
 		"--innodb-print-all-deadlocks=ON",
 		"--innodb-undo-log-truncate=ON",
 		"--innodb-undo-tablespaces=2",
-		"--innodb-undo-logs=2",
+		// "--innodb-undo-logs=2", (removed in 8.0)
 		// group replication pre-requisites & recommendations
 		"--binlog_checksum=NONE",
 		"--gtid_mode=ON",
@@ -202,32 +201,26 @@ func mysqlServerContainer(cluster *api.MySQLCluster, mysqlServerImage string, ro
 		"--log-slave-updates=ON",
 		"--master-info-repository=TABLE",
 		"--relay-log-info-repository=TABLE",
+		fmt.Sprintf("--relay-log=%s-${index}-relay-bin", cluster.Name),
 		"--slave-preserve-commit-order=ON",
 		"--disabled_storage_engines='MyISAM,BLACKHOLE,FEDERATED,ARCHIVE'",
 		"--transaction-isolation='READ-COMMITTED'",
 		// group replication specific options
 		"--transaction-write-set-extraction=XXHASH64",
-		"--loose-group-replication-ip-whitelist='0.0.0.0/0'",
+		fmt.Sprintf("--report-host=\"%s-${index}.%[1]s.%s\"", cluster.Name, cluster.Namespace),
+		"--log-error-verbosity=3",
 	}
 
 	entryPointArgs := strings.Join(args, " ")
 
-	cmd := fmt.Sprintf(
-		`# Note: We fiddle with the resolv.conf file in order to ensure that the mysql instances
-         # can refer to each other using just thier hostnames (e.g. mysql-N), thus do not need
-         # to qualify their names with the name of the (headless) service (e.g. mysql-N.mysql)
-         search=$(grep ^search /etc/resolv.conf)
-         echo "$search %s.${POD_NAMESPACE}.svc.cluster.local" >> /etc/resolv.conf
-
+	cmd := fmt.Sprintf(`
          # Set baseServerID
          base=%d
 
          # Finds the replica index from the hostname, and uses this to define
          # a unique server id for this instance.
          index=$(cat /etc/hostname | grep -o '[^-]*$')
-         /entrypoint.sh %s`,
-		serviceName, baseServerID, entryPointArgs)
-
+         /entrypoint.sh %s`, baseServerID, entryPointArgs)
 	return v1.Container{
 		Name: MySQLServerName,
 		// TODO(apryde): Add BaseImage to cluster CRD.
@@ -264,12 +257,12 @@ func mysqlAgentContainer(cluster *api.MySQLCluster, mysqlAgentImage string, root
 		agentVersion = version
 	}
 
-	replicationGroupSeeds := getReplicationGroupSeeds(serviceName, replicas)
+	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Name, replicas)
 
 	return v1.Container{
 		Name:         MySQLAgentName,
 		Image:        fmt.Sprintf("%s:%s", mysqlAgentImage, agentVersion),
-		Args:         []string{"--v=4"},
+		Args:         []string{"--v=6"},
 		VolumeMounts: volumeMounts(cluster),
 		Env: []v1.EnvVar{
 			clusterNameEnvVar(cluster),
@@ -278,6 +271,14 @@ func mysqlAgentContainer(cluster *api.MySQLCluster, mysqlAgentImage string, root
 			replicationGroupSeedsEnvVar(replicationGroupSeeds),
 			multiMasterEnvVar(cluster.Spec.MultiMaster),
 			rootPassword,
+			v1.EnvVar{
+				Name: "MY_POD_IP",
+				ValueFrom: &v1.EnvVarSource{
+					FieldRef: &v1.ObjectFieldSelector{
+						FieldPath: "status.podIP",
+					},
+				},
+			},
 		},
 		LivenessProbe: &v1.Probe{
 			Handler: v1.Handler{

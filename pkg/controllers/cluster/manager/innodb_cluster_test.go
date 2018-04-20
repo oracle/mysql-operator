@@ -36,11 +36,15 @@ func TestGetReplicationGroupSeeds(t *testing.T) {
 		}, {
 			seeds:    "server-1-1:1234,server-1-0:1234",
 			pod:      cluster.NewInstance("", "", "server-1", 0, -1, false),
-			expected: []string{"server-1-0:1234", "server-1-1:1234"},
+			expected: []string{"server-1-1:1234", "server-1-0:1234"},
 		}, {
 			seeds:    "server-1-0:1234,server-1-1:1234",
 			pod:      cluster.NewInstance("", "", "server-2", 0, -1, false),
 			expected: []string{"server-1-0:1234", "server-1-1:1234"},
+		}, {
+			seeds:    "server-1-0.server-1:1234,server-1-1.server-1:1234",
+			pod:      cluster.NewInstance("", "", "server-2", 0, -1, false),
+			expected: []string{"server-1-0.server-1:1234", "server-1-1.server-1:1234"},
 		},
 	}
 

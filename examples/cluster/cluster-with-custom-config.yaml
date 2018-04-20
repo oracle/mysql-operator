@@ -1,7 +1,7 @@
 apiVersion: "mysql.oracle.com/v1"
 kind: MySQLCluster
 metadata:
-  name: mysql-cluster-with-custom-config
+  name: mysql
 spec:
   replicas: 1
   configRef:

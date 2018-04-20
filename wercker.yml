@@ -59,7 +59,7 @@ push-operator-image:
 
 push-agent-image:
   box:
-    id: mysql/mysql-server:5.7.20-1.1.2
+    id: mysql/mysql-server:8.0.11
   steps:
     - script:
       name: set environment variables

@@ -50,6 +50,9 @@ type ClusterManager struct {
 	// for testing purposes.
 	mysqlshFactory func(uri string) mysqlsh.Interface
 
+	// localMySh is a mysqlsh.Interface configured for the local instance of MySQL.
+	localMySh mysqlsh.Interface
+
 	// Instance is the local instance of MySQL under management.
 	Instance *cluster.Instance
 
@@ -70,6 +73,7 @@ func NewClusterManager(
 		kubeInformerFactory: kubeInformerFactory,
 		mysqlshFactory:      mysqlshFactory,
 		Instance:            instance,
+		localMySh:           mysqlshFactory(instance.GetShellURI()),
 	}
 	return manager
 }
@@ -98,6 +102,19 @@ func formatClusterStatus(status *innodb.ClusterStatus) string {
 	return string(s)
 }
 
+func (m *ClusterManager) getClusterStatus(ctx context.Context) (*innodb.ClusterStatus, error) {
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+	clusterStatus, err := m.localMySh.GetClusterStatus(ctx)
+	if err != nil {
+		clusterStatus, err = getClusterStatusFromGroupSeeds(ctx, m.kubeClient, m.Instance)
+		if err != nil {
+			return nil, errors.Wrap(err, "getting cluster status from group seeds")
+		}
+	}
+	return clusterStatus, nil
+}
+
 // Sync ensures that the MySQL database instance managed by this instance of the
 // agent is part of the InnoDB cluster and is online.
 func (m *ClusterManager) Sync(ctx context.Context) bool {
@@ -106,9 +123,11 @@ func (m *ClusterManager) Sync(ctx context.Context) bool {
 		return false
 	}
 
-	clusterStatus, err := getClusterStatusFromGroupSeeds(ctx, m.kubeClient, m.Instance)
+	// First try the local instance so we reuse the mysqlsh.Instance in the
+	// most common case.
+	clusterStatus, err := m.getClusterStatus(ctx)
 	if err != nil {
-		if err != errNoClusterFound {
+		if errors.Cause(err) != errNoClusterFound {
 			glog.Errorf("Failed to get the cluster status: %+v", err)
 			return false
 		}
@@ -118,7 +137,7 @@ func (m *ClusterManager) Sync(ctx context.Context) bool {
 		if m.Instance.Ordinal == 0 {
 			clusterStatus, err = m.bootstrap(ctx)
 			if err != nil {
-				glog.Errorf("Error bootstrapping cluster: %+v", err)
+				glog.Errorf("Error bootstrapping cluster: %v", err)
 				metrics.IncEventCounter(clusterCreateErrorCount)
 				return false
 			}
@@ -128,6 +147,10 @@ func (m *ClusterManager) Sync(ctx context.Context) bool {
 			return false
 		}
 	}
+
+	// Set the cluster status so that the in-cluster healthcheck gets the
+	// most up to date information.
+	cluster.SetStatus(clusterStatus)
 
 	online := false
 	instanceStatus := clusterStatus.GetInstanceStatus(m.Instance.Name())
@@ -227,8 +250,13 @@ func (m *ClusterManager) handleInstanceMissing(ctx context.Context, primaryAddr 
 	}
 	glog.V(4).Infof("Checking if instance can rejoin cluster")
 	if instanceState.CanRejoinCluster() {
+		whitelistCIDR, err := m.Instance.WhitelistCIDR()
+		if err != nil {
+			glog.Errorf("Getting CIDR to whitelist for GR: %v", err)
+			return false
+		}
 		glog.V(4).Infof("Attempting to rejoin instance to cluster")
-		if err := primarySh.RejoinInstanceToCluster(ctx, m.Instance.GetShellURI()); err != nil {
+		if err := primarySh.RejoinInstanceToCluster(ctx, m.Instance.GetShellURI(), whitelistCIDR); err != nil {
 			glog.Errorf("Failed to rejoin cluster: %v", err)
 			return false
 		}
@@ -245,24 +273,18 @@ func (m *ClusterManager) handleInstanceMissing(ctx context.Context, primaryAddr 
 }
 
 func (m *ClusterManager) handleInstanceNotFound(ctx context.Context, primaryAddr string) bool {
+	glog.V(4).Infof("Adding secondary instance to the cluster")
+
 	primaryURI := fmt.Sprintf("%s:%s@%s", m.Instance.GetUser(), m.Instance.GetPassword(), primaryAddr)
 	psh := m.mysqlshFactory(primaryURI)
 
-	instanceState, err := psh.CheckInstanceState(ctx, m.Instance.GetShellURI())
+	whitelistCIDR, err := m.Instance.WhitelistCIDR()
 	if err != nil {
-		glog.Errorf("Failed to determine if we need to clear the binary logs: %v", err)
+		glog.Errorf("Getting CIDR to whitelist for GR: %v", err)
 		return false
 	}
-	glog.V(4).Infof("Checking if instance requires its binary logs clearing")
-	if instanceState.RequiresClearBinaryLogs() {
-		if err := clearBinaryLogs(ctx, m.Instance); err != nil {
-			glog.Errorf("Failed to clear binary logs: %v", err)
-			return false
-		}
-	}
 
-	glog.V(4).Infof("Adding secondary instance to the cluster")
-	if err := psh.AddInstanceToCluster(ctx, m.Instance.GetShellURI()); err != nil {
+	if err := psh.AddInstanceToCluster(ctx, m.Instance.GetShellURI(), whitelistCIDR); err != nil {
 		glog.Errorf("Failed to add to cluster: %v", err)
 		return false
 	}
@@ -273,15 +295,39 @@ func (m *ClusterManager) handleInstanceNotFound(ctx context.Context, primaryAddr
 
 // bootstrap bootstraps the cluster. Called on the first Pod in the StatefulSet.
 func (m *ClusterManager) bootstrap(ctx context.Context) (*innodb.ClusterStatus, error) {
-	if err := clearBinaryLogs(ctx, m.Instance); err != nil {
-		return nil, errors.Wrap(err, "failed to clear binary logs")
+	msh := m.mysqlshFactory(m.Instance.GetShellURI())
+
+	status, err := msh.GetClusterStatus(ctx)
+	if err != nil {
+		mshErr, ok := errors.Cause(err).(*mysqlsh.Error)
+		if !ok {
+			return nil, errors.Wrap(err, "getting cluster status")
+		}
+
+		if strings.Contains(mshErr.Message, "Cannot perform operation while group replication is starting up") {
+			return nil, err
+		} else if strings.Contains(mshErr.Message, "(metadata exists, but GR is not active)") {
+			glog.Info("Found existing InnoDB cluster (metadata exists, but GR is not active)")
+			if err := msh.RebootClusterFromCompleteOutage(ctx); err != nil {
+				return nil, errors.Wrap(err, "rebooting cluster from complete outage")
+			}
+		} else {
+			glog.Infof("Creating InnoDB cluster")
+			whitelistCIDR, err := m.Instance.WhitelistCIDR()
+			if err != nil {
+				return nil, errors.Wrap(err, "getting CIDR to whitelist for  GR")
+			}
+			if err := msh.CreateCluster(ctx, whitelistCIDR, m.Instance.MultiMaster); err != nil {
+				return nil, errors.Wrap(err, "failed to create new cluster")
+			}
+
+		}
+
+		if status, err = msh.GetClusterStatus(ctx); err != nil {
+			return nil, errors.Wrap(err, "getting cluster status")
+		}
 	}
 
-	glog.V(4).Infof("Creating the cluster on the primary instance")
-	status, err := m.mysqlshFactory(m.Instance.GetShellURI()).CreateCluster(ctx, m.Instance.MultiMaster)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create new cluster")
-	}
 	glog.V(4).Info(formatClusterStatus(status))
 	return status, nil
 }

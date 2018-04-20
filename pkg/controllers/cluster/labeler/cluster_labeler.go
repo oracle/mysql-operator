@@ -121,7 +121,7 @@ func (clc *ClusterLabelerController) syncHandler(key string) error {
 	// the local primary.
 	primaryLabeled := false
 	for _, pod := range primaries {
-		if pod.Name == clc.localInstance.Name() {
+		if pod.Name == clc.localInstance.PodName() {
 			primaryLabeled = true
 			continue
 		}
@@ -144,7 +144,7 @@ func (clc *ClusterLabelerController) syncHandler(key string) error {
 	// If the local primary is not yet labeled mysql.oracle.com/role=primary
 	// label it.
 	if !primaryLabeled {
-		primary, err := clc.podLister.Pods(namespace).Get(clc.localInstance.Name())
+		primary, err := clc.podLister.Pods(namespace).Get(clc.localInstance.PodName())
 		if err != nil {
 			return errors.Wrap(err, "failed to get primary Pod")
 		}
@@ -173,7 +173,7 @@ func (clc *ClusterLabelerController) syncHandler(key string) error {
 			}
 			continue
 		}
-		if pod.Name != clc.localInstance.Name() && !SecondarySelector(clusterName).Matches(labels.Set(pod.Labels)) {
+		if pod.Name != clc.localInstance.PodName() && !SecondarySelector(clusterName).Matches(labels.Set(pod.Labels)) {
 			glog.Infof("Labeling %s/%s as secondary", pod.Namespace, pod.Name)
 			if err := clc.updateClusterRoleLabel(pod, constants.MySQLClusterRoleSecondary); err != nil {
 				return errors.Wrapf(err, "labeling %s/%s as secondary", pod.Namespace, pod.Name)

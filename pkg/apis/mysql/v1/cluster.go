@@ -22,7 +22,7 @@ import (
 
 const (
 	// The default MySQL version to use if not specified explicitly by user
-	defaultVersion      = "5.7.20-1.1.2"
+	defaultVersion      = "8.0.11"
 	defaultReplicas     = 1
 	defaultBaseServerID = 1000
 	// Max safe value for BaseServerID calculated as max MySQL server_id value - max Replication Group size

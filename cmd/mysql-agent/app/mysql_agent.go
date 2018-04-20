@@ -69,12 +69,12 @@ func Run(opts *options.MySQLAgentOpts) error {
 	signals.SetupSignalHandler(cancelFunc)
 
 	// Set up healthchecks (liveness and readiness).
+	checkInCluster, err := cluster.NewHealthCheck(ctx)
+	if err != nil {
+		glog.Fatal(err)
+	}
 	health := healthcheck.NewHandler()
-	health.AddReadinessCheck("node-in-cluster",
-		healthcheck.Async(
-			healthcheck.Timeout(func() error { return cluster.CheckNodeInCluster(ctx) }, 5*time.Second),
-			10*time.Second,
-		))
+	health.AddReadinessCheck("node-in-cluster", checkInCluster)
 	go func() {
 		glog.Fatal(http.ListenAndServe(
 			net.JoinHostPort(opts.Address, strconv.Itoa(int(opts.HealthcheckPort))),
