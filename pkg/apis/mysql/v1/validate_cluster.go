@@ -15,15 +15,37 @@
 package v1
 
 import (
+	"fmt"
 	"strconv"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 func validateCluster(c *MySQLCluster) field.ErrorList {
 	allErrs := field.ErrorList{}
+	allErrs = append(allErrs, validateClusterMetadata(c.ObjectMeta, field.NewPath("metadata"))...)
 	allErrs = append(allErrs, validateClusterSpec(c.Spec, field.NewPath("spec"))...)
 	allErrs = append(allErrs, validateClusterStatus(c.Status, field.NewPath("status"))...)
+	return allErrs
+}
+
+func validateClusterMetadata(m metav1.ObjectMeta, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	allErrs = append(allErrs, validateName(m.Name, fldPath.Child("name"))...)
+
+	return allErrs
+}
+
+func validateName(name string, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	if len(name) > MySQLClusterNameMaxLen {
+		msg := fmt.Sprintf("longer than maximum supported length %d (see: https://bugs.mysql.com/bug.php?id=90601)", MaxInnoDBClusterMembers)
+		allErrs = append(allErrs, field.Invalid(fldPath, name, msg))
+	}
+
 	return allErrs
 }
 
@@ -31,6 +53,7 @@ func validateClusterSpec(s MySQLClusterSpec, fldPath *field.Path) field.ErrorLis
 	allErrs := field.ErrorList{}
 
 	allErrs = append(allErrs, validateVersion(s.Version, fldPath.Child("version"))...)
+	allErrs = append(allErrs, validateReplicas(s.Replicas, fldPath.Child("replicas"))...)
 	allErrs = append(allErrs, validateBaseServerID(s.BaseServerID, fldPath.Child("baseServerId"))...)
 
 	return allErrs
@@ -68,4 +91,12 @@ func validatePhase(phase MySQLClusterPhase, fldPath *field.Path) field.ErrorList
 		}
 	}
 	return append(allErrs, field.Invalid(fldPath, phase, "invalid phase specified"))
+}
+
+func validateReplicas(replicas int32, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+	if replicas < 1 || replicas > MaxInnoDBClusterMembers {
+		allErrs = append(allErrs, field.Invalid(fldPath, replicas, "InnoDB clustering supports between 1-9 members"))
+	}
+	return allErrs
 }

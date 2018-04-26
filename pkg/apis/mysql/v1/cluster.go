@@ -32,6 +32,17 @@ const (
 // ClusterCRDResourcePlural defines the custom resource name for mysqlclusters
 const ClusterCRDResourcePlural = "mysqlclusters"
 
+const (
+	// MaxInnoDBClusterMembers is the maximum number of members supported by InnoDB
+	// group replication.
+	MaxInnoDBClusterMembers = 9
+
+	// MySQLClusterNameMaxLen is the maximum supported length of a
+	// MySQLCluster name.
+	// See: https://bugs.mysql.com/bug.php?id=90601
+	MySQLClusterNameMaxLen = 30
+)
+
 // TODO (owain) we need to remove this because it's not reasonable for us to maintain a list
 // of all the potential MySQL versions that can be used and in reality, it shouldn't matter
 // too much. The burden of this is not worth the benfit to a user
