@@ -82,13 +82,12 @@ func NewLocalInstance() (*Instance, error) {
 // NewInstanceFromGroupSeed creates an Instance from a fully qualified group
 // seed.
 func NewInstanceFromGroupSeed(seed string) (*Instance, error) {
+	podName, err := podNameFromSeed(seed)
+	if err != nil {
+		return nil, errors.Wrap(err, "getting pod name from group seed")
+	}
 	// We don't care about the returned port here as the Instance's port its
 	// MySQLDB port not its group replication port.
-	host, _, err := net.SplitHostPort(seed)
-	if err != nil {
-		return nil, err
-	}
-	podName := strings.SplitN(host, ".", 1)[0]
 	parentName, ordinal := getParentNameAndOrdinal(podName)
 	multiMaster, _ := strconv.ParseBool(os.Getenv("MYSQL_CLUSTER_MULTI_MASTER"))
 	return &Instance{
@@ -162,4 +161,12 @@ func getParentNameAndOrdinal(hostname string) (string, int) {
 		ordinal = int(i)
 	}
 	return parent, ordinal
+}
+
+func podNameFromSeed(seed string) (string, error) {
+	host, _, err := net.SplitHostPort(seed)
+	if err != nil {
+		return "", errors.Wrap(err, "splitting host and port")
+	}
+	return strings.SplitN(host, ".", 2)[0], nil
 }
