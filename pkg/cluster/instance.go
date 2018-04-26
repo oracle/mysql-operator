@@ -20,6 +20,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -87,7 +88,8 @@ func NewInstanceFromGroupSeed(seed string) (*Instance, error) {
 	if err != nil {
 		return nil, err
 	}
-	parentName, ordinal := getParentNameAndOrdinal(host)
+	podName := strings.SplitN(host, ".", 1)[0]
+	parentName, ordinal := getParentNameAndOrdinal(podName)
 	multiMaster, _ := strconv.ParseBool(os.Getenv("MYSQL_CLUSTER_MULTI_MASTER"))
 	return &Instance{
 		ClusterName: os.Getenv("MYSQL_CLUSTER_NAME"),
@@ -142,7 +144,7 @@ func (i *Instance) WhitelistCIDR() (string, error) {
 
 // statefulPodRegex is a regular expression that extracts the parent StatefulSet
 // and ordinal from StatefulSet Pod's hostname.
-var statefulPodRegex = regexp.MustCompile("(.*)-([0-9]+)")
+var statefulPodRegex = regexp.MustCompile("(.*)-([0-9]+)$")
 
 // getParentNameAndOrdinal gets the name of a Pod's parent StatefulSet and Pod's
 // ordinal as extracted from its hostname. If the Pod was not created by a
