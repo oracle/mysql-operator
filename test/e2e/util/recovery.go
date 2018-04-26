@@ -129,33 +129,47 @@ func getPodNameFromInstanceName(instanceName string) string {
 // GetPrimaryPodName returns the name of the first primary pod it finds in
 // the given cluster.
 func GetPrimaryPodName(t *T, namespace string, clusterName string, kubeClient kubernetes.Interface) string {
-	pods, err := kubeClient.CoreV1().Pods(namespace).List(meta_v1.ListOptions{
-		LabelSelector: labeler.PrimarySelector(clusterName).String(),
+	var name string
+	err := Retry(DefaultRetry, func() (bool, error) {
+		pods, err := kubeClient.CoreV1().Pods(namespace).List(meta_v1.ListOptions{
+			LabelSelector: labeler.PrimarySelector(clusterName).String(),
+		})
+		if err != nil {
+			return false, err
+		}
+		if len(pods.Items) == 0 {
+			return false, nil
+		}
+		name = pods.Items[0].Name
+		return true, nil
 	})
 	if err != nil {
-		t.Fatalf("failed to get a primary pod name: err: %v", err)
+		t.Fatalf("failed to get a primary pod name: %v", err)
 	}
-	for _, pod := range pods.Items {
-		return pod.Name
-	}
-	t.Fatalf("failed to get a primary pod name")
-	return ""
+	return name
 }
 
 // GetSecondaryPodName returns the name of the first secondary pod it finds in
 // the given cluster.
 func GetSecondaryPodName(t *T, namespace string, clusterName string, kubeClient kubernetes.Interface) string {
-	pods, err := kubeClient.CoreV1().Pods(namespace).List(meta_v1.ListOptions{
-		LabelSelector: labeler.SecondarySelector(clusterName).String(),
+	var name string
+	err := Retry(DefaultRetry, func() (bool, error) {
+		pods, err := kubeClient.CoreV1().Pods(namespace).List(meta_v1.ListOptions{
+			LabelSelector: labeler.SecondarySelector(clusterName).String(),
+		})
+		if err != nil {
+			return false, err
+		}
+		if len(pods.Items) == 0 {
+			return false, nil
+		}
+		name = pods.Items[0].Name
+		return true, nil
 	})
 	if err != nil {
-		t.Fatalf("failed to get a secondary pod name: err: %v", err)
+		t.Fatalf("failed to get a secondary pod name: %v", err)
 	}
-	for _, pod := range pods.Items {
-		return pod.Name
-	}
-	t.Fatalf("failed to get a secondary pod name")
-	return ""
+	return name
 }
 
 // CheckPrimaryFailover exists with an error if the primary has not changed
