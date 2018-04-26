@@ -390,7 +390,7 @@ func assertOperatorVersionInvariants(t *testing.T, controller *MySQLController, 
 
 func TestMySQLControllerSyncClusterFromScratch(t *testing.T) {
 	version := buildversion.GetBuildVersion()
-	name := "test-from-scratch-mysql-cluster"
+	name := "from-scratch"
 	namespace := "test-namespace"
 	replicas := int32(3)
 	cluster := mockMySQLCluster(version, name, namespace, replicas)
