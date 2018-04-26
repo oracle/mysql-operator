@@ -25,11 +25,11 @@ func TestGetParentNameAndOrdinal(t *testing.T) {
 		ordinal  int
 	}{
 		{
-			hostname: "host-99.host",
+			hostname: "host-99",
 			name:     "host",
 			ordinal:  99,
 		}, {
-			hostname: "host-with-dashes-99.host-with-dashes",
+			hostname: "host-with-dashes-99",
 			name:     "host-with-dashes",
 			ordinal:  99,
 		}, {
@@ -41,9 +41,9 @@ func TestGetParentNameAndOrdinal(t *testing.T) {
 			name:     "",
 			ordinal:  -1,
 		}, {
-			hostname: "e2e-cr-498zv-1.e2e-cr-498",
-			name:     "e2e-cr-498zv",
-			ordinal:  1,
+			hostname: "host-99.namespace",
+			name:     "host",
+			ordinal:  99,
 		},
 	}
 

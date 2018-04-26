@@ -142,7 +142,7 @@ func (i *Instance) WhitelistCIDR() (string, error) {
 
 // statefulPodRegex is a regular expression that extracts the parent StatefulSet
 // and ordinal from StatefulSet Pod's hostname.
-var statefulPodRegex = regexp.MustCompile(`(.*)-([0-9]+)\.(.*)$`)
+var statefulPodRegex = regexp.MustCompile("(.*)-([0-9]+)")
 
 // getParentNameAndOrdinal gets the name of a Pod's parent StatefulSet and Pod's
 // ordinal as extracted from its hostname. If the Pod was not created by a
