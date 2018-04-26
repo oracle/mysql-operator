@@ -127,7 +127,7 @@ func (clc *ClusterLabelerController) syncHandler(key string) error {
 		}
 
 		var role string
-		if !inCluster(status, fmt.Sprintf("%s:%d", pod.Name, clc.localInstance.Port)) {
+		if !inCluster(status, pod.Name, clc.localInstance.Port) {
 			glog.Infof("Removing %q label from previously labeled primary %s/%s",
 				constants.LabelMySQLClusterRole, pod.Namespace, pod.Name)
 			role = ""
@@ -163,7 +163,7 @@ func (clc *ClusterLabelerController) syncHandler(key string) error {
 
 	// Ensure they are labeled as secondary or not at all.
 	for _, pod := range pods {
-		if !inCluster(status, fmt.Sprintf("%s:%d", pod.Name, clc.localInstance.Port)) {
+		if !inCluster(status, pod.Name, clc.localInstance.Port) {
 			if HasRoleSelector(clusterName).Matches(labels.Set(pod.Labels)) {
 				glog.Infof("Removing %q label from %s/%s as it's no longer in an ONLINE state",
 					constants.LabelMySQLClusterRole, pod.Namespace, pod.Name)
@@ -254,9 +254,11 @@ func (clc *ClusterLabelerController) Run(ctx context.Context) {
 	<-ctx.Done()
 }
 
-// inCluster returns true if an instance with the given address is a functioning
-// member of the InnoDB cluster.
-func inCluster(status *innodb.ClusterStatus, address string) bool {
+// inCluster returns true if an instance is a functioning member of the InnoDB
+// cluster.
+func inCluster(status *innodb.ClusterStatus, podName string, port int) bool {
+	statefuSetName, _ := cluster.GetParentNameAndOrdinal(podName)
+	address := fmt.Sprintf("%s.%s:%d", podName, statefuSetName, port)
 	inst, ok := status.DefaultReplicaSet.Topology[address]
 	r := ok && (inst.Status == innodb.InstanceStatusOnline)
 	return r

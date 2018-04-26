@@ -105,24 +105,24 @@ func TestClusterLabelerLabelsPrimaryAndSecondaries(t *testing.T) {
 		ClusterName: "MySQLCluster",
 		DefaultReplicaSet: innodb.ReplicaSet{
 			Name:       "default",
-			Primary:    "test-cluster-0:3306",
+			Primary:    "test-cluster-0.test-cluster:3306",
 			Status:     "OK",
 			StatusText: "Cluster is ONLINE and can tolerate up to ONE failure.",
 			Topology: map[string]*innodb.Instance{
-				"test-cluster-0:3306": &innodb.Instance{
-					Address: "test-cluster-0:3306",
+				"test-cluster-0.test-cluster:3306": &innodb.Instance{
+					Address: "test-cluster-0.test-cluster:3306",
 					Mode:    "R/W",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
 				},
-				"test-cluster-1:3306": &innodb.Instance{
-					Address: "test-cluster-1:3306",
+				"test-cluster-1.test-cluster:3306": &innodb.Instance{
+					Address: "test-cluster-1.test-cluster:3306",
 					Mode:    "R/O",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
 				},
-				"test-cluster-2:3306": &innodb.Instance{
-					Address: "test-cluster-2:3306",
+				"test-cluster-2.test-cluster:3306": &innodb.Instance{
+					Address: "test-cluster-2.test-cluster:3306",
 					Mode:    "R/O",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
@@ -221,24 +221,24 @@ func TestClusterLabelerRelabelsOldPrimary(t *testing.T) {
 		ClusterName: "MySQLCluster",
 		DefaultReplicaSet: innodb.ReplicaSet{
 			Name:       "default",
-			Primary:    "test-cluster-1:3306",
+			Primary:    "test-cluster-1.test-cluster:3306",
 			Status:     "OK",
 			StatusText: "Cluster is ONLINE and can tolerate up to ONE failure.",
 			Topology: map[string]*innodb.Instance{
-				"test-cluster-0:3306": &innodb.Instance{
-					Address: "test-cluster-0:3306",
+				"test-cluster-0.test-cluster:3306": &innodb.Instance{
+					Address: "test-cluster-0.test-cluster:3306",
 					Mode:    "R/O",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
 				},
-				"test-cluster-1:3306": &innodb.Instance{
-					Address: "test-cluster-1:3306",
+				"test-cluster-1.test-cluster:3306": &innodb.Instance{
+					Address: "test-cluster-1.test-cluster:3306",
 					Mode:    "R/W",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
 				},
-				"test-cluster-2:3306": &innodb.Instance{
-					Address: "test-cluster-2:3306",
+				"test-cluster-2.test-cluster:3306": &innodb.Instance{
+					Address: "test-cluster-2.test-cluster:3306",
 					Mode:    "R/O",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
@@ -327,24 +327,24 @@ func TestClusterLabelerDoesntRelabelCorrectlyLabeledPods(t *testing.T) {
 		ClusterName: "MySQLCluster",
 		DefaultReplicaSet: innodb.ReplicaSet{
 			Name:       "default",
-			Primary:    "test-cluster-0:3306",
+			Primary:    "test-cluster-0.test-cluster:3306",
 			Status:     "OK",
 			StatusText: "Cluster is ONLINE and can tolerate up to ONE failure.",
 			Topology: map[string]*innodb.Instance{
-				"test-cluster-0:3306": &innodb.Instance{
-					Address: "test-cluster-0:3306",
+				"test-cluster-0.test-cluster:3306": &innodb.Instance{
+					Address: "test-cluster-0.test-cluster:3306",
 					Mode:    "R/W",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
 				},
-				"test-cluster-1:3306": &innodb.Instance{
-					Address: "test-cluster-1:3306",
+				"test-cluster-1.test-cluster:3306": &innodb.Instance{
+					Address: "test-cluster-1.test-cluster:3306",
 					Mode:    "R/O",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
 				},
-				"test-cluster-2:3306": &innodb.Instance{
-					Address: "test-cluster-2:3306",
+				"test-cluster-2.test-cluster:3306": &innodb.Instance{
+					Address: "test-cluster-2.test-cluster:3306",
 					Mode:    "R/O",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
@@ -413,24 +413,24 @@ func TestClusterLabelerRemovesLabelFromInstanceInMissingState(t *testing.T) {
 		ClusterName: "MySQLCluster",
 		DefaultReplicaSet: innodb.ReplicaSet{
 			Name:       "default",
-			Primary:    "test-cluster-0:3306",
+			Primary:    "test-cluster-0.test-cluster:3306",
 			Status:     "OK",
 			StatusText: "Cluster is ONLINE and can tolerate up to ONE failure.",
 			Topology: map[string]*innodb.Instance{
-				"test-cluster-0:3306": &innodb.Instance{
-					Address: "test-cluster-0:3306",
+				"test-cluster-0.test-cluster:3306": &innodb.Instance{
+					Address: "test-cluster-0.test-cluster:3306",
 					Mode:    "R/W",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
 				},
-				"test-cluster-1:3306": &innodb.Instance{
-					Address: "test-cluster-1:3306",
+				"test-cluster-1.test-cluster:3306": &innodb.Instance{
+					Address: "test-cluster-1.test-cluster:3306",
 					Mode:    "R/O",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
 				},
-				"test-cluster-2:3306": &innodb.Instance{
-					Address: "test-cluster-2:3306",
+				"test-cluster-2.test-cluster:3306": &innodb.Instance{
+					Address: "test-cluster-2.test-cluster:3306",
 					Mode:    "R/O",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusMissing,

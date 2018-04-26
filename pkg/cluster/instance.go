@@ -66,7 +66,7 @@ func NewLocalInstance() (*Instance, error) {
 	if err != nil {
 		return nil, err
 	}
-	name, ordinal := getParentNameAndOrdinal(hostname)
+	name, ordinal := GetParentNameAndOrdinal(hostname)
 	multiMaster, _ := strconv.ParseBool(os.Getenv("MYSQL_CLUSTER_MULTI_MASTER"))
 	return &Instance{
 		Namespace:   os.Getenv("POD_NAMESPACE"),
@@ -88,7 +88,7 @@ func NewInstanceFromGroupSeed(seed string) (*Instance, error) {
 	}
 	// We don't care about the returned port here as the Instance's port its
 	// MySQLDB port not its group replication port.
-	parentName, ordinal := getParentNameAndOrdinal(podName)
+	parentName, ordinal := GetParentNameAndOrdinal(podName)
 	multiMaster, _ := strconv.ParseBool(os.Getenv("MYSQL_CLUSTER_MULTI_MASTER"))
 	return &Instance{
 		ClusterName: os.Getenv("MYSQL_CLUSTER_NAME"),
@@ -145,14 +145,14 @@ func (i *Instance) WhitelistCIDR() (string, error) {
 // and ordinal from StatefulSet Pod's hostname.
 var statefulPodRegex = regexp.MustCompile("(.*)-([0-9]+)$")
 
-// getParentNameAndOrdinal gets the name of a Pod's parent StatefulSet and Pod's
-// ordinal as extracted from its hostname. If the Pod was not created by a
+// GetParentNameAndOrdinal gets the name of a Pod's parent StatefulSet and Pod's
+// ordinal from the Pods name (or hostname). If the Pod was not created by a
 // StatefulSet, its parent is considered to be empty string, and its ordinal is
 // considered to be -1.
-func getParentNameAndOrdinal(hostname string) (string, int) {
+func GetParentNameAndOrdinal(name string) (string, int) {
 	parent := ""
 	ordinal := -1
-	subMatches := statefulPodRegex.FindStringSubmatch(hostname)
+	subMatches := statefulPodRegex.FindStringSubmatch(name)
 	if len(subMatches) < 3 {
 		return parent, ordinal
 	}

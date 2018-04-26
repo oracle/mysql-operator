@@ -47,7 +47,7 @@ func TestGetParentNameAndOrdinal(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.hostname, func(t *testing.T) {
-			name, ordinal := getParentNameAndOrdinal(tt.hostname)
+			name, ordinal := GetParentNameAndOrdinal(tt.hostname)
 			if name != tt.name || ordinal != tt.ordinal {
 				t.Errorf("getParentNameAndOrdinal(%q) => (%q, %d) expected (%q, %d)",
 					tt.hostname, name, ordinal, tt.name, tt.ordinal)
