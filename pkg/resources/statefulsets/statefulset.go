@@ -207,7 +207,7 @@ func mysqlServerContainer(cluster *api.MySQLCluster, mysqlServerImage string, ro
 		"--transaction-isolation='READ-COMMITTED'",
 		// group replication specific options
 		"--transaction-write-set-extraction=XXHASH64",
-		fmt.Sprintf("--report-host=\"%s-${index}.%[1]s.%s\"", cluster.Name, cluster.Namespace),
+		fmt.Sprintf("--report-host=\"%[1]s-${index}.%[1]s", cluster.Name),
 		"--log-error-verbosity=3",
 	}
 
