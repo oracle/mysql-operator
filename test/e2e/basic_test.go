@@ -32,7 +32,7 @@ func TestCreateCluster(test *testing.T) {
 	f := framework.Global
 	replicas := int32(3)
 
-	testdb := e2eutil.CreateTestDB(t, "e2e-cc", replicas, false, f.DestroyAfterFailure)
+	testdb := e2eutil.CreateTestDB(t, "e2e-create-cluster-longn-", replicas, false, f.DestroyAfterFailure)
 	defer testdb.Delete()
 
 	testdb.Populate()
