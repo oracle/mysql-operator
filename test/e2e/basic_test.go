@@ -32,8 +32,8 @@ func TestCreateCluster(test *testing.T) {
 	f := framework.Global
 	replicas := int32(3)
 
-	// 30 character long name to test max length.
-	testdb := e2eutil.CreateTestDB(t, "e2e-create-clustr-long-", replicas, false, f.DestroyAfterFailure)
+	// 29 character long name to test max length (24 + 5 random)
+	testdb := e2eutil.CreateTestDB(t, "e2e-create-clust-long-", replicas, false, f.DestroyAfterFailure)
 	defer testdb.Delete()
 
 	testdb.Populate()
