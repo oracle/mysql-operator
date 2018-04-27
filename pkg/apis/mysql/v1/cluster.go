@@ -40,7 +40,7 @@ const (
 	// MySQLClusterNameMaxLen is the maximum supported length of a
 	// MySQLCluster name.
 	// See: https://bugs.mysql.com/bug.php?id=90601
-	MySQLClusterNameMaxLen = 29
+	MySQLClusterNameMaxLen = 28
 )
 
 // TODO (owain) we need to remove this because it's not reasonable for us to maintain a list
