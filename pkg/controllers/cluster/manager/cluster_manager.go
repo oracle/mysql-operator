@@ -256,13 +256,16 @@ func (m *ClusterManager) handleInstanceMissing(ctx context.Context, primaryAddr 
 			return false
 		}
 		glog.V(4).Infof("Attempting to rejoin instance to cluster")
-		if err := primarySh.RejoinInstanceToCluster(ctx, m.Instance.GetShellURI(), whitelistCIDR); err != nil {
+		if err := primarySh.RejoinInstanceToCluster(ctx, m.Instance.GetShellURI(), mysqlsh.Options{
+			"ipWhitelist":   whitelistCIDR,
+			"memberSslMode": "DISABLED",
+		}); err != nil {
 			glog.Errorf("Failed to rejoin cluster: %v", err)
 			return false
 		}
 	} else {
 		glog.V(4).Infof("Removing instance from cluster")
-		if err := primarySh.RemoveInstanceFromCluster(ctx, m.Instance.GetShellURI()); err != nil {
+		if err := primarySh.RemoveInstanceFromCluster(ctx, m.Instance.GetShellURI(), mysqlsh.Options{"force": "True"}); err != nil {
 			glog.Errorf("Failed to remove from cluster: %v", err)
 			return false
 		}
@@ -284,7 +287,10 @@ func (m *ClusterManager) handleInstanceNotFound(ctx context.Context, primaryAddr
 		return false
 	}
 
-	if err := psh.AddInstanceToCluster(ctx, m.Instance.GetShellURI(), whitelistCIDR); err != nil {
+	if err := psh.AddInstanceToCluster(ctx, m.Instance.GetShellURI(), mysqlsh.Options{
+		"memberSslMode": "DISABLED",
+		"ipWhitelist":   whitelistCIDR,
+	}); err != nil {
 		glog.Errorf("Failed to add to cluster: %v", err)
 		return false
 	}
@@ -317,7 +323,15 @@ func (m *ClusterManager) bootstrap(ctx context.Context) (*innodb.ClusterStatus, 
 			if err != nil {
 				return nil, errors.Wrap(err, "getting CIDR to whitelist for  GR")
 			}
-			if err := msh.CreateCluster(ctx, whitelistCIDR, m.Instance.MultiMaster); err != nil {
+			opts := mysqlsh.Options{
+				"memberSslMode": "DISABLED",
+				"ipWhitelist":   whitelistCIDR,
+			}
+			if m.Instance.MultiMaster {
+				opts["force"] = "True"
+				opts["multiMaster"] = "True"
+			}
+			if err := msh.CreateCluster(ctx, opts); err != nil {
 				return nil, errors.Wrap(err, "failed to create new cluster")
 			}
 

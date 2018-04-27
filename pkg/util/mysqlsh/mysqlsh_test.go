@@ -187,7 +187,7 @@ func TestRemoveInstanceFromCluster(t *testing.T) {
 	uri := "root:foo@localhost:3306"
 	runner := New(&fexec, uri)
 	ctx := context.Background()
-	err := runner.RemoveInstanceFromCluster(ctx, "root:foo@mysql-cluster-1:3306")
+	err := runner.RemoveInstanceFromCluster(ctx, "root:foo@mysql-cluster-1:3306", Options{"force": "True"})
 
 	if fcmd.RunCalls != 1 {
 		t.Errorf("Expected 1 exec('mysqlsh'), got %d", fcmd.RunCalls)
@@ -198,7 +198,7 @@ func TestRemoveInstanceFromCluster(t *testing.T) {
 		"--no-wizard",
 		"--uri", "root:foo@localhost:3306",
 		"--py",
-		"-e", "dba.get_cluster('MySQLCluster').remove_instance('root:foo@mysql-cluster-1:3306', {\"force\":True})",
+		"-e", `dba.get_cluster('MySQLCluster').remove_instance('root:foo@mysql-cluster-1:3306', {'force': True})`,
 	}
 	if !reflect.DeepEqual(fcmd.RunLog[0], expectedCall) {
 		t.Errorf("Expected call %+v, got %+v", expectedCall, fcmd.RunLog[0])

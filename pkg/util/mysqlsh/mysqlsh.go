@@ -35,7 +35,7 @@ type Interface interface {
 	IsClustered(ctx context.Context) bool
 	// CreateCluster creates a new InnoDB cluster called
 	// innodb.DefaultClusterName.
-	CreateCluster(ctx context.Context, whitelistCIDR string, multiMaster bool) error
+	CreateCluster(ctx context.Context, opts Options) error
 	// GetClusterStatus gets the status of the innodb.DefaultClusterName InnoDB
 	// cluster.
 	GetClusterStatus(ctx context.Context) (*innodb.ClusterStatus, error)
@@ -44,13 +44,13 @@ type Interface interface {
 	CheckInstanceState(ctx context.Context, uri string) (*innodb.InstanceState, error)
 	// AddInstanceToCluster adds the instance (specified by URI) the InnoDB
 	// cluster.
-	AddInstanceToCluster(ctx context.Context, uri, whitelistCIDR string) error
+	AddInstanceToCluster(ctx context.Context, uri string, opts Options) error
 	// RejoinInstanceToCluster rejoins an instance (specified by URI) to the
 	// InnoDB cluster.
-	RejoinInstanceToCluster(ctx context.Context, uri, whitelistCIDR string) error
+	RejoinInstanceToCluster(ctx context.Context, uri string, opts Options) error
 	// RemoveInstanceFromCluster removes an instance (specified by URI) to the
 	// InnoDB cluster.
-	RemoveInstanceFromCluster(ctx context.Context, uri string) error
+	RemoveInstanceFromCluster(ctx context.Context, uri string, opts Options) error
 	// RebootClusterFromCompleteOutage recovers a cluster when all of its members
 	// have failed.
 	RebootClusterFromCompleteOutage(ctx context.Context) error
@@ -80,13 +80,8 @@ func (r *runner) IsClustered(ctx context.Context) bool {
 	return err == nil
 }
 
-func (r *runner) CreateCluster(ctx context.Context, whitelistCIDR string, multiMaster bool) error {
-	var python string
-	if multiMaster {
-		python = fmt.Sprintf("dba.create_cluster('%s', {'memberSslMode': 'DISABLED', 'ipWhitelist': '%s', 'force': True, 'multiMaster': True})", innodb.DefaultClusterName, whitelistCIDR)
-	} else {
-		python = fmt.Sprintf("dba.create_cluster('%s', {'memberSslMode': 'DISABLED', 'ipWhitelist': '%s'})", innodb.DefaultClusterName, whitelistCIDR)
-	}
+func (r *runner) CreateCluster(ctx context.Context, opts Options) error {
+	python := fmt.Sprintf("dba.create_cluster('%s', %s)", innodb.DefaultClusterName, opts)
 	_, err := r.run(ctx, python)
 	return err
 }
@@ -123,20 +118,20 @@ func (r *runner) CheckInstanceState(ctx context.Context, uri string) (*innodb.In
 	return state, nil
 }
 
-func (r *runner) AddInstanceToCluster(ctx context.Context, uri, whitelistCIDR string) error {
-	python := fmt.Sprintf("dba.get_cluster('%s').add_instance('%s', {'memberSslMode': 'DISABLED', 'ipWhitelist': '%s'})", innodb.DefaultClusterName, uri, whitelistCIDR)
+func (r *runner) AddInstanceToCluster(ctx context.Context, uri string, opts Options) error {
+	python := fmt.Sprintf("dba.get_cluster('%s').add_instance('%s', %s)", innodb.DefaultClusterName, uri, opts)
 	_, err := r.run(ctx, python)
 	return err
 }
 
-func (r *runner) RejoinInstanceToCluster(ctx context.Context, uri, whitelistCIDR string) error {
-	python := fmt.Sprintf("dba.get_cluster('%s').rejoin_instance('%s', {'memberSslMode': 'DISABLED', 'ipWhitelist': '%s'})", innodb.DefaultClusterName, uri, whitelistCIDR)
+func (r *runner) RejoinInstanceToCluster(ctx context.Context, uri string, opts Options) error {
+	python := fmt.Sprintf("dba.get_cluster('%s').rejoin_instance('%s', %s)", innodb.DefaultClusterName, uri, opts)
 	_, err := r.run(ctx, python)
 	return err
 }
 
-func (r *runner) RemoveInstanceFromCluster(ctx context.Context, uri string) error {
-	python := fmt.Sprintf("dba.get_cluster('%s').remove_instance('%s', {\"force\":True})", innodb.DefaultClusterName, uri)
+func (r *runner) RemoveInstanceFromCluster(ctx context.Context, uri string, opts Options) error {
+	python := fmt.Sprintf("dba.get_cluster('%s').remove_instance('%s', %s)", innodb.DefaultClusterName, uri, opts)
 	_, err := r.run(ctx, python)
 	return err
 }
