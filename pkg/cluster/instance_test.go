@@ -16,6 +16,8 @@ package cluster
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetParentNameAndOrdinal(t *testing.T) {
@@ -45,11 +47,31 @@ func TestGetParentNameAndOrdinal(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.hostname, func(t *testing.T) {
-			name, ordinal := getParentNameAndOrdinal(tt.hostname)
+			name, ordinal := GetParentNameAndOrdinal(tt.hostname)
 			if name != tt.name || ordinal != tt.ordinal {
 				t.Errorf("getParentNameAndOrdinal(%q) => (%q, %d) expected (%q, %d)",
 					tt.hostname, name, ordinal, tt.name, tt.ordinal)
 			}
+		})
+	}
+}
+
+func TestGetPodName(t *testing.T) {
+	testCases := []struct {
+		seed string
+		name string
+	}{
+		{
+			seed: "host-99.host:3306",
+			name: "host-99",
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.seed, func(t *testing.T) {
+			name, err := podNameFromSeed(tt.seed)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.name, name)
 		})
 	}
 }

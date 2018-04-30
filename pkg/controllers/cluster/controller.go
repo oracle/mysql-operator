@@ -353,9 +353,11 @@ func (m *MySQLController) syncHandler(key string) error {
 		return err
 	}
 
+	operatorVersion := buildversion.GetBuildVersion()
 	// Ensure that the required labels are set on the cluster.
-	if !SelectorForCluster(cluster).Matches(labels.Set(cluster.Labels)) {
-		glog.V(2).Infof("Setting label on cluster %s", SelectorForCluster(cluster).String())
+	sel := combineSelectors(SelectorForCluster(cluster), SelectorForClusterOperatorVersion(operatorVersion))
+	if !sel.Matches(labels.Set(cluster.Labels)) {
+		glog.V(2).Infof("Setting labels on cluster %s", SelectorForCluster(cluster).String())
 		if cluster.Labels == nil {
 			cluster.Labels = make(map[string]string)
 		}

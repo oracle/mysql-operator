@@ -17,12 +17,12 @@ USE_GLOBAL_NAMESPACE ?= false
 ifdef WERCKER
     # Insert swear words about mysql group replication and hostname length. Arghh..
     NEW_NAMESPACE ?= e2e-$(shell echo ${WERCKER_GIT_COMMIT} | fold -w 8 | head -n1)
-    VERSION ?= ${WERCKER_GIT_COMMIT}
+    VERSION := ${WERCKER_GIT_COMMIT}
     E2E_FUNC := e2efunc-wercker
     E2E_NON_BUFFERED_LOGS ?= false
 else
     NEW_NAMESPACE ?= e2e-${USER}
-    VERSION ?= ${USER}-$(shell date +%Y%m%d%H%M%S)
+    VERSION := ${USER}-$(shell date +%Y%m%d%H%M%S)
     E2E_FUNC := e2efunc-docker
     E2E_NON_BUFFERED_LOGS ?= true
 endif

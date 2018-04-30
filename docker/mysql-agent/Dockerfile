@@ -1,4 +1,4 @@
-FROM mysql/mysql-server:5.7.20-1.1.2
+FROM mysql/mysql-server:8.0.11
 
 COPY bin/linux_amd64/mysql-agent /
 

@@ -19,8 +19,7 @@ import (
 	"errors"
 	"os"
 	"strings"
-
-	"github.com/golang/glog"
+	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,9 +35,13 @@ import (
 
 var errNoClusterFound = errors.New("no cluster found on any of the seed nodes")
 
+const defaultTimeout = 10 * time.Second
+
 // isDatabaseRunning returns true if a connection can be made to the MySQL
 // database running in the pod instance in which this function is called.
 func isDatabaseRunning(ctx context.Context) bool {
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
 	err := utilexec.New().CommandContext(ctx,
 		"mysqladmin",
 		"--protocol", "tcp",
@@ -51,7 +54,7 @@ func isDatabaseRunning(ctx context.Context) bool {
 
 func podExists(kubeclient kubernetes.Interface, instance *cluster.Instance) bool {
 	err := wait.ExponentialBackoff(retry.DefaultRetry, func() (bool, error) {
-		_, err := kubeclient.CoreV1().Pods(instance.Namespace).Get(instance.Name(), metav1.GetOptions{})
+		_, err := kubeclient.CoreV1().Pods(instance.Namespace).Get(instance.PodName(), metav1.GetOptions{})
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				return false, nil
@@ -64,34 +67,28 @@ func podExists(kubeclient kubernetes.Interface, instance *cluster.Instance) bool
 }
 
 // getReplicationGroupSeeds returns the list of servers in the replication
-// group based on the given string (from the environment). It also ensures that
-// the entry corresponding to the given pod is at the begining of the list.
+// group based on the given string (from the environment).
+// It removes the local instance of mysql from the group.
 func getReplicationGroupSeeds(seeds string, pod *cluster.Instance) ([]string, error) {
-	s := strings.Split(seeds, ",")
-	matchIndex := -1
-	matchSeed := ""
-	for i, seed := range s {
+	s := []string{}
+	for _, seed := range strings.Split(seeds, ",") {
 		seedInstance, err := cluster.NewInstanceFromGroupSeed(seed)
 		if err != nil {
 			return nil, err
 		}
-		if seedInstance.Name() == pod.Name() {
-			matchIndex = i
-			matchSeed = seed
+		if seedInstance.PodName() == pod.Name() {
+			continue
 		}
-	}
-	if matchIndex != -1 {
-		s = append(s[:matchIndex], s[matchIndex+1:]...)
-		return append([]string{matchSeed}, s...), nil
+		s = append(s, seed)
 	}
 	return s, nil
 }
 
 // getClusterStatusFromGroupSeeds will attempt to get the cluster status (json)
 // string for the MySQL cluster. It will try to log into the mysqlsh on each of
-// the seed nodes in turn (starting with the current node) until it finds a
-// valid cluster. If we can determine that no cluster is found on any of the
-// seed nodes, then we return the empty string.
+// the seed nodes in turn (excluding the current node) until it finds a valid
+// cluster. If we can determine that no cluster is found on any of the seed
+// nodes, then we return the empty string.
 func getClusterStatusFromGroupSeeds(ctx context.Context, kubeclient kubernetes.Interface, pod *cluster.Instance) (*innodb.ClusterStatus, error) {
 	replicationGroupSeeds, err := getReplicationGroupSeeds(os.Getenv("REPLICATION_GROUP_SEEDS"), pod)
 	if err != nil {
@@ -113,22 +110,4 @@ func getClusterStatusFromGroupSeeds(ctx context.Context, kubeclient kubernetes.I
 	}
 
 	return nil, errNoClusterFound
-}
-
-// clearBinaryLogs resets the logs for the database instance running in the
-// given pod. It will return an error if the operation is not successful.
-func clearBinaryLogs(ctx context.Context, pod *cluster.Instance) error {
-	glog.V(4).Infof("Clearing the MySQL binary logs")
-
-	output, err := utilexec.New().CommandContext(ctx,
-		"mysql",
-		"--protocol", "tcp",
-		"-u", "root",
-		os.ExpandEnv("-p$MYSQL_ROOT_PASSWORD"),
-		"-e", "reset master;",
-	).CombinedOutput()
-	if err != nil {
-		glog.Errorf("Failed to clear binary logs: %s", output)
-	}
-	return err
 }

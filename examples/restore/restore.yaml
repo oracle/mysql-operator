@@ -4,6 +4,6 @@ metadata:
   name: mysql-restore
 spec:
   clusterRef:
-    name: mysql-cluster
+    name: mysql
   backupRef:
     name: mysql-backup

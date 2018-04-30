@@ -22,7 +22,7 @@ import (
 
 const (
 	// The default MySQL version to use if not specified explicitly by user
-	defaultVersion      = "5.7.20-1.1.2"
+	defaultVersion      = "8.0.11"
 	defaultReplicas     = 1
 	defaultBaseServerID = 1000
 	// Max safe value for BaseServerID calculated as max MySQL server_id value - max Replication Group size
@@ -31,6 +31,17 @@ const (
 
 // ClusterCRDResourcePlural defines the custom resource name for mysqlclusters
 const ClusterCRDResourcePlural = "mysqlclusters"
+
+const (
+	// MaxInnoDBClusterMembers is the maximum number of members supported by InnoDB
+	// group replication.
+	MaxInnoDBClusterMembers = 9
+
+	// MySQLClusterNameMaxLen is the maximum supported length of a
+	// MySQLCluster name.
+	// See: https://bugs.mysql.com/bug.php?id=90601
+	MySQLClusterNameMaxLen = 28
+)
 
 // TODO (owain) we need to remove this because it's not reasonable for us to maintain a list
 // of all the potential MySQL versions that can be used and in reality, it shouldn't matter

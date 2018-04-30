@@ -8,12 +8,12 @@ spec:
     databases:
       - test
   storage:
-    provider: s3  
+    provider: s3
     secretRef:
       name: s3-credentials
-    config:					
+    config:
       endpoint: ocitenancy.compat.objectstorage.ociregion.oraclecloud.com
       region:   ociregion
       bucket:   mybucket
   clusterRef:
-    name: mysql-cluster
+    name: mysql

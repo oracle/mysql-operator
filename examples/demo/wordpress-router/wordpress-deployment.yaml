@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
       - name: mysqlrouter
-        image: mysql/mysql-router:8.0
+        image: mysql/mysql-router:8.0.11
         env:
         - name: MYSQL_PASSWORD
           valueFrom:
@@ -46,14 +46,9 @@ spec:
         command:
         - "/bin/bash"
         - "-cx"
-        - |
-          echo "Updating resolv.conf"
-          search=$(grep ^search /etc/resolv.conf)
-          echo "$search mysql-wordpress.default.svc.cluster.local" >> /etc/resolv.conf
-          echo "Running the router"
-          exec /run.sh mysqlrouter
+        - "exec /run.sh mysqlrouter"
       - name: wordpress
-        image: wordpress:4.8.0-apache
+        image: wordpress:4.9.0-apache
         env:
         - name: WORDPRESS_DB_HOST
           value: 127.0.0.1:6446

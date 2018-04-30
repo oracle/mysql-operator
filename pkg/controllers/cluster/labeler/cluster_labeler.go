@@ -121,13 +121,13 @@ func (clc *ClusterLabelerController) syncHandler(key string) error {
 	// the local primary.
 	primaryLabeled := false
 	for _, pod := range primaries {
-		if pod.Name == clc.localInstance.Name() {
+		if pod.Name == clc.localInstance.PodName() {
 			primaryLabeled = true
 			continue
 		}
 
 		var role string
-		if !inCluster(status, fmt.Sprintf("%s:%d", pod.Name, clc.localInstance.Port)) {
+		if !inCluster(status, pod.Name, clc.localInstance.Port) {
 			glog.Infof("Removing %q label from previously labeled primary %s/%s",
 				constants.LabelMySQLClusterRole, pod.Namespace, pod.Name)
 			role = ""
@@ -144,7 +144,7 @@ func (clc *ClusterLabelerController) syncHandler(key string) error {
 	// If the local primary is not yet labeled mysql.oracle.com/role=primary
 	// label it.
 	if !primaryLabeled {
-		primary, err := clc.podLister.Pods(namespace).Get(clc.localInstance.Name())
+		primary, err := clc.podLister.Pods(namespace).Get(clc.localInstance.PodName())
 		if err != nil {
 			return errors.Wrap(err, "failed to get primary Pod")
 		}
@@ -163,7 +163,7 @@ func (clc *ClusterLabelerController) syncHandler(key string) error {
 
 	// Ensure they are labeled as secondary or not at all.
 	for _, pod := range pods {
-		if !inCluster(status, fmt.Sprintf("%s:%d", pod.Name, clc.localInstance.Port)) {
+		if !inCluster(status, pod.Name, clc.localInstance.Port) {
 			if HasRoleSelector(clusterName).Matches(labels.Set(pod.Labels)) {
 				glog.Infof("Removing %q label from %s/%s as it's no longer in an ONLINE state",
 					constants.LabelMySQLClusterRole, pod.Namespace, pod.Name)
@@ -173,7 +173,7 @@ func (clc *ClusterLabelerController) syncHandler(key string) error {
 			}
 			continue
 		}
-		if pod.Name != clc.localInstance.Name() && !SecondarySelector(clusterName).Matches(labels.Set(pod.Labels)) {
+		if pod.Name != clc.localInstance.PodName() && !SecondarySelector(clusterName).Matches(labels.Set(pod.Labels)) {
 			glog.Infof("Labeling %s/%s as secondary", pod.Namespace, pod.Name)
 			if err := clc.updateClusterRoleLabel(pod, constants.MySQLClusterRoleSecondary); err != nil {
 				return errors.Wrapf(err, "labeling %s/%s as secondary", pod.Namespace, pod.Name)
@@ -254,9 +254,11 @@ func (clc *ClusterLabelerController) Run(ctx context.Context) {
 	<-ctx.Done()
 }
 
-// inCluster returns true if an instance with the given address is a functioning
-// member of the InnoDB cluster.
-func inCluster(status *innodb.ClusterStatus, address string) bool {
+// inCluster returns true if an instance is a functioning member of the InnoDB
+// cluster.
+func inCluster(status *innodb.ClusterStatus, podName string, port int) bool {
+	statefuSetName, _ := cluster.GetParentNameAndOrdinal(podName)
+	address := fmt.Sprintf("%s.%s:%d", podName, statefuSetName, port)
 	inst, ok := status.DefaultReplicaSet.Topology[address]
 	r := ok && (inst.Status == innodb.InstanceStatusOnline)
 	return r

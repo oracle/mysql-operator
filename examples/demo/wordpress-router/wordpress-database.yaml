@@ -1,9 +1,27 @@
 ---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: mysql-config
+data:
+  my.cnf: |-
+    [mysqld]
+    default_authentication_plugin=mysql_native_password
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: wordpress-mysql-root-password
+data:
+  password: bXktc3VwZXItc2VjcmV0LXBhc3M=
+---
 apiVersion: "mysql.oracle.com/v1"
 kind: MySQLCluster
 metadata:
   name: mysql-wordpress
 spec:
   replicas: 3
+  configRef:
+    name: mysql-config
   secretRef:
     name: wordpress-mysql-root-password

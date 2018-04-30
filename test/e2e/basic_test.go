@@ -32,9 +32,8 @@ func TestCreateCluster(test *testing.T) {
 	f := framework.Global
 	replicas := int32(3)
 
-	var err error
-
-	testdb := e2eutil.CreateTestDB(t, "e2e-cc-biglongnametocheckitstillworks", replicas, false, f.DestroyAfterFailure)
+	// 28 character long name to test max length (23 + 5 random)
+	testdb := e2eutil.CreateTestDB(t, "e2e-create-clust-lng-", replicas, false, f.DestroyAfterFailure)
 	defer testdb.Delete()
 
 	testdb.Populate()
@@ -43,10 +42,11 @@ func TestCreateCluster(test *testing.T) {
 	cluster := testdb.Cluster()
 
 	if cluster.Labels[constants.MySQLOperatorVersionLabel] != f.BuildVersion {
-		t.Errorf("Cluster MySQLOperatorVersionLabel was incorrect: %s != %s.", cluster.Labels[constants.MySQLOperatorVersionLabel], f.BuildVersion)
+		t.Errorf("Cluster label %q incorrect: %q != %q.", constants.MySQLOperatorVersionLabel, cluster.Labels[constants.MySQLOperatorVersionLabel], f.BuildVersion)
 	} else {
-		t.Logf("Cluster label MySQLOperatorVersionLabel: %s", cluster.Labels[constants.MySQLOperatorVersionLabel])
+		t.Logf("Cluster label %q: %q", constants.MySQLOperatorVersionLabel, cluster.Labels[constants.MySQLOperatorVersionLabel])
 	}
+
 	if cluster.Spec.Replicas != replicas {
 		t.Errorf("Got cluster with %d replica(s), want %d", cluster.Spec.Replicas, replicas)
 	}
@@ -61,9 +61,9 @@ func TestCreateCluster(test *testing.T) {
 			t.Errorf("Got statefulset with %d ready replica(s), want %d", ss.Status.ReadyReplicas, replicas)
 		}
 		if ss.Labels[constants.MySQLOperatorVersionLabel] != f.BuildVersion {
-			t.Errorf("StatefulSet MySQLOperatorVersionLabel was incorrect: %s != %s.", ss.Labels[constants.MySQLOperatorVersionLabel], f.BuildVersion)
+			t.Errorf("StatefulSet label %q incorrect: %q != %q.", constants.MySQLOperatorVersionLabel, ss.Labels[constants.MySQLOperatorVersionLabel], f.BuildVersion)
 		} else {
-			t.Logf("StatefulSet label MySQLOperatorVersionLabel: %s", ss.Labels[constants.MySQLOperatorVersionLabel])
+			t.Logf("StatefulSet label %q: %s", constants.MySQLOperatorVersionLabel, ss.Labels[constants.MySQLOperatorVersionLabel])
 		}
 	}
 

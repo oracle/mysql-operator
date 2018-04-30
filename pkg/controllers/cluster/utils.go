@@ -37,6 +37,15 @@ func SelectorForClusterOperatorVersion(operatorVersion string) labels.Selector {
 	return labels.SelectorFromSet(labels.Set{constants.MySQLOperatorVersionLabel: operatorVersion})
 }
 
+func combineSelectors(first labels.Selector, rest ...labels.Selector) labels.Selector {
+	res := first.DeepCopySelector()
+	for _, s := range rest {
+		reqs, _ := s.Requirements()
+		res = res.Add(reqs...)
+	}
+	return res
+}
+
 func requiresMySQLAgentStatefulSetUpgrade(ss *apps.StatefulSet, targetContainer string, operatorVersion string) bool {
 	if !SelectorForClusterOperatorVersion(operatorVersion).Matches(labels.Set(ss.Labels)) {
 		return true
