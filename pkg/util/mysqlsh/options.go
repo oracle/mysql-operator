@@ -8,7 +8,7 @@ import (
 // Options holds the options passed to individual mysqlsh commands.
 type Options map[string]string
 
-// String encods
+// String encodes options as a Python dictionary string.
 func (opts Options) String() string {
 	vals := []string{}
 	for k, v := range opts {
