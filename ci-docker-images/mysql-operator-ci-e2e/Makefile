@@ -1,4 +1,4 @@
-IMAGE ?= wcr.io/oracle/mysql-operator-ci-e2e
+IMAGE ?= iad.ocir.io/oracle/mysql-operator-ci-e2e
 VERSION ?= 1.1.1
 
 .PHONY: build

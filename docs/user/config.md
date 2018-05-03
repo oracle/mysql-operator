@@ -39,7 +39,7 @@ data:
   mysql-operator-config.yaml: |
     images: 
       mysqlServer: mysql/mysql-server
-      mysqlAgent: wcr.io/oracle/mysql-agent
+      mysqlAgent: iad.ocir.io/oracle/mysql-agent
 ---
 apiVersion: apps/v1beta1
 kind: Deployment
@@ -73,7 +73,7 @@ spec:
       containers:
       - name: mysql-operator-controller
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        image: wcr.io/oracle/mysql-operator:{{ .Values.image.tag }}
+        image: iad.ocir.io/oracle/mysql-operator:{{ .Values.image.tag }}
         ports:
         - containerPort: 10254
         volumeMounts:
