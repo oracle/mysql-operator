@@ -2,8 +2,9 @@
 #
 # Gets an interactive Python based mysqlsh on the given instance.
 
-if [ "$#" -ne 1 ]; then
-    echo "Usage: $0 <namespace/podname>"
+if [ "$#" -lt 1 ]; then
+    echo "Usage: $0 <namespace/podname> [args]"
+    echo "example: $0 default/my-cluster-0 --py"
     exit 1
 fi
 
@@ -17,4 +18,4 @@ kubectl exec \
     -it \
     -c mysql-agent \
     ${POD} -- /bin/sh \
-    -c "PS1='\u@\h:\w\$ ' mysqlsh --no-wizard --uri ${URI} --py"
+    -c "PS1='\u@\h:\w\$ ' mysqlsh --no-wizard --uri ${URI} ${@:2}"
