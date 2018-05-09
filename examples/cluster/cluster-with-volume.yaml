@@ -1,35 +1,20 @@
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  labels:
-    type: local
-  name: mysql-cluster-with-volume
-spec:
-  accessModes:
-  - ReadWriteMany
-  capacity:
-    storage: 10Gi
-  hostPath:
-    path: /tmp/data
-  persistentVolumeReclaimPolicy: Recycle
-  storageClassName: manual
----
+# This example will create a MySQL cluster which persists data to an OCI Block Volume.
 apiVersion: "mysql.oracle.com/v1"
 kind: MySQLCluster
 metadata:
   name: mysql
 spec:
-  replicas: 1
-  secretRef:
-    name: mysql-root-user-secret
+  replicas: 3
   volumeClaimTemplate:
     metadata:
-      name: data
+      name: mysql-block-volume
     spec:
-      storageClassName: manual
+      storageClassName: "oci"
+      selector:
+        matchLabels:
+          oci-availability-domain: "PHX-AD-1"
       accessModes:
-        - ReadWriteMany
+        - ReadWriteOnce
       resources:
         requests:
-          storage: 1Gi
+          storage: 50Gi
