@@ -16,7 +16,6 @@ package cluster
 
 import (
 	"k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -24,13 +23,12 @@ import (
 	"github.com/oracle/mysql-operator/pkg/resources/secrets"
 )
 
-// SecretControlInterface defines the interface that the
-// MySQLClusterController uses to create, update, and delete Secrets. It
-// is implemented as an interface to enable testing.
+// SecretControlInterface defines the interface that the MySQLClusterController
+// uses to get and create Secrets. It is implemented as an interface to enable
+// testing.
 type SecretControlInterface interface {
 	GetForCluster(cluster *api.MySQLCluster) (*v1.Secret, error)
 	CreateSecret(s *v1.Secret) error
-	DeleteSecret(s *v1.Secret) error
 }
 
 type realSecretControl struct {
@@ -51,13 +49,5 @@ func (rsc *realSecretControl) GetForCluster(cluster *api.MySQLCluster) (*v1.Secr
 
 func (rsc *realSecretControl) CreateSecret(s *v1.Secret) error {
 	_, err := rsc.client.CoreV1().Secrets(s.Namespace).Create(s)
-	return err
-}
-
-func (rsc *realSecretControl) DeleteSecret(s *v1.Secret) error {
-	err := rsc.client.CoreV1().Secrets(s.Namespace).Delete(s.Name, nil)
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
 	return err
 }

@@ -4,12 +4,14 @@ kind: ServiceAccount
 metadata:
   name: mysql-operator
   namespace: {{ if .Values.operator.global }}mysql-operator{{ else }}{{ .Values.operator.namespace}}{{ end }}
+
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: mysql-agent
   namespace: {{ if .Values.operator.global }}default{{ else }}{{ .Values.operator.namespace}}{{ end }}
+
 ---
 {{- if .Values.rbac.enabled }}
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -19,14 +21,108 @@ metadata:
   namespace: {{ .Values.operator.namespace}}{{ end }}
 rules:
   - apiGroups:
-    - "*"
+    - ""
     resources:
-    - "*"
+    - pods
     verbs:
-    - "*"
+    - get
+    - list
+    - patch
+    - update
+    - watch
+
+  - apiGroups:
+    - ""
+    resources:
+    - secrets
+    verbs:
+    - create
+
+  - apiGroups:
+    - ""
+    resources:
+    - services
+    verbs:
+    - create
+    - get
+    - list
+    - watch
+
+  - apiGroups:
+    - apps
+    resources:
+    - statefulsets
+    verbs:
+    - create
+    - get
+    - list
+    - patch
+    - update
+    - watch
+
+  - apiGroups:
+    - mysql.oracle.com
+    resources:
+    - mysqlbackups
+    - mysqlbackupschedules
+    - mysqlclusters
+    - mysqlrestores
+    verbs:
+    - get
+    - list
+    - patch
+    - update
+    - watch
+
+  - apiGroups:
+    - mysql.oracle.com
+    resources:
+    - mysqlbackups
+    verbs:
+    - create
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: {{ if .Values.operator.global }}Cluster{{ end }}RoleBinding
+kind: {{ if .Values.operator.global }}Cluster{{ end }}Role
+metadata:
+  name: mysql-agent{{ if .Values.operator.global }}{{ else}}
+  namespace: {{ .Values.operator.namespace}}{{ end }}
+rules:
+  - apiGroups:
+    - ""
+    resources:
+    - pods
+    verbs:
+    - get
+    - list
+    - patch
+    - update
+    - watch
+
+  - apiGroups:
+    - ""
+    resources:
+    - secrets
+    verbs:
+    - get
+
+  - apiGroups:
+    - mysql.oracle.com
+    resources:
+    - mysqlbackups
+    - mysqlbackupschedules
+    - mysqlclusters
+    - mysqlrestores
+    verbs:
+    - get
+    - list
+    - patch
+    - update
+    - watch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind:  {{ if .Values.operator.global }}Cluster{{ end }}RoleBinding
 metadata:
   name: mysql-operator
   namespace: {{ .Values.operator.namespace}}
@@ -38,18 +134,19 @@ subjects:
 - kind: ServiceAccount
   name: mysql-operator
   namespace: {{ .Values.operator.namespace }}
+
 ---
-kind: {{ if .Values.operator.global }}Cluster{{ end }}RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
+kind:  {{ if .Values.operator.global }}Cluster{{ end }}RoleBinding
 metadata:
   name: mysql-agent
-  namespace: {{ if .Values.operator.global }}default{{ else }}{{ .Values.operator.namespace }}{{ end }}
+  namespace: {{ .Values.operator.namespace}}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: {{ if .Values.operator.global }}Cluster{{ end }}Role
-  name: mysql-operator
+  kind:  {{ if .Values.operator.global }}Cluster{{ end }}Role
+  name: mysql-agent
 subjects:
 - kind: ServiceAccount
   name: mysql-agent
-  namespace: {{ if .Values.operator.global }}default{{ else }}{{ .Values.operator.namespace }}{{ end }}
+  namespace: {{ .Values.operator.namespace }}
 {{- end }}

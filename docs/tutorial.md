@@ -47,10 +47,10 @@ To install the chart in a cluster without RBAC with the release name `my-release
 $ helm install --name my-release mysql-operator
 ```
 
-If your cluster has RBAC enabled then you will need to run:
+If your cluster has RBAC disabled then you will need to run:
 
 ```console
-$ helm install --name my-release mysql-operator --set rbac.enabled=true
+$ helm install --name my-release mysql-operator --set rbac.enabled=false
 ```
 
 The above command deploys the MySQL Operator on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
@@ -73,10 +73,37 @@ The following tables lists the configurable parameters of the MySQL-operator cha
 
 Parameter | Description | Default
 --------- | ----------- | -------
-`rbac.enabled` | If true, enables RBAC | `false`
+`rbac.enabled` | If true, enables RBAC | `true`
 `operator.namespace` | Controls the namespace in which the operator is deployed | `mysql-operator`
 
 ## Create a simple MySQL cluster
+
+The first time you create a MySQL Cluster in a namespace you need to create the
+`mysql-agent` ServiceAccount and RoleBinding in that namespace:
+
+```bash
+$ cat <<EOF | kubectl create -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mysql-agent
+  namespace: my-namespace
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: mysql-agent
+  namespace: my-namespace
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mysql-agent
+subjects:
+- kind: ServiceAccount
+  name: mysql-agent
+  namespace: my-namespace
+EOF
+```
 
 Now let's create a new MySQL cluster. Create a cluster.yaml file with the following contents
 
