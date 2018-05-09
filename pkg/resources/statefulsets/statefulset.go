@@ -161,52 +161,12 @@ func mysqlServerContainer(cluster *api.MySQLCluster, mysqlServerImage string, ro
 
 	args := []string{
 		"--server_id=$(expr $base + $index)",
-		// basic process setup options
-		"--user=mysql",
 		"--datadir=/var/lib/mysql",
-		// storage engine options
-		"--default-storage-engine=innodb",
-		"--default-tmp-storage-engine=innodb",
-		"--internal-tmp-disk-storage-engine=innodb",
-		// character set, collation, and i18n options
-		"--character-set-server=utf8mb4",
-		"--collation-server=utf8mb4_unicode_520_ci",
-		// crash handling and debugging options
-		"--core-file",
-		"--default-password-lifetime=0",
-		// date and time handling options
-		"--default-time-zone=SYSTEM",
-		"--explicit-defaults-for-timestamp=ON",
-		// performance Schema options
-		"--performance-schema-consumer-events-transactions-current=ON",
-		"--performance-schema-consumer-events-transactions-history=ON",
-		// innoDB options
-		"--innodb-buffer-pool-size=128M",
-		"--innodb-buffer-pool-instances=4",
-		"--innodb-autoinc-lock-mode=2",
-		"--innodb-flush-method=O_DIRECT_NO_FSYNC",
-		"--innodb-open-files=128",
-		"--innodb-log-buffer-size=4M",
-		"--innodb-monitor-enable='%'",
-		"--innodb-print-all-deadlocks=ON",
-		"--innodb-undo-log-truncate=ON",
-		"--innodb-undo-tablespaces=2",
-		// "--innodb-undo-logs=2", (removed in 8.0)
-		// group replication pre-requisites & recommendations
-		"--binlog_checksum=NONE",
 		"--gtid_mode=ON",
-		"--enforce_gtid_consistency=ON",
 		"--log_bin",
-		"--binlog-format=ROW",
-		"--log-slave-updates=ON",
-		"--master-info-repository=TABLE",
-		"--relay-log-info-repository=TABLE",
+		"--binlog_checksum=NONE",
+		"--enforce_gtid_consistency=ON",
 		fmt.Sprintf("--relay-log=%s-${index}-relay-bin", cluster.Name),
-		"--slave-preserve-commit-order=ON",
-		"--disabled_storage_engines='MyISAM,BLACKHOLE,FEDERATED,ARCHIVE'",
-		"--transaction-isolation='READ-COMMITTED'",
-		// group replication specific options
-		"--transaction-write-set-extraction=XXHASH64",
 		fmt.Sprintf("--report-host=\"%[1]s-${index}.%[1]s\"", cluster.Name),
 		"--log-error-verbosity=3",
 	}
