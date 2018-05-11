@@ -30,7 +30,7 @@ import (
 
 const (
 	mysqlServer = "mysql/mysql-server"
-	mysqlAgent  = "wcr.io/oracle/mysql-agent"
+	mysqlAgent  = "iad.ocir.io/oracle/mysql-agent"
 )
 
 // Images is the configuration of required MySQLOperator images. Remember to configure the appropriate
