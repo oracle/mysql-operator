@@ -11,7 +11,7 @@ else
         __assert_var_set E2E_TEST_TAG
         OPERATOR_NAMESPACE=$(echo ${NEW_NAMESPACE}-${E2E_TEST_TAG} | tr "[:upper:]" "[:lower:]")
         TEST_NAMESPACE=$(echo ${NEW_NAMESPACE}-${E2E_TEST_TAG} | tr "[:upper:]" "[:lower:]")
-    else    
+    else
         OPERATOR_NAMESPACE=$(echo ${NEW_NAMESPACE}-${E2E_TEST_RUN} | tr "[:upper:]" "[:lower:]")
         TEST_NAMESPACE=$(echo ${NEW_NAMESPACE}-${E2E_TEST_RUN} | tr "[:upper:]" "[:lower:]")
     fi
@@ -142,7 +142,7 @@ function create_odx_docker_pull_secrets() {
     kubectl --kubeconfig=${KUBECONFIG} \
         -n ${OPERATOR_NAMESPACE} \
         create secret docker-registry odx-docker-pull-secret \
-        --docker-server="wcr.io" \
+        --docker-server="iad.ocir.io" \
         --docker-username=${DOCKER_REGISTRY_USERNAME} \
         --docker-password=${DOCKER_REGISTRY_PASSWORD} \
         --docker-email="k8s@oracle.com"
@@ -151,7 +151,7 @@ function create_odx_docker_pull_secrets() {
         kubectl --kubeconfig=${KUBECONFIG} \
             -n ${TEST_NAMESPACE} \
             create secret docker-registry odx-docker-pull-secret \
-            --docker-server="wcr.io" \
+            --docker-server="iad.ocir.io" \
             --docker-username=${DOCKER_REGISTRY_USERNAME} \
             --docker-password=${DOCKER_REGISTRY_PASSWORD} \
             --docker-email="k8s@oracle.com"
@@ -258,7 +258,7 @@ function run() {
     else
         log "E2E_TEST_RUN:${E2E_TEST_RUN}"
         cmd_or_exit go test -timeout 45m -v ./test/e2e/ --kubeconfig=${KUBECONFIG} --namespace=${TEST_NAMESPACE} -run ${E2E_TEST_RUN} -parallel ${E2E_PARALLEL} -tags all
-    fi    
+    fi
 }
 
 function teardown() {

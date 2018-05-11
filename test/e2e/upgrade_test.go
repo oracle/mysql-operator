@@ -31,7 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const mysqlOperatorImageName = "wcr.io/oracle/mysql-operator"
+const mysqlOperatorImageName = "iad.ocir.io/oracle/mysql-operator"
 const mysqlAgentContainerName = "mysql-agent"
 
 func TestUpgrade(test *testing.T) {
