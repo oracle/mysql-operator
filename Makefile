@@ -30,9 +30,9 @@ endif
 E2E_PARALLEL    ?= 10
 ROOT_DIR        := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 PKG             := github.com/oracle/mysql-operator
-REGISTRY        := wcr.io/oracle
+REGISTRY        := iad.ocir.io/spinnaker
 SRC_DIRS        := cmd pkg test/examples
-TEST_E2E_IMAGE  := wcr.io/oracle/mysql-operator-ci-e2e:1.0.0
+TEST_E2E_IMAGE  := iad.ocir.io/oracle/mysql-operator-ci-e2e:1.0.0
 REGISTRY_STRING := $(subst /,_,$(REGISTRY))
 CMD_DIRECTORIES := $(sort $(dir $(wildcard ./cmd/*/)))
 COMMANDS        := $(CMD_DIRECTORIES:./cmd/%/=%)

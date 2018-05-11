@@ -1,4 +1,4 @@
-DOCKER_REPO ?= wcr.io
+DOCKER_REPO ?= iad.ocir.io
 DOCKER_USER ?= oracle
 DOCKER_IMAGE_NAME ?= mysql-operator-ci-e2e
 
