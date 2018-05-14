@@ -15,25 +15,21 @@
 package e2e
 
 import (
-	"os"
-	"testing"
-
-	"github.com/golang/glog"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 
 	"github.com/oracle/mysql-operator/test/e2e/framework"
 )
 
-func TestMain(m *testing.M) {
-	if err := framework.Setup(); err != nil {
-		glog.Errorf("Failed to setup framework: %v", err)
-		os.Exit(1)
-	}
+var _ = Describe("Basic cluster creation", func() {
+	f := framework.NewDefaultFramework("basic")
 
-	code := m.Run()
+	It("should be possible to create a basic 3 member cluster with a 28 character name", func() {
+		clusterName := "basic-twenty-eight-char-name"
+		Expect(clusterName).To(HaveLen(28))
 
-	if err := framework.Teardown(); err != nil {
-		glog.Errorf("Failed to teardown framework: %v", err)
-		os.Exit(1)
-	}
-	os.Exit(code)
-}
+		jig := framework.NewMySQLClusterTestJig(f.MySQLClientSet, f.ClientSet, clusterName)
+
+		jig.CreateAndAwaitMySQLClusterOrFail(f.Namespace.Name, 3, nil, framework.DefaultTimeout)
+	})
+})
