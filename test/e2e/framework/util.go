@@ -27,6 +27,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pkg/errors"
 
 	"k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
@@ -194,6 +195,19 @@ func (b kubectlBuilder) Exec() (string, error) {
 // RunKubectl is a convenience wrapper over kubectlBuilder
 func RunKubectl(args ...string) (string, error) {
 	return NewKubectlCommand(args...).Exec()
+}
+
+// RunKubectlWithRetries runs a kubectl command with 3 retries.
+func RunKubectlWithRetries(args ...string) (string, error) {
+	var err error
+	var out string
+	for i := 0; i < 3; i++ {
+		if out, err = RunKubectl(args...); err == nil {
+			return out, err
+		}
+		Logf("Retrying %v:\nerror %v\nstdout %v", args, err, out)
+	}
+	return "", errors.Wrapf(err, "failed to execute \"%v\" with retries", args)
 }
 
 // RunHostCmd runs the given cmd in the context of the given pod using `kubectl exec`

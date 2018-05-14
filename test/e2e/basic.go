@@ -30,6 +30,7 @@ var _ = Describe("Basic cluster creation", func() {
 
 		jig := framework.NewMySQLClusterTestJig(f.MySQLClientSet, f.ClientSet, clusterName)
 
-		jig.CreateAndAwaitMySQLClusterOrFail(f.Namespace.Name, 3, nil, framework.DefaultTimeout)
+		cluster := jig.CreateAndAwaitMySQLClusterOrFail(f.Namespace.Name, 3, nil, framework.DefaultTimeout)
+		framework.RWSQLTest(cluster, cluster.Name+"-0")
 	})
 })

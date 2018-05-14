@@ -16,6 +16,7 @@ package framework
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -154,5 +155,40 @@ func (j *MySQLClusterTestJig) SanityCheckMySQLCluster(cluster *v1.MySQLCluster) 
 	_, err = j.KubeClient.CoreV1().Secrets(cluster.Namespace).Get(secretName.Name, metav1.GetOptions{})
 	if err != nil {
 		Failf("Error root password secret %q for cluster %q: %v", secretName, name, err)
+	}
+}
+
+// ExecuteSQL executes the given SQL statement(s) on a specified MySQLCluster
+// member via kubectl exec.
+func ExecuteSQL(cluster *v1.MySQLCluster, member, sql string) (string, error) {
+	cmd := fmt.Sprintf("mysql -h %s.%s -u root -p$MYSQL_ROOT_PASSWORD -e '%s'", member, cluster.Name, sql)
+
+	return RunKubectlWithRetries(
+		fmt.Sprintf("--namespace=%v", cluster.Namespace),
+		"exec", member,
+		"-c", "mysql",
+		"--", "/bin/sh", "-c", cmd)
+}
+
+func lastLine(out string) string {
+	outLines := strings.Split(strings.Trim(out, "\n"), "\n")
+	return outLines[len(outLines)-1]
+}
+
+// RWSQLTest creates a test table, inserts a row, and
+func RWSQLTest(cluster *v1.MySQLCluster, member string) {
+	output, err := ExecuteSQL(cluster, member, strings.Join([]string{
+		"CREATE DATABASE IF NOT EXISTS testdb;",
+		"use testdb;",
+		"CREATE TABLE IF NOT EXISTS foo (k varchar(20) NOT NULL, v varchar(20), PRIMARY KEY (k));",
+		`INSERT INTO foo (k, v) VALUES ("foo", "bar") ON DUPLICATE KEY UPDATE k="foo", v="bar";`,
+		`select v from foo where k="foo";`,
+	}, " "))
+	if err != nil {
+		Failf("Error executing SQL: %v", err)
+	}
+	result := lastLine(output)
+	if result != "bar" {
+		Failf("Expected foo=\"bar\"; got foo=%q", result)
 	}
 }
