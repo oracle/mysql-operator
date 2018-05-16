@@ -249,14 +249,16 @@ func (f *Framework) AfterEach() {
 	RemoveCleanupAction(f.cleanupHandle)
 
 	nsDeletionErrors := map[string]error{}
-	for _, ns := range f.namespacesToDelete {
-		if !TestContext.DeleteNamespace {
-			Logf("Not deleteing namespace %q as --delete-namespace=false", ns)
-			continue
-		}
-		By(fmt.Sprintf("Destroying namespace %q for this suite. Manual cleanup required.", ns.Name))
-		if err := f.DeleteNamespace(ns.Name, 5*time.Minute); err != nil {
-			nsDeletionErrors[ns.Name] = err
+
+	// Whether to delete namespace is determined by 3 factors: delete-namespace flag, delete-namespace-on-failure flag and the test result
+	// if delete-namespace set to false, namespace will always be preserved.
+	// if delete-namespace is true and delete-namespace-on-failure is false, namespace will be preserved if test failed.
+	if TestContext.DeleteNamespace && (TestContext.DeleteNamespaceOnFailure || !CurrentGinkgoTestDescription().Failed) {
+		for _, ns := range f.namespacesToDelete {
+			By(fmt.Sprintf("Destroying namespace %q for this suite.", ns.Name))
+			if err := f.DeleteNamespace(ns.Name, 5*time.Minute); err != nil {
+				nsDeletionErrors[ns.Name] = err
+			}
 		}
 	}
 
