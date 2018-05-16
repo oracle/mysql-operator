@@ -18,6 +18,13 @@ type TestContextType struct {
 	Namespace string
 	// DeleteNamespace controls whether or not to delete test namespaces
 	DeleteNamespace bool
+
+	// S3AccessKey is the S3 (compat.) access key for the bucket used in
+	// backup / restore tests.
+	S3AccessKey string
+	// S3AccessKey is the S3 (compat.) secret key for the bucket used in
+	// backup / restore tests.
+	S3SecretKey string
 }
 
 // TestContext holds the context of the the test run.
@@ -30,6 +37,8 @@ func RegisterFlags() {
 	flag.StringVar(&TestContext.KubeConfig, "kubeconfig", "", "Path to Kubeconfig file with authorization and master location information.")
 	flag.StringVar(&TestContext.Namespace, "namespace", "", "Name of an existing Namespace to run tests in")
 	flag.BoolVar(&TestContext.DeleteNamespace, "delete-namespace", true, "If true tests will delete namespace after completion. It is only designed to make debugging easier, DO NOT turn it off by default.")
+	flag.StringVar(&TestContext.S3AccessKey, "s3-access-key", "", "The S3 (compat.) access key for the bucket used in backup / restore tests.")
+	flag.StringVar(&TestContext.S3SecretKey, "s3-secret-key", "", "The S3 (compat.) secret key for the bucket used in backup / restore tests.")
 }
 
 func init() {

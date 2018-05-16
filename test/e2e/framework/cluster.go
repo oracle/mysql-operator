@@ -26,31 +26,40 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 
 	. "github.com/onsi/ginkgo"
+	"github.com/pkg/errors"
 
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
 	mysqlclientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 	"github.com/oracle/mysql-operator/pkg/resources/secrets"
 )
 
+// TestDBName is the name of database to use when executing test SQL queries.
+const TestDBName = "testdb"
+
 // MySQLClusterTestJig is a jig to help MySQLCluster testing.
 type MySQLClusterTestJig struct {
-	ID          string
-	Name        string
+	ID     string
+	Name   string
+	Labels map[string]string
+
 	MySQLClient mysqlclientset.Interface
 	KubeClient  clientset.Interface
-	Labels      map[string]string
 }
 
 // NewMySQLClusterTestJig allocates and inits a new MySQLClusterTestJig.
 func NewMySQLClusterTestJig(mysqlClient mysqlclientset.Interface, kubeClient clientset.Interface, name string) *MySQLClusterTestJig {
-	j := &MySQLClusterTestJig{}
-	j.MySQLClient = mysqlClient
-	j.KubeClient = kubeClient
-	j.Name = name
-	j.ID = (j.Name + "-" + string(uuid.NewUUID()))[:63]
-	j.Labels = map[string]string{"testid": j.ID}
+	id := string(uuid.NewUUID())
+	return &MySQLClusterTestJig{
+		ID:   id,
+		Name: name,
+		Labels: map[string]string{
+			"testID":   id,
+			"testName": name,
+		},
 
-	return j
+		MySQLClient: mysqlClient,
+		KubeClient:  kubeClient,
+	}
 }
 
 // newMySQLClusterTemplate returns the default v1.MySQLCluster template for this jig, but
@@ -158,14 +167,11 @@ func (j *MySQLClusterTestJig) SanityCheckMySQLCluster(cluster *v1.MySQLCluster) 
 	}
 }
 
-// ExecuteSQL executes the given SQL statement(s) on a specified MySQLCluster
+// ExecuteSQLOrDie executes the given SQL statement(s) on a specified MySQLCluster
 // member via kubectl exec.
 func ExecuteSQL(cluster *v1.MySQLCluster, member, sql string) (string, error) {
 	cmd := fmt.Sprintf("mysql -h %s.%s -u root -p$MYSQL_ROOT_PASSWORD -e '%s'", member, cluster.Name, sql)
-
-	return RunKubectlWithRetries(
-		fmt.Sprintf("--namespace=%v", cluster.Namespace),
-		"exec", member,
+	return RunKubectl(fmt.Sprintf("--namespace=%v", cluster.Namespace), "exec", member,
 		"-c", "mysql",
 		"--", "/bin/sh", "-c", cmd)
 }
@@ -175,20 +181,32 @@ func lastLine(out string) string {
 	return outLines[len(outLines)-1]
 }
 
-// RWSQLTest creates a test table, inserts a row, and
-func RWSQLTest(cluster *v1.MySQLCluster, member string) {
+// ReadSQLTest SELECTs v from testdb.foo where k=foo.
+func ReadSQLTest(cluster *v1.MySQLCluster, member string) (string, error) {
+	By("SELECT v FROM foo WHERE k=\"foo\"")
 	output, err := ExecuteSQL(cluster, member, strings.Join([]string{
-		"CREATE DATABASE IF NOT EXISTS testdb;",
-		"use testdb;",
-		"CREATE TABLE IF NOT EXISTS foo (k varchar(20) NOT NULL, v varchar(20), PRIMARY KEY (k));",
-		`INSERT INTO foo (k, v) VALUES ("foo", "bar") ON DUPLICATE KEY UPDATE k="foo", v="bar";`,
-		`select v from foo where k="foo";`,
+		fmt.Sprintf("use %s;", TestDBName),
+		`SELECT v FROM foo WHERE k="foo";`,
 	}, " "))
 	if err != nil {
-		Failf("Error executing SQL: %v", err)
+		return "", errors.Wrap(err, "executing SQL")
 	}
-	result := lastLine(output)
-	if result != "bar" {
-		Failf("Expected foo=\"bar\"; got foo=%q", result)
+
+	return lastLine(output), nil
+}
+
+// WriteSQLTest creates a test table, inserts a row, and writes a uuid into it.
+// It returns the generated UUID.
+func WriteSQLTest(cluster *v1.MySQLCluster, member string) (string, error) {
+	By("Creating a database and table, writing to that table, and writing a uuid")
+	id := uuid.NewUUID()
+	if _, err := ExecuteSQL(cluster, member, strings.Join([]string{
+		fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s;", TestDBName),
+		fmt.Sprintf("use %s;", TestDBName),
+		"CREATE TABLE IF NOT EXISTS foo (k varchar(20) NOT NULL, v varchar(36), PRIMARY KEY (k));",
+		fmt.Sprintf("INSERT INTO foo (k, v) VALUES (\"foo\", \"%[1]s\") ON DUPLICATE KEY UPDATE k=\"foo\", v=\"%[1]s\";", id),
+	}, " ")); err != nil {
+		return "", errors.Wrap(err, "executing SQL")
 	}
+	return string(id), nil
 }

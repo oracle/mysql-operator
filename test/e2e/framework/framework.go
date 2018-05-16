@@ -249,12 +249,14 @@ func (f *Framework) AfterEach() {
 	RemoveCleanupAction(f.cleanupHandle)
 
 	nsDeletionErrors := map[string]error{}
-	if TestContext.DeleteNamespace {
-		for _, ns := range f.namespacesToDelete {
-			By(fmt.Sprintf("Destroying namespace %q for this suite.", ns.Name))
-			if err := f.DeleteNamespace(ns.Name, 5*time.Minute); err != nil {
-				nsDeletionErrors[ns.Name] = err
-			}
+	for _, ns := range f.namespacesToDelete {
+		if !TestContext.DeleteNamespace {
+			Logf("Not deleteing namespace %q as --delete-namespace=false", ns)
+			continue
+		}
+		By(fmt.Sprintf("Destroying namespace %q for this suite. Manual cleanup required.", ns.Name))
+		if err := f.DeleteNamespace(ns.Name, 5*time.Minute); err != nil {
+			nsDeletionErrors[ns.Name] = err
 		}
 	}
 
@@ -266,4 +268,5 @@ func (f *Framework) AfterEach() {
 		}
 		Failf(strings.Join(messages, ","))
 	}
+	f.OperatorInstalled = false
 }
