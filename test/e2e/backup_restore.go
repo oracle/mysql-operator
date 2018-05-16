@@ -46,6 +46,7 @@ var _ = Describe("Backup/Restore", func() {
 
 		clusterJig := framework.NewMySQLClusterTestJig(mcs, cs, clusterName)
 		backupJig := framework.NewMySQLBackupTestJig(mcs, cs, clusterName)
+		restoreJig := framework.NewMySQLRestoreTestJig(mcs, cs, clusterName)
 
 		By("Creating a cluster to backup")
 
@@ -97,5 +98,16 @@ var _ = Describe("Backup/Restore", func() {
 
 		_, err = framework.ReadSQLTest(cluster, member)
 		Expect(err).To(HaveOccurred())
+
+		By("Restoring the backup")
+
+		restore := restoreJig.CreateAndAwaitMySQLRestoreOrFail(ns, clusterName, backup.Name, nil, framework.DefaultTimeout)
+		Expect(restore.Status.TimeCompleted).ToNot(BeZero())
+
+		By("Checking testdb is present and contains the correct uuid")
+
+		actual, err = framework.ReadSQLTest(cluster, member)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(actual).To(Equal(expected))
 	})
 })

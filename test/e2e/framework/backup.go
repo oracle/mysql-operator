@@ -59,7 +59,7 @@ func NewMySQLBackupTestJig(mysqlClient mysqlclientset.Interface, kubeClient clie
 
 // newMySQLBackupTemplate returns the default v1.MySQLBackup template for this jig, but
 // does not actually create the MySQLBackup. The default MySQLBackup has the same name
-// as the jig and has no Spec.
+// as the jig.
 func (j *MySQLBackupTestJig) newMySQLBackupTemplate(namespace, clusterName string) *v1.MySQLBackup {
 	return &v1.MySQLBackup{
 		TypeMeta: metav1.TypeMeta{
@@ -99,23 +99,17 @@ func (j *MySQLBackupTestJig) CreateMySQLBackupOrFail(namespace, clusterName stri
 }
 
 // CreateAndAwaitMySQLBackupOrFail creates a new MySQLBackup based on the
-// jig's defaults, waits for it to become ready, and then sanity checks it and
-// its dependant resources. Callers can provide a function to tweak the
-// MySQLBackup object before it is created.
+// jig's defaults, waits for it to become ready. Callers can provide a function
+// to tweak the MySQLBackup object before it is created.
 func (j *MySQLBackupTestJig) CreateAndAwaitMySQLBackupOrFail(namespace, clusterName string, tweak func(backup *v1.MySQLBackup), timeout time.Duration) *v1.MySQLBackup {
 	backup := j.CreateMySQLBackupOrFail(namespace, clusterName, tweak)
-	backup = j.WaitForbackupReadyOrFail(namespace, backup.Name, timeout)
-	j.SanityCheckMySQLBackup(backup)
-	return backup
+	return j.WaitForbackupReadyOrFail(namespace, backup.Name, timeout)
 }
 
 // CreateAndAwaitMySQLDumpBackupOrFail creates a new MySQLBackup based on the
-// jig's defaults, waits for it to become ready, and then sanity checks it and
-// its dependant resources. Callers can provide a function to tweak the
-// MySQLBackup object before it is created.
-func (j *MySQLBackupTestJig) CreateAndAwaitMySQLDumpBackupOrFail(namespace, clusterName string, databases []string, tweak func(backup *v1.MySQLBackup),
-	timeout time.Duration,
-) *v1.MySQLBackup {
+// jig's defaults, waits for it to become ready. Callers can provide a function
+// to tweak the MySQLBackup object before it is created.
+func (j *MySQLBackupTestJig) CreateAndAwaitMySQLDumpBackupOrFail(namespace, clusterName string, databases []string, tweak func(backup *v1.MySQLBackup), timeout time.Duration) *v1.MySQLBackup {
 	backup := j.CreateMySQLBackupOrFail(namespace, clusterName, func(backup *v1.MySQLBackup) {
 		backup.Spec.Executor = &v1.Executor{
 			Provider:  "mysqldump",
@@ -124,7 +118,6 @@ func (j *MySQLBackupTestJig) CreateAndAwaitMySQLDumpBackupOrFail(namespace, clus
 		tweak(backup)
 	})
 	backup = j.WaitForbackupReadyOrFail(namespace, backup.Name, timeout)
-	j.SanityCheckMySQLBackup(backup)
 	return backup
 }
 
@@ -189,13 +182,4 @@ func (j *MySQLBackupTestJig) WaitForbackupReadyOrFail(namespace, name string, ti
 		return false
 	})
 	return backup
-}
-
-// SanityCheckMySQLBackup checks basic properties of a given MySQLBackup match
-// our expectations.
-func (j *MySQLBackupTestJig) SanityCheckMySQLBackup(backup *v1.MySQLBackup) {
-	_ = types.NamespacedName{Namespace: backup.Namespace, Name: backup.Name}
-	// TODO(apryde):
-	//  - Check spec fields
-	//  - Check referenced resources exist
 }
