@@ -212,8 +212,13 @@ func RunKubectlWithRetries(args ...string) (string, error) {
 
 // RunHostCmd runs the given cmd in the context of the given pod using `kubectl exec`
 // inside of a shell.
-func RunHostCmd(ns, name, cmd string) (string, error) {
-	return RunKubectl("exec", fmt.Sprintf("--namespace=%v", ns), name, "--", "/bin/sh", "-c", cmd)
+func RunHostCmd(ns, name, container, cmd string) (string, error) {
+	args := []string{"exec", fmt.Sprintf("--namespace=%v", ns), name}
+	if container != "" {
+		args = append(args, "-c", container)
+	}
+	args = append(args, "--", "/bin/sh", "-c", cmd)
+	return RunKubectl(args...)
 }
 
 // IsPodAvailable returns true if a pod is available; false otherwise.

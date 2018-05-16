@@ -29,7 +29,7 @@ import (
 )
 
 var _ = Describe("Pod crash", func() {
-	f := framework.NewDefaultFramework("cluster-creation")
+	f := framework.NewDefaultFramework("pod-crash")
 
 	var cs clientset.Interface
 	var mcs mysqlclientset.Interface

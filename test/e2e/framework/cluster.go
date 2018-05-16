@@ -19,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -233,6 +234,25 @@ func getReadyClusterMemberMatchingSelector(cs clientset.Interface, namespace str
 		Failf("Failed to find a Pod matching %q after %v: %v", sel, DefaultTimeout, err)
 	}
 	return name
+}
+
+// AwaitPodReadyOrDie polls the specified Pod until it is ready of a timeout
+func AwaitPodReadyOrDie(cs clientset.Interface, ns, name string, timeout time.Duration) {
+	nsName := types.NamespacedName{Namespace: ns, Name: name}
+	Logf("Waiting up to %v for a Pod %q to be ready", timeout, nsName)
+
+	if err := wait.PollImmediate(Poll, timeout, func() (bool, error) {
+		pod, err := cs.CoreV1().Pods(ns).Get(name, metav1.GetOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			return false, err
+		}
+		if IsPodReady(pod) {
+			return true, nil
+		}
+		return false, nil
+	}); err != nil {
+		Failf("Pod %q did not become ready after %v: %v", nsName, timeout, err)
+	}
 }
 
 // GetReadyPrimaryPodName returns the name of the first ready primary Pod it finds in
