@@ -1,5 +1,5 @@
 IMAGE ?= wcr.io/oracle/mysql-operator-ci-e2e
-VERSION ?= 1.1.0
+VERSION ?= 1.1.1
 
 .PHONY: build
 build:

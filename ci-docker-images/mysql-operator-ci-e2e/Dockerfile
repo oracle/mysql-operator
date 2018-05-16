@@ -9,7 +9,7 @@ RUN curl https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz -O && 
     rm go1.8.3.linux-amd64.tar.gz && \
     mkdir -p /go/bin
 
-ENV PATH=/tools/go/bin:/tools/linux-amd64:$PATH \
+ENV PATH=/tools/go/bin:/go/bin:/tools/linux-amd64:$PATH \
     GOPATH=/go \
     GOROOT=/tools/go
 

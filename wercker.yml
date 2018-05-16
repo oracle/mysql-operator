@@ -84,7 +84,7 @@ e2e-test:
   base-path: "/go/src/github.com/oracle/mysql-operator"
   box:
     registry: https://wcr.io/v2
-    id: wcr.io/oracle/mysql-operator-ci-e2e:1.1.0
+    id: wcr.io/oracle/mysql-operator-ci-e2e:1.1.1
   steps:
     - script:
       name: e2e default tests
