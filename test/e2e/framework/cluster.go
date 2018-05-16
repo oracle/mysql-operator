@@ -20,6 +20,7 @@ import (
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	wait "k8s.io/apimachinery/pkg/util/wait"
@@ -29,6 +30,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/controllers/cluster/labeler"
 	mysqlclientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 	"github.com/oracle/mysql-operator/pkg/resources/secrets"
 )
@@ -209,4 +211,38 @@ func WriteSQLTest(cluster *v1.MySQLCluster, member string) (string, error) {
 		return "", errors.Wrap(err, "executing SQL")
 	}
 	return string(id), nil
+}
+
+func getReadyClusterMemberMatchingSelector(cs clientset.Interface, namespace string, sel labels.Selector) string {
+	Logf("Waiting up to %v for a Pod to match selector %q", DefaultTimeout, sel)
+
+	var name string
+	if err := wait.PollImmediate(Poll, DefaultTimeout, func() (bool, error) {
+		pods, err := cs.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: sel.String()})
+		if err != nil {
+			return false, err
+		}
+		for _, pod := range pods.Items {
+			if IsPodReady(&pod) {
+				name = pod.Name
+				return true, nil
+			}
+		}
+		return false, nil
+	}); err != nil {
+		Failf("Failed to find a Pod matching %q after %v: %v", sel, DefaultTimeout, err)
+	}
+	return name
+}
+
+// GetReadyPrimaryPodName returns the name of the first ready primary Pod it finds in
+// the given cluster.
+func GetReadyPrimaryPodName(cs clientset.Interface, namespace, clusterName string) string {
+	return getReadyClusterMemberMatchingSelector(cs, namespace, labeler.PrimarySelector(clusterName))
+}
+
+// GetReadySecondaryPodName returns the name of the first ready secondary pod it
+// finds in the given cluster.
+func GetReadySecondaryPodName(cs clientset.Interface, namespace, clusterName string) string {
+	return getReadyClusterMemberMatchingSelector(cs, namespace, labeler.SecondarySelector(clusterName))
 }
