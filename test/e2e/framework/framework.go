@@ -152,7 +152,7 @@ func (f *Framework) DeleteNamespace(namespace string, timeout time.Duration) err
 // InstallOperator installs the MySQL operator into the given namespace via helm.
 // NOTE: Requires that the MySQL operator CRDs have already been installed.
 func (f *Framework) InstallOperator(namespace string) error {
-	By("Installing the operator via helm")
+	By(fmt.Sprintf("Installing the operator via helm into namespace %q", namespace))
 	// TODO(apryde): Implement timeout
 	args := []string{"install", "mysql-operator",
 		"--debug",
@@ -172,8 +172,8 @@ func (f *Framework) InstallOperator(namespace string) error {
 	}
 
 	output, err := cmd.CombinedOutput()
-	Logf("helm output: \n%s", string(output))
 	if err != nil {
+		Logf("helm output: \n%s", string(output))
 		return errors.Wrap(err, "installing operator")
 	}
 
