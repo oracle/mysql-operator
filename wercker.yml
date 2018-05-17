@@ -90,11 +90,10 @@ e2e-test:
       name: e2e default tests
       code: |
         export KUBECONFIG="/tmp/kubeconfig"
-        echo -n "${KUBECONFIG_VAR}" | openssl enc -base64 -d -A > ${KUBECONFIG}
-        export MYSQL_OPERATOR_VERSION="$(cat dist/version.txt)"
-        ginkgo -p -v test/e2e -- \
+        echo -n "${KUBECONFIG_VAR}" | openssl enc -base64 -d -A > "${KUBECONFIG}"
+        ginkgo -nodes=3 -v test/e2e -- \
           --kubeconfig="${KUBECONFIG}" \
-          --operator-version="${MYSQL_OPERATOR_VERSION}" \
+          --operator-version="$(cat dist/version.txt)" \
           --s3-access-key="${S3_ACCESS_KEY}" \
           --s3-secret-key="${S3_SECRET_KEY}" \
           --delete-namespace-on-failure=false
@@ -108,6 +107,7 @@ release:
         code: |
           export VERSION=$(cat dist/version.txt)
           echo "${VERSION}"
+
     - github-create-release:
       token: $GITHUB_TOKEN
       tag: $VERSION
