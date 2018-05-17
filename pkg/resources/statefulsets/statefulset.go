@@ -44,6 +44,7 @@ const (
 
 	mySQLBackupVolumeName = "mysqlbackupvolume"
 	mySQLVolumeName       = "mysqlvolume"
+	mySQLSSLVolumeName    = "mysqlsslvolume"
 
 	replicationGroupPort = 13306
 )
@@ -79,6 +80,13 @@ func volumeMounts(cluster *api.MySQLCluster) []v1.VolumeMount {
 			Name:      cluster.Name,
 			MountPath: "/etc/my.cnf",
 			SubPath:   "my.cnf",
+		})
+	}
+
+	if cluster.RequiresCustomSSLSetup() {
+		mounts = append(mounts, v1.VolumeMount{
+			Name:      mySQLSSLVolumeName,
+			MountPath: "/etc/ssl/mysql",
 		})
 	}
 
@@ -211,6 +219,13 @@ func mysqlServerContainer(cluster *api.MySQLCluster, mysqlServerImage string, ro
 		"--log-error-verbosity=3",
 	}
 
+	if cluster.RequiresCustomSSLSetup() {
+		args = append(args,
+			"--ssl-ca=/etc/ssl/mysql/ca.crt",
+			"--ssl-cert=/etc/ssl/mysql/tls.crt",
+			"--ssl-key=/etc/ssl/mysql/tls.key")
+	}
+
 	entryPointArgs := strings.Join(args, " ")
 
 	cmd := fmt.Sprintf(`
@@ -325,6 +340,39 @@ func NewForCluster(cluster *api.MySQLCluster, images operatoropts.Images, servic
 				ConfigMap: &v1.ConfigMapVolumeSource{
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: cluster.Spec.ConfigRef.Name,
+					},
+				},
+			},
+		})
+	}
+
+	if cluster.RequiresCustomSSLSetup() {
+		podVolumes = append(podVolumes, v1.Volume{
+			Name: mySQLSSLVolumeName,
+			VolumeSource: v1.VolumeSource{
+				Projected: &v1.ProjectedVolumeSource{
+					Sources: []v1.VolumeProjection{
+						v1.VolumeProjection{
+							Secret: &v1.SecretProjection{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: cluster.Spec.SSLSecretRef.Name,
+								},
+								Items: []v1.KeyToPath{
+									v1.KeyToPath{
+										Key:  "ca.crt",
+										Path: "ca.crt",
+									},
+									v1.KeyToPath{
+										Key:  "tls.crt",
+										Path: "tls.crt",
+									},
+									v1.KeyToPath{
+										Key:  "tls.key",
+										Path: "tls.key",
+									},
+								},
+							},
+						},
 					},
 				},
 			},

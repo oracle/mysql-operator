@@ -3,6 +3,8 @@ dist/
 bin/
 .push-wcr*
 .container-wcr*
+.push-iad*
+.container-iad*
 
 test/system/runner.log
 test/system/terraform/cluster/.terraform/

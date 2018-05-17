@@ -17,6 +17,7 @@ package v1
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
@@ -83,4 +84,21 @@ func TestRequiresConfigMount(t *testing.T) {
 	if !cluster.RequiresConfigMount() {
 		t.Errorf("Cluster with configRef should require a config mount")
 	}
+}
+
+func TestRequiresCustomSSLSetup(t *testing.T) {
+	cluster := &MySQLCluster{}
+	cluster.EnsureDefaults()
+
+	assert.False(t, cluster.RequiresCustomSSLSetup(), "Cluster without SSLSecretRef should not require custom SSL setup")
+
+	cluster = &MySQLCluster{
+		Spec: MySQLClusterSpec{
+			SSLSecretRef: &corev1.LocalObjectReference{
+				Name: "custom-ssl-secret",
+			},
+		},
+	}
+
+	assert.True(t, cluster.RequiresCustomSSLSetup(), "Cluster with SSLSecretRef should require custom SSL setup")
 }
