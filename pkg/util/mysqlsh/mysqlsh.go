@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/golang/glog"
@@ -171,8 +172,36 @@ func (r *runner) run(ctx context.Context, python string) ([]byte, error) {
 }
 
 func (r *runner) RebootClusterFromCompleteOutage(ctx context.Context) error {
-	python := fmt.Sprintf("dba.reboot_cluster_from_complete_outage('%s')", innodb.DefaultClusterName)
-	_, err := r.run(ctx, python)
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+
+	// NOTE(apryde): This is implemented in SQL rather than as a call to
+	// dba.reboot_cluster_from_complete_outage() due to https://bugs.mysql.com/90793.
+	sql := strings.Join([]string{
+		"RESET PERSIST group_replication_bootstrap_group;",
+		"SET GLOBAL group_replication_bootstrap_group=ON;",
+		"start group_replication;",
+	}, " ")
+
+	args := []string{"--no-wizard", "--uri", r.uri, "--sql", "-e", sql}
+
+	cmd := r.exec.CommandContext(ctx, "mysqlsh", args...)
+
+	cmd.SetStdout(stdout)
+	cmd.SetStderr(stderr)
+
+	glog.V(6).Infof("Running command: mysqlsh %v", args)
+	err := cmd.Run()
+	glog.V(6).Infof("    stdout: %s\n    stderr: %s\n    err: %s", stdout, stderr, err)
+	if err != nil {
+		underlying := NewErrorFromStderr(stderr.String())
+		if underlying != nil {
+			return errors.WithStack(underlying)
+		}
+	}
 	return err
 }
 
