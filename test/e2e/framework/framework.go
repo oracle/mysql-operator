@@ -41,7 +41,7 @@ const (
 	Poll = 2 * time.Second
 	// DefaultTimeout is how long we wait for long-running operations in the
 	// test suite before giving up.
-	DefaultTimeout = 7*time.Minute + 30*time.Second
+	DefaultTimeout = 10 * time.Minute
 )
 
 // Framework is used in the execution of e2e tests.
