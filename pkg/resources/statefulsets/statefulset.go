@@ -162,10 +162,16 @@ func mysqlServerContainer(cluster *api.MySQLCluster, mysqlServerImage string, ro
 	args := []string{
 		"--server_id=$(expr $base + $index)",
 		"--datadir=/var/lib/mysql",
+		"--user=mysql",
 		"--gtid_mode=ON",
-		"--log_bin",
+		"--log-bin",
 		"--binlog_checksum=NONE",
 		"--enforce_gtid_consistency=ON",
+		"--log-slave-updates=ON",
+		"--binlog-format=ROW",
+		"--master-info-repository=TABLE",
+		"--relay-log-info-repository=TABLE",
+		"--transaction-write-set-extraction=XXHASH64",
 		fmt.Sprintf("--relay-log=%s-${index}-relay-bin", cluster.Name),
 		fmt.Sprintf("--report-host=\"%[1]s-${index}.%[1]s\"", cluster.Name),
 		"--log-error-verbosity=3",
@@ -222,7 +228,7 @@ func mysqlAgentContainer(cluster *api.MySQLCluster, mysqlAgentImage string, root
 	return v1.Container{
 		Name:         MySQLAgentName,
 		Image:        fmt.Sprintf("%s:%s", mysqlAgentImage, agentVersion),
-		Args:         []string{"--v=6"},
+		Args:         []string{"--v=4"},
 		VolumeMounts: volumeMounts(cluster),
 		Env: []v1.EnvVar{
 			clusterNameEnvVar(cluster),
