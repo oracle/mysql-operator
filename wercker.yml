@@ -80,33 +80,23 @@ push-agent-image:
       entrypoint: /mysql-agent
       user: mysql
 
-e2e-test-default:
+e2e-test:
   base-path: "/go/src/github.com/oracle/mysql-operator"
   box:
     registry: https://wcr.io/v2
-    id: wcr.io/oracle/mysql-operator-ci-e2e:1.0.0
+    id: wcr.io/oracle/mysql-operator-ci-e2e:1.1.1
   steps:
     - script:
       name: e2e default tests
-      code: make e2e-suite-default
-
-e2e-test-upgrade:
-  base-path: "/go/src/github.com/oracle/mysql-operator"
-  box:
-    registry: https://wcr.io/v2
-    id: wcr.io/oracle/mysql-operator-ci-e2e:1.0.0
-  steps:
-    - script:
-      name: e2e upgrade test
       code: |
-        make e2e-suite-teardown-upgrade
-        if [ $(git log -1 --pretty=format:"%H" HEAD) == $(git log -1 --pretty=format:"%H" origin/master) ]; then
-            make e2e-suite-setup-upgrade MYSQL_OPERATOR_VERSION=$(git log -1 --pretty=format:"%H" origin/master~1)
-        else
-            make e2e-suite-setup-upgrade MYSQL_OPERATOR_VERSION=$(git log -1 --pretty=format:"%H" origin/master)
-        fi
-        E2E_NON_BUFFERED_LOGS=true make e2e-suite-run-upgrade
-        make e2e-suite-teardown-upgrade
+        export KUBECONFIG="/tmp/kubeconfig"
+        echo -n "${KUBECONFIG_VAR}" | openssl enc -base64 -d -A > "${KUBECONFIG}"
+        ginkgo -nodes=4 -v test/e2e -- \
+          --kubeconfig="${KUBECONFIG}" \
+          --operator-version="$(cat dist/version.txt)" \
+          --s3-access-key="${S3_ACCESS_KEY}" \
+          --s3-secret-key="${S3_SECRET_KEY}" \
+          --delete-namespace-on-failure=false
 
 release:
   box:
@@ -117,6 +107,7 @@ release:
         code: |
           export VERSION=$(cat dist/version.txt)
           echo "${VERSION}"
+
     - github-create-release:
       token: $GITHUB_TOKEN
       tag: $VERSION
