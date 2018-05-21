@@ -1,5 +1,6 @@
 box: golang:1.9
-no-response-timeout: 10
+no-response-timeout: 60
+command-timeout: 60
 
 test:
   base-path: "/go/src/github.com/oracle/mysql-operator"
@@ -52,10 +53,36 @@ push-operator-image:
         chmod +x /mysql-operator
 
     - internal/docker-push:
-      registry: https://wcr.io/v2
-      repository: wcr.io/oracle/mysql-operator
+      registry: https://iad.ocir.io/v2
+      repository: iad.ocir.io/oracle/mysql-operator
       tag: $VERSION
       entrypoint: /mysql-operator
+      username: $OCIRUSERNAME
+      password: $OCIRPASSWORD
+
+    - internal/docker-push:
+      registry: https://lhr.ocir.io/v2
+      repository: lhr.ocir.io/oracle/mysql-operator
+      tag: $VERSION
+      entrypoint: /mysql-operator
+      username: $OCIRUSERNAME
+      password: $OCIRPASSWORD
+
+    - internal/docker-push:
+      registry: https://phx.ocir.io/v2
+      repository: phx.ocir.io/oracle/mysql-operator
+      tag: $VERSION
+      entrypoint: /mysql-operator
+      username: $OCIRUSERNAME
+      password: $OCIRPASSWORD
+
+    - internal/docker-push:
+      registry: https://fra.ocir.io/v2
+      repository: fra.ocir.io/oracle/mysql-operator
+      tag: $VERSION
+      entrypoint: /mysql-operator
+      username: $OCIRUSERNAME
+      password: $OCIRPASSWORD
 
 push-agent-image:
   box:
@@ -74,8 +101,37 @@ push-agent-image:
         chmod +x /mysql-agent
 
     - internal/docker-push:
-      registry: https://wcr.io/v2
-      repository: wcr.io/oracle/mysql-agent
+      registry: https://iad.ocir.io/v2
+      username: $OCIRUSERNAME
+      password: $OCIRPASSWORD
+      repository: iad.ocir.io/oracle/mysql-agent
+      tag: $VERSION
+      entrypoint: /mysql-agent
+      user: mysql
+
+    - internal/docker-push:
+      registry: https://lhr.ocir.io/v2
+      username: $OCIRUSERNAME
+      password: $OCIRPASSWORD
+      repository: lhr.ocir.io/oracle/mysql-agent
+      tag: $VERSION
+      entrypoint: /mysql-agent
+      user: mysql
+
+    - internal/docker-push:
+      registry: https://phx.ocir.io/v2
+      username: $OCIRUSERNAME
+      password: $OCIRPASSWORD
+      repository: phx.ocir.io/oracle/mysql-agent
+      tag: $VERSION
+      entrypoint: /mysql-agent
+      user: mysql
+
+    - internal/docker-push:
+      registry: https://fra.ocir.io/v2
+      username: $OCIRUSERNAME
+      password: $OCIRPASSWORD
+      repository: fra.ocir.io/oracle/mysql-agent
       tag: $VERSION
       entrypoint: /mysql-agent
       user: mysql
@@ -83,8 +139,8 @@ push-agent-image:
 e2e-test:
   base-path: "/go/src/github.com/oracle/mysql-operator"
   box:
-    registry: https://wcr.io/v2
-    id: wcr.io/oracle/mysql-operator-ci-e2e:1.1.1
+    registry: https://iad.ocir.io/v2
+    id: iad.ocir.io/oracle/mysql-operator-ci-e2e:1.1.1
   steps:
     - script:
       name: e2e default tests

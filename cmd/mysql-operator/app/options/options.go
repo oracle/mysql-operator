@@ -30,7 +30,7 @@ import (
 
 const (
 	mysqlServer = "mysql/mysql-server"
-	mysqlAgent  = "wcr.io/oracle/mysql-agent"
+	mysqlAgent  = "iad.ocir.io/oracle/mysql-agent"
 )
 
 // Images is the configuration of required MySQLOperator images. Remember to configure the appropriate
@@ -123,7 +123,7 @@ func (s *MySQLOperatorServer) AddFlags(fs *pflag.FlagSet) *pflag.FlagSet {
 	fs.StringVar(&s.Master, "master", s.Master, "The address of the Kubernetes API server (overrides any value in kubeconfig).")
 	fs.StringVar(&s.Namespace, "namespace", metav1.NamespaceAll, "The namespace for which the MySQL operator manages MySQL clusters. Defaults to all.")
 	fs.StringVar(&s.Images.MySQLServerImage, "mysql-server-image", s.Images.MySQLServerImage, "The name of the target 'mysql-server' image. Defaults to: mysql/mysql-server.")
-	fs.StringVar(&s.Images.MySQLAgentImage, "mysql-agent-image", s.Images.MySQLAgentImage, "The name of the target 'mysql-agent' image. Defaults to: wcr.io/oracle/mysql-agent.")
+	fs.StringVar(&s.Images.MySQLAgentImage, "mysql-agent-image", s.Images.MySQLAgentImage, "The name of the target 'mysql-agent' image. Defaults to: iad.ocir.io/oracle/mysql-agent.")
 	fs.DurationVar(&s.MinResyncPeriod.Duration, "min-resync-period", s.MinResyncPeriod.Duration, "The resync period in reflectors will be random between MinResyncPeriod and 2*MinResyncPeriod.")
 	return fs
 }
