@@ -84,12 +84,11 @@ rules:
     resources: ["statefulsets"]
     verbs: ["*"]
   - apiGroups: [""]
-    resources: ["events", "pods", "persistentvolumes", "persistentvolumeclaims", "services"]
+    resources: ["events", "services", "pods"]
     verbs: ["*"]
-  # These permissions need to be restricted since they essentially grant access to cluster level secrets
   - apiGroups: [""]
     resources: ["secrets", "configmaps"]
-    verbs: ["create", "delete"]
+    verbs: ["watch", "create", "delete", "list"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
