@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-USE_GLOBAL_NAMESPACE ?= false
-
 ifdef WERCKER
     # Insert swear words about mysql group replication and hostname length. Arghh..
     VERSION := ${WERCKER_GIT_COMMIT}
