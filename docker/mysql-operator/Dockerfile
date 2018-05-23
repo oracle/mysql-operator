@@ -1,5 +1,5 @@
 FROM oraclelinux:7.3
 
-COPY bin/linux_amd64/mysql-operator /
+COPY bin/mysql-operator /
 
 ENTRYPOINT ["/mysql-operator"]
