@@ -19,11 +19,12 @@ ifdef WERCKER
 else
     NEW_NAMESPACE ?= e2e-${USER}
     VERSION := ${USER}-$(shell date +%Y%m%d%H%M%S)
+    TENANT := "spinnaker"
 endif
 
 ROOT_DIR        := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 PKG             := github.com/oracle/mysql-operator
-REGISTRY        := iad.ocir.io/spinnaker
+REGISTRY        := iad.ocir.io/$(TENANT)
 SRC_DIRS        := cmd pkg test/examples
 
 ARCH    := amd64

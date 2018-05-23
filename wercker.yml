@@ -19,8 +19,10 @@ build:
     - script:
       name: copy build artifacts
       code: |
-        cp -a bin/* ${WERCKER_OUTPUT_DIR}
-        cp -R dist ${WERCKER_OUTPUT_DIR}
+        mkdir -p ${WERCKER_OUTPUT_DIR}/bin
+-       cp ./bin/mysql-agent ${WERCKER_OUTPUT_DIR}/bin/
+-       cp ./bin/mysql-operator ${WERCKER_OUTPUT_DIR}/bin/
+-       cp -R dist/ ${WERCKER_OUTPUT_DIR}/
 
     - script:
       name: copy test artifacts
@@ -47,7 +49,7 @@ push-operator-image:
     - script:
       name: prepare
       code: |
-        mv mysql-operator /mysql-operator
+        mv bin/mysql-operator /mysql-operator
         chmod +x /mysql-operator
 
     - internal/docker-push:
@@ -95,7 +97,7 @@ push-agent-image:
     - script:
       name: prepare
       code: |
-        mv mysql-agent /mysql-agent
+        mv bin/mysql-agent /mysql-agent
         chmod +x /mysql-agent
 
     - internal/docker-push:
