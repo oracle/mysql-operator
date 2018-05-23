@@ -20,9 +20,9 @@ build:
       name: copy build artifacts
       code: |
         mkdir -p ${WERCKER_OUTPUT_DIR}/bin
--       cp ./bin/mysql-agent ${WERCKER_OUTPUT_DIR}/bin/
--       cp ./bin/mysql-operator ${WERCKER_OUTPUT_DIR}/bin/
--       cp -R dist/ ${WERCKER_OUTPUT_DIR}/
+        cp ./bin/mysql-agent ${WERCKER_OUTPUT_DIR}/bin/
+        cp ./bin/mysql-operator ${WERCKER_OUTPUT_DIR}/bin/
+        cp -R dist/ ${WERCKER_OUTPUT_DIR}/
 
     - script:
       name: copy test artifacts
