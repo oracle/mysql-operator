@@ -15,9 +15,7 @@
 package cluster
 
 import (
-	"context"
 	"sync"
-	"time"
 
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
@@ -50,23 +48,17 @@ func GetStatus() *innodb.ClusterStatus {
 
 // NewHealthCheck constructs a healthcheck for the local instance which checks
 // cluster status using mysqlsh.
-func NewHealthCheck(ctx context.Context) (healthcheck.Check, error) {
+func NewHealthCheck() (healthcheck.Check, error) {
 	instance, err := NewLocalInstance()
 	if err != nil {
 		return nil, errors.Wrap(err, "getting local mysql instance")
 	}
 
-	return healthcheck.AsyncWithContext(ctx,
-		healthcheck.Timeout(
-			func() error {
-				s := GetStatus()
-				if s == nil || s.GetInstanceStatus(instance.Name()) != innodb.InstanceStatusOnline {
-					return errors.New("database still requires management")
-				}
-				return nil
-			},
-			5*time.Second,
-		),
-		10*time.Second,
-	), nil
+	return func() error {
+		s := GetStatus()
+		if s == nil || s.GetInstanceStatus(instance.Name()) != innodb.InstanceStatusOnline {
+			return errors.New("database still requires management")
+		}
+		return nil
+	}, nil
 }
