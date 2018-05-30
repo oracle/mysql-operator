@@ -18,6 +18,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -138,4 +139,29 @@ func TestClusterCustomConfig(t *testing.T) {
 	if !hasExpectedVolumeMount {
 		t.Errorf("Cluster is missing expected volume mount for custom config map")
 	}
+}
+
+func TestClusterCustomSSLSetup(t *testing.T) {
+	cluster := &api.MySQLCluster{
+		Spec: api.MySQLClusterSpec{
+			SSLSecretRef: &v1.LocalObjectReference{
+				Name: "my-ssl",
+			},
+		},
+	}
+
+	statefulSet := NewForCluster(cluster, mockOperatorConfig().Images, "mycluster")
+	containers := statefulSet.Spec.Template.Spec.Containers
+
+	var hasExpectedVolumeMount = false
+	for _, container := range containers {
+		for _, mount := range container.VolumeMounts {
+			if mount.MountPath == "/etc/ssl/mysql" {
+				hasExpectedVolumeMount = true
+				break
+			}
+		}
+	}
+
+	assert.True(t, hasExpectedVolumeMount, "Cluster is missing expected volume mount for custom SSL certs")
 }

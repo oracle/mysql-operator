@@ -95,6 +95,11 @@ type MySQLClusterSpec struct {
 	// ConfigRef allows a user to specify a custom configuration file for MySQL.
 	// +optional
 	ConfigRef *corev1.LocalObjectReference `json:"configRef,omitempty"`
+
+	// SSLSecretRef allows a user to specify custom CA certificate, server certificate
+	// and server key for group replication SSL
+	// +optional
+	SSLSecretRef *corev1.LocalObjectReference `json:"sslSecretRef,omitempty"`
 }
 
 // MySQLClusterPhase describes the state of the cluster.
@@ -201,6 +206,13 @@ func (c *MySQLCluster) RequiresConfigMount() bool {
 // for a MySQL cluster else false
 func (c *MySQLCluster) RequiresSecret() bool {
 	return c.Spec.SecretRef == nil
+}
+
+// RequiresCustomSSLSetup returns true is the user has provided a secret
+// that contains CA cert, server cert and server key for group replication
+// SSL support
+func (c *MySQLCluster) RequiresCustomSSLSetup() bool {
+	return c.Spec.SSLSecretRef != nil
 }
 
 // GetObjectKind is required for codegen
