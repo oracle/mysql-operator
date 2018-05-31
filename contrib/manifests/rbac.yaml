@@ -1,0 +1,46 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mysql-operator
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mysql-agent
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: mysql-operator
+rules:
+  - apiGroups:
+    - "*"
+    resources:
+    - "*"
+    verbs:
+    - "*"
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: mysql-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind:  ClusterRole
+  name: mysql-operator
+subjects:
+- kind: ServiceAccount
+  name: mysql-operator
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: mysql-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mysql-operator
+subjects:
+- kind: ServiceAccount
+  name: mysql-agent
