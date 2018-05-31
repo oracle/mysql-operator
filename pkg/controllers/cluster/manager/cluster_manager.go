@@ -16,7 +16,6 @@ package manager
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -94,22 +93,17 @@ func NewLocalClusterManger(kubeclient kubernetes.Interface, kubeInformerFactory 
 	), nil
 }
 
-func formatClusterStatus(status *innodb.ClusterStatus) string {
-	s, err := json.MarshalIndent(status, "", "\t")
-	if err != nil {
-		return "<nil>"
-	}
-	return string(s)
-}
-
 func (m *ClusterManager) getClusterStatus(ctx context.Context) (*innodb.ClusterStatus, error) {
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
-	clusterStatus, err := m.localMySh.GetClusterStatus(ctx)
-	if err != nil {
+	clusterStatus, localMSHErr := m.localMySh.GetClusterStatus(ctx)
+	if localMSHErr != nil {
+		var err error
 		clusterStatus, err = getClusterStatusFromGroupSeeds(ctx, m.kubeClient, m.Instance)
 		if err != nil {
-			return nil, errors.Wrap(err, "getting cluster status from group seeds")
+			// NOTE: We return the localMSHErr rather than the error here so that we
+			// can dispatch on it.
+			return nil, errors.Wrap(localMSHErr, "getting cluster status from group seeds")
 		}
 	}
 	return clusterStatus, nil
@@ -127,7 +121,8 @@ func (m *ClusterManager) Sync(ctx context.Context) bool {
 	// most common case.
 	clusterStatus, err := m.getClusterStatus(ctx)
 	if err != nil {
-		if errors.Cause(err) != errNoClusterFound {
+		myshErr, ok := errors.Cause(err).(*mysqlsh.Error)
+		if !ok {
 			glog.Errorf("Failed to get the cluster status: %+v", err)
 			return false
 		}
@@ -135,7 +130,7 @@ func (m *ClusterManager) Sync(ctx context.Context) bool {
 		// We can't find a cluster. Bootstrap if we're the first member of the
 		// StatefulSet.
 		if m.Instance.Ordinal == 0 {
-			clusterStatus, err = m.bootstrap(ctx)
+			clusterStatus, err = m.bootstrap(ctx, myshErr)
 			if err != nil {
 				glog.Errorf("Error bootstrapping cluster: %v", err)
 				metrics.IncEventCounter(clusterCreateErrorCount)
@@ -200,6 +195,7 @@ func (m *ClusterManager) Sync(ctx context.Context) bool {
 	if online && !m.Instance.MultiMaster {
 		m.ensurePrimaryControllerState(ctx, clusterStatus)
 	}
+
 	return online
 }
 
@@ -239,10 +235,12 @@ func (m *ClusterManager) ensurePrimaryControllerState(ctx context.Context, statu
 	}
 }
 
+// NOTE: This should never happen in 8.0 but probably worth keeping for now.
 func (m *ClusterManager) handleInstanceMissing(ctx context.Context, primaryAddr string) bool {
 	primaryURI := fmt.Sprintf("%s:%s@%s", m.Instance.GetUser(), m.Instance.GetPassword(), primaryAddr)
 	primarySh := m.mysqlshFactory(primaryURI)
 
+	// TODO: just call RejoinInstanceToCluster and handle the error.
 	instanceState, err := primarySh.CheckInstanceState(ctx, m.Instance.GetShellURI())
 	if err != nil {
 		glog.Errorf("Failed to determine if we can rejoin the cluster: %v", err)
@@ -270,8 +268,6 @@ func (m *ClusterManager) handleInstanceMissing(ctx context.Context, primaryAddr 
 			return false
 		}
 	}
-	status, _ := primarySh.GetClusterStatus(ctx)
-	glog.V(4).Info(formatClusterStatus(status))
 	return true
 }
 
@@ -294,55 +290,58 @@ func (m *ClusterManager) handleInstanceNotFound(ctx context.Context, primaryAddr
 		glog.Errorf("Failed to add to cluster: %v", err)
 		return false
 	}
-	status, _ := psh.GetClusterStatus(ctx)
-	glog.V(4).Info(formatClusterStatus(status))
 	return true
 }
 
 // bootstrap bootstraps the cluster. Called on the first Pod in the StatefulSet.
-func (m *ClusterManager) bootstrap(ctx context.Context) (*innodb.ClusterStatus, error) {
+func (m *ClusterManager) bootstrap(ctx context.Context, mshErr *mysqlsh.Error) (*innodb.ClusterStatus, error) {
+	if strings.Contains(mshErr.Message, "Cannot perform operation while group replication is starting up") {
+		return nil, mshErr
+	}
+
+	if strings.Contains(mshErr.Message, "(metadata exists, but GR is not active)") {
+		return m.rebootFromOutage(ctx)
+	}
+
+	return m.createCluster(ctx)
+}
+
+func (m *ClusterManager) createCluster(ctx context.Context) (*innodb.ClusterStatus, error) {
+	glog.Infof("Creating InnoDB cluster")
+
 	msh := m.mysqlshFactory(m.Instance.GetShellURI())
+
+	whitelistCIDR, err := m.Instance.WhitelistCIDR()
+	if err != nil {
+		return nil, errors.Wrap(err, "getting CIDR to whitelist for  GR")
+	}
+	opts := mysqlsh.Options{
+		"memberSslMode": "REQUIRED",
+		"ipWhitelist":   whitelistCIDR,
+	}
+	if m.Instance.MultiMaster {
+		opts["force"] = "True"
+		opts["multiMaster"] = "True"
+	}
+	status, err := msh.CreateCluster(ctx, opts)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create new cluster")
+	}
+	return status, nil
+}
+
+func (m *ClusterManager) rebootFromOutage(ctx context.Context) (*innodb.ClusterStatus, error) {
+	glog.Info("Found existing InnoDB cluster (metadata exists, but GR is not active)")
+
+	msh := m.mysqlshFactory(m.Instance.GetShellURI())
+	if err := msh.RebootClusterFromCompleteOutage(ctx); err != nil {
+		return nil, errors.Wrap(err, "rebooting cluster from complete outage")
+	}
 
 	status, err := msh.GetClusterStatus(ctx)
 	if err != nil {
-		mshErr, ok := errors.Cause(err).(*mysqlsh.Error)
-		if !ok {
-			return nil, errors.Wrap(err, "getting cluster status")
-		}
-
-		if strings.Contains(mshErr.Message, "Cannot perform operation while group replication is starting up") {
-			return nil, err
-		} else if strings.Contains(mshErr.Message, "(metadata exists, but GR is not active)") {
-			glog.Info("Found existing InnoDB cluster (metadata exists, but GR is not active)")
-			if err := msh.RebootClusterFromCompleteOutage(ctx); err != nil {
-				return nil, errors.Wrap(err, "rebooting cluster from complete outage")
-			}
-		} else {
-			glog.Infof("Creating InnoDB cluster")
-			whitelistCIDR, err := m.Instance.WhitelistCIDR()
-			if err != nil {
-				return nil, errors.Wrap(err, "getting CIDR to whitelist for  GR")
-			}
-			opts := mysqlsh.Options{
-				"memberSslMode": "REQUIRED",
-				"ipWhitelist":   whitelistCIDR,
-			}
-			if m.Instance.MultiMaster {
-				opts["force"] = "True"
-				opts["multiMaster"] = "True"
-			}
-			if err := msh.CreateCluster(ctx, opts); err != nil {
-				return nil, errors.Wrap(err, "failed to create new cluster")
-			}
-
-		}
-
-		if status, err = msh.GetClusterStatus(ctx); err != nil {
-			return nil, errors.Wrap(err, "getting cluster status")
-		}
+		return nil, errors.Wrap(err, "getting cluster status")
 	}
-
-	glog.V(4).Info(formatClusterStatus(status))
 	return status, nil
 }
 

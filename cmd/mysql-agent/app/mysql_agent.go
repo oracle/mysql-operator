@@ -69,7 +69,7 @@ func Run(opts *options.MySQLAgentOpts) error {
 	signals.SetupSignalHandler(cancelFunc)
 
 	// Set up healthchecks (liveness and readiness).
-	checkInCluster, err := cluster.NewHealthCheck(ctx)
+	checkInCluster, err := cluster.NewHealthCheck()
 	if err != nil {
 		glog.Fatal(err)
 	}

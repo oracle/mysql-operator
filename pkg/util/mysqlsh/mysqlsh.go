@@ -36,7 +36,7 @@ type Interface interface {
 	IsClustered(ctx context.Context) bool
 	// CreateCluster creates a new InnoDB cluster called
 	// innodb.DefaultClusterName.
-	CreateCluster(ctx context.Context, opts Options) error
+	CreateCluster(ctx context.Context, opts Options) (*innodb.ClusterStatus, error)
 	// GetClusterStatus gets the status of the innodb.DefaultClusterName InnoDB
 	// cluster.
 	GetClusterStatus(ctx context.Context) (*innodb.ClusterStatus, error)
@@ -81,10 +81,31 @@ func (r *runner) IsClustered(ctx context.Context) bool {
 	return err == nil
 }
 
-func (r *runner) CreateCluster(ctx context.Context, opts Options) error {
-	python := fmt.Sprintf("dba.create_cluster('%s', %s)", innodb.DefaultClusterName, opts)
-	_, err := r.run(ctx, python)
-	return err
+func (r *runner) CreateCluster(ctx context.Context, opts Options) (*innodb.ClusterStatus, error) {
+	python := fmt.Sprintf("print dba.create_cluster('%s', %s).status()", innodb.DefaultClusterName, opts)
+	output, err := r.run(ctx, python)
+	if err != nil {
+		return nil, err
+	}
+
+	// Skip non-json spat out on stdout.
+	var jsonData string
+	for _, line := range strings.Split(string(output), "\n") {
+		if strings.HasPrefix(line, "{") {
+			jsonData = line
+			break
+		}
+	}
+	if jsonData == "" {
+		return nil, errors.Errorf("no json found in output: %q", output)
+	}
+
+	status := &innodb.ClusterStatus{}
+	err = json.Unmarshal([]byte(jsonData), status)
+	if err != nil {
+		return nil, errors.Wrapf(err, "decoding cluster status output: %q", output)
+	}
+	return status, nil
 }
 
 func (r *runner) GetClusterStatus(ctx context.Context) (*innodb.ClusterStatus, error) {
