@@ -7,7 +7,7 @@ MySQL cluster examples.
 The following example will create a MySQL Cluster with 3 replicas, one primary and 2 secondaries:
 
 ```yaml
-apiVersion: "mysql.oracle.com/v1"
+apiVersion: mysql.oracle.com/v1alpha1
 kind: MySQLCluster
 metadata:
   name: mysql-test-cluster
@@ -20,7 +20,7 @@ spec:
 The following example will create a MySQL Cluster with 3 primary (read/write) replicas:
 
 ```yaml
-apiVersion: "mysql.oracle.com/v1"
+apiVersion: mysql.oracle.com/v1alpha1
 kind: MySQLCluster
 metadata:
   name: mysql-multimaster-cluster
@@ -40,7 +40,7 @@ $ kubectl create secret generic mysql-root-user-secret --from-literal=password=f
 Create your cluster and reference it
 
 ```yaml
-apiVersion: "mysql.oracle.com/v1"
+apiVersion: mysql.oracle.com/v1alpha1
 kind: MySQLCluster
 metadata:
   name: example-mysql-cluster-custom-secret
@@ -72,7 +72,7 @@ spec:
   persistentVolumeReclaimPolicy: Recycle
   storageClassName: manual
 ---
-apiVersion: "mysql.oracle.com/v1"
+apiVersion: mysql.oracle.com/v1alpha1
 kind: MySQLCluster
 metadata:
   name: example-mysql-cluster-with-volume
@@ -129,7 +129,7 @@ spec:
   persistentVolumeReclaimPolicy: Recycle
   storageClassName: manual
 ---
-apiVersion: "mysql.oracle.com/v1"
+apiVersion: mysql.oracle.com/v1alpha1
 kind: MySQLCluster
 metadata:
   name: example-mysql-cluster-with-volume
@@ -179,7 +179,7 @@ kubectl create configmap mycnf --from-file=examples/my.cnf
 Now we can reference our config map in our cluster spec definition. For example:
 
 ```yaml
-apiVersion: "mysql.oracle.com/v1"
+apiVersion: mysql.oracle.com/v1alpha1
 kind: MySQLCluster
 metadata:
   name: mysql-cluster-with-config
@@ -194,7 +194,7 @@ By default, the MySQL Operator starts a cluster with `--server_id` set to `1000`
 
 The following example will create a MySQL Cluster with following `server_id`'s: 42,43,44
 ```yaml
-apiVersion: "mysql.oracle.com/v1"
+apiVersion: mysql.oracle.com/v1alpha1
 kind: MySQLCluster
 metadata:
   name: mysql-cluster-with-custom-serverid

@@ -15,7 +15,7 @@ spec:
   persistentVolumeReclaimPolicy: Recycle
   storageClassName: manual
 ---
-apiVersion: "mysql.oracle.com/v1"
+apiVersion: mysql.oracle.com/v1alpha1
 kind: MySQLCluster
 metadata:
   name: mysql-wordpress

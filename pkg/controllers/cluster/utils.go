@@ -17,17 +17,17 @@ package cluster
 import (
 	"strings"
 
-	apps "k8s.io/api/apps/v1beta1"
-	"k8s.io/api/core/v1"
+	appsv1beta1 "k8s.io/api/apps/v1beta1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 
-	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/constants"
 )
 
 // SelectorForCluster creates a labels.Selector to match a given clusters
 // associated resources.
-func SelectorForCluster(c *api.MySQLCluster) labels.Selector {
+func SelectorForCluster(c *v1alpha1.MySQLCluster) labels.Selector {
 	return labels.SelectorFromSet(labels.Set{constants.MySQLClusterLabel: c.Name})
 }
 
@@ -46,7 +46,7 @@ func combineSelectors(first labels.Selector, rest ...labels.Selector) labels.Sel
 	return res
 }
 
-func requiresMySQLAgentStatefulSetUpgrade(ss *apps.StatefulSet, targetContainer string, operatorVersion string) bool {
+func requiresMySQLAgentStatefulSetUpgrade(ss *appsv1beta1.StatefulSet, targetContainer string, operatorVersion string) bool {
 	if !SelectorForClusterOperatorVersion(operatorVersion).Matches(labels.Set(ss.Labels)) {
 		return true
 	}
@@ -60,7 +60,7 @@ func requiresMySQLAgentStatefulSetUpgrade(ss *apps.StatefulSet, targetContainer 
 	return false
 }
 
-func requiresMySQLAgentPodUpgrade(pod *v1.Pod, targetContainer string, operatorVersion string) bool {
+func requiresMySQLAgentPodUpgrade(pod *corev1.Pod, targetContainer string, operatorVersion string) bool {
 	if !SelectorForClusterOperatorVersion(operatorVersion).Matches(labels.Set(pod.Labels)) {
 		return true
 	}
@@ -76,6 +76,6 @@ func requiresMySQLAgentPodUpgrade(pod *v1.Pod, targetContainer string, operatorV
 
 // canUpgradeMySQLAgent checks that pod can actually be updated (e.g. there no backups currently taking place).
 // TODO: Implement.
-func canUpgradeMySQLAgent(pod *v1.Pod) bool {
+func canUpgradeMySQLAgent(pod *corev1.Pod) bool {
 	return true
 }

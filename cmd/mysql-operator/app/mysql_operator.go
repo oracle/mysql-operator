@@ -33,7 +33,7 @@ import (
 	backupschedule "github.com/oracle/mysql-operator/pkg/controllers/backup/schedule"
 	cluster "github.com/oracle/mysql-operator/pkg/controllers/cluster"
 	restorecontroller "github.com/oracle/mysql-operator/pkg/controllers/restore"
-	mysqlop "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
+	clientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 	informers "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions"
 	metrics "github.com/oracle/mysql-operator/pkg/util/metrics"
 	signals "github.com/oracle/mysql-operator/pkg/util/signals"
@@ -71,7 +71,7 @@ func Run(s *options.MySQLOperatorServer) error {
 	signals.SetupSignalHandler(cancelFunc)
 
 	kubeClient := kubernetes.NewForConfigOrDie(kubeconfig)
-	mysqlopClient := mysqlop.NewForConfigOrDie(kubeconfig)
+	mysqlopClient := clientset.NewForConfigOrDie(kubeconfig)
 
 	// Shared informers (non namespace specific).
 	operatorInformerFactory := informers.NewFilteredSharedInformerFactory(mysqlopClient, resyncPeriod(s)(), s.Namespace, nil)
@@ -83,7 +83,7 @@ func Run(s *options.MySQLOperatorServer) error {
 		*s,
 		mysqlopClient,
 		kubeClient,
-		operatorInformerFactory.Mysql().V1().MySQLClusters(),
+		operatorInformerFactory.Mysql().V1alpha1().MySQLClusters(),
 		kubeInformerFactory.Apps().V1beta1().StatefulSets(),
 		kubeInformerFactory.Core().V1().Pods(),
 		kubeInformerFactory.Core().V1().Services(),
@@ -98,9 +98,9 @@ func Run(s *options.MySQLOperatorServer) error {
 
 	backupController := backupcontroller.NewOperatorController(
 		kubeClient,
-		mysqlopClient.MysqlV1(),
-		operatorInformerFactory.Mysql().V1().MySQLBackups(),
-		operatorInformerFactory.Mysql().V1().MySQLClusters(),
+		mysqlopClient.MysqlV1alpha1(),
+		operatorInformerFactory.Mysql().V1alpha1().MySQLBackups(),
+		operatorInformerFactory.Mysql().V1alpha1().MySQLClusters(),
 		kubeInformerFactory.Core().V1().Pods(),
 	)
 	wg.Add(1)
@@ -111,10 +111,10 @@ func Run(s *options.MySQLOperatorServer) error {
 
 	restoreController := restorecontroller.NewOperatorController(
 		kubeClient,
-		mysqlopClient.MysqlV1(),
-		operatorInformerFactory.Mysql().V1().MySQLRestores(),
-		operatorInformerFactory.Mysql().V1().MySQLClusters(),
-		operatorInformerFactory.Mysql().V1().MySQLBackups(),
+		mysqlopClient.MysqlV1alpha1(),
+		operatorInformerFactory.Mysql().V1alpha1().MySQLRestores(),
+		operatorInformerFactory.Mysql().V1alpha1().MySQLClusters(),
+		operatorInformerFactory.Mysql().V1alpha1().MySQLBackups(),
 		kubeInformerFactory.Core().V1().Pods(),
 	)
 	wg.Add(1)
@@ -126,7 +126,7 @@ func Run(s *options.MySQLOperatorServer) error {
 	backupScheduleController := backupschedule.NewController(
 		mysqlopClient,
 		kubeClient,
-		operatorInformerFactory.Mysql().V1().MySQLBackupSchedules(),
+		operatorInformerFactory.Mysql().V1alpha1().MySQLBackupSchedules(),
 		30*time.Second,
 		s.Namespace,
 	)

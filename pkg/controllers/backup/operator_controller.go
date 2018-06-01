@@ -35,12 +35,12 @@ import (
 	record "k8s.io/client-go/tools/record"
 	workqueue "k8s.io/client-go/util/workqueue"
 
-	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	v1alpha1 "github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	clusterlabeler "github.com/oracle/mysql-operator/pkg/controllers/cluster/labeler"
 	controllerutils "github.com/oracle/mysql-operator/pkg/controllers/util"
-	mysqlv1client "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned/typed/mysql/v1"
-	informers "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions/mysql/v1"
-	listers "github.com/oracle/mysql-operator/pkg/generated/listers/mysql/v1"
+	clientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned/typed/mysql/v1alpha1"
+	informersv1alpha1 "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions/mysql/v1alpha1"
+	listersv1alpha1 "github.com/oracle/mysql-operator/pkg/generated/listers/mysql/v1alpha1"
 	kubeutil "github.com/oracle/mysql-operator/pkg/util/kube"
 )
 
@@ -50,12 +50,12 @@ const controllerAgentName = "operator-backup-controller"
 // MySQLBackups to be executed on a specific (primary) mysql-agent. It is run
 // in the operator.
 type OperatorController struct {
-	client      mysqlv1client.MySQLBackupsGetter
+	client      clientset.MySQLBackupsGetter
 	syncHandler func(key string) error
 
 	// backupLister is able to list/get MySQLBackups from a shared informer's
 	// store.
-	backupLister listers.MySQLBackupLister
+	backupLister listersv1alpha1.MySQLBackupLister
 	// backupListerSynced returns true if the MySQLBackup shared informer has
 	// synced at least once.
 	backupListerSynced cache.InformerSynced
@@ -68,7 +68,7 @@ type OperatorController struct {
 
 	// clusterLister is able to list/get MySQLClusters from a shared informer's
 	// store.
-	clusterLister listers.MySQLClusterLister
+	clusterLister listersv1alpha1.MySQLClusterLister
 	// clusterListerSynced returns true if the MySQLCluster shared informer has
 	// synced at least once.
 	clusterListerSynced cache.InformerSynced
@@ -82,9 +82,9 @@ type OperatorController struct {
 // NewOperatorController constructs a new OperatorController.
 func NewOperatorController(
 	kubeClient kubernetes.Interface,
-	client mysqlv1client.MySQLBackupsGetter,
-	backupInformer informers.MySQLBackupInformer,
-	clusterInformer informers.MySQLClusterInformer,
+	client clientset.MySQLBackupsGetter,
+	backupInformer informersv1alpha1.MySQLBackupInformer,
+	clusterInformer informersv1alpha1.MySQLClusterInformer,
 	podInformer corev1informers.PodInformer,
 ) *OperatorController {
 	// Create event broadcaster.
@@ -111,10 +111,10 @@ func NewOperatorController(
 	backupInformer.Informer().AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
-				backup := obj.(*api.MySQLBackup)
+				backup := obj.(*v1alpha1.MySQLBackup)
 
 				switch backup.Status.Phase {
-				case api.BackupPhaseUnknown, api.BackupPhaseNew:
+				case v1alpha1.BackupPhaseUnknown, v1alpha1.BackupPhaseNew:
 					// Only process new backups.
 				default:
 					glog.V(2).Infof("MySQLBackup %q is not new, skipping (phase=%q)",
@@ -257,10 +257,10 @@ func (controller *OperatorController) processBackup(key string) error {
 	// and support users fixing validation errors via updates (rather than
 	// recreation).
 	if validationErr != nil {
-		backup.Status.Phase = api.BackupPhaseFailed
+		backup.Status.Phase = v1alpha1.BackupPhaseFailed
 		backup, err = controller.client.MySQLBackups(ns).Update(backup)
 		if err != nil {
-			return errors.Wrapf(err, "failed to update (phase=%q)", api.BackupPhaseFailed)
+			return errors.Wrapf(err, "failed to update (phase=%q)", v1alpha1.BackupPhaseFailed)
 		}
 
 		controller.recorder.Event(backup, corev1.EventTypeWarning, "FailedValidation", validationErr.Error())
@@ -286,7 +286,7 @@ func (controller *OperatorController) processBackup(key string) error {
 }
 
 // scheduleBackup schedules a MySQLBackup on a specific member of a MySQLCluster.
-func (controller *OperatorController) scheduleBackup(backup *api.MySQLBackup) (*api.MySQLBackup, error) {
+func (controller *OperatorController) scheduleBackup(backup *v1alpha1.MySQLBackup) (*v1alpha1.MySQLBackup, error) {
 	var (
 		name = backup.Spec.ClusterRef.Name
 		ns   = backup.Namespace
@@ -298,7 +298,7 @@ func (controller *OperatorController) scheduleBackup(backup *api.MySQLBackup) (*
 		return backup, errors.Wrap(err, "error listing Pods to choose secondary")
 	}
 	if len(secondaries) > 0 {
-		backup.Status.Phase = api.BackupPhaseScheduled
+		backup.Status.Phase = v1alpha1.BackupPhaseScheduled
 		backup.Spec.AgentScheduled = secondaries[0].Name
 		return backup, nil
 	}
@@ -309,7 +309,7 @@ func (controller *OperatorController) scheduleBackup(backup *api.MySQLBackup) (*
 		return backup, errors.Wrap(err, "error listing Pods to choose primary")
 	}
 	if len(primaries) > 0 {
-		backup.Status.Phase = api.BackupPhaseScheduled
+		backup.Status.Phase = v1alpha1.BackupPhaseScheduled
 		backup.Spec.AgentScheduled = primaries[0].Name
 		return backup, nil
 	}

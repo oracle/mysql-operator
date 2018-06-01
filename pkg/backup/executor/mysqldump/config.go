@@ -17,7 +17,7 @@ package mysqldump
 import (
 	"fmt"
 
-	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 )
 
 // Config holds the MySQL credentials required to authenticate with the MySQL database being
@@ -29,7 +29,7 @@ type Config struct {
 }
 
 // NewConfig creates an mysqldump configuration based on the input parameters.
-func NewConfig(executor *v1.Executor, creds map[string]string) *Config {
+func NewConfig(executor *v1alpha1.Executor, creds map[string]string) *Config {
 	return &Config{
 		databases: executor.Databases,
 		username:  creds["username"],

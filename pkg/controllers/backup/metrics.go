@@ -22,6 +22,7 @@ var (
 	clusterBackupCount = metrics.NewAgentEventCounter("cluster_backups", "Total number of times the cluster has been backed up")
 )
 
+// RegisterMetrics registers the backup metrics.
 func RegisterMetrics() {
 	metrics.RegisterAgentMetric(clusterBackupCount)
 }

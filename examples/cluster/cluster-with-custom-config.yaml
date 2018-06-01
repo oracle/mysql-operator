@@ -1,4 +1,4 @@
-apiVersion: "mysql.oracle.com/v1"
+apiVersion: mysql.oracle.com/alpha1
 kind: MySQLCluster
 metadata:
   name: mysql

@@ -28,7 +28,7 @@ import (
 
 	agentopts "github.com/oracle/mysql-operator/cmd/mysql-agent/app/options"
 	operatoropts "github.com/oracle/mysql-operator/cmd/mysql-operator/app/options"
-	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/constants"
 	"github.com/oracle/mysql-operator/pkg/resources/secrets"
 	"github.com/oracle/mysql-operator/pkg/version"
@@ -49,7 +49,7 @@ const (
 	replicationGroupPort = 13306
 )
 
-func volumeMounts(cluster *api.MySQLCluster) []v1.VolumeMount {
+func volumeMounts(cluster *v1alpha1.MySQLCluster) []v1.VolumeMount {
 	var mounts []v1.VolumeMount
 
 	name := mySQLVolumeName
@@ -93,7 +93,7 @@ func volumeMounts(cluster *api.MySQLCluster) []v1.VolumeMount {
 	return mounts
 }
 
-func clusterNameEnvVar(cluster *api.MySQLCluster) v1.EnvVar {
+func clusterNameEnvVar(cluster *v1alpha1.MySQLCluster) v1.EnvVar {
 	return v1.EnvVar{Name: "MYSQL_CLUSTER_NAME", Value: cluster.Name}
 }
 
@@ -125,7 +125,7 @@ func multiMasterEnvVar(enabled bool) v1.EnvVar {
 // Returns the MySQL_ROOT_PASSWORD environment variable
 // If a user specifies a secret in the spec we use that
 // else we create a secret with a random password
-func mysqlRootPassword(cluster *api.MySQLCluster) v1.EnvVar {
+func mysqlRootPassword(cluster *v1alpha1.MySQLCluster) v1.EnvVar {
 	var secretName string
 	if cluster.RequiresSecret() {
 		secretName = secrets.GetRootPasswordSecretName(cluster)
@@ -164,7 +164,7 @@ func getReplicationGroupSeeds(name string, replicas int) string {
 // Builds the MySQL operator container for a cluster.
 // The 'mysqlImage' parameter is the image name of the mysql server to use with
 // no version information.. e.g. 'mysql/mysql-server'
-func mysqlServerContainer(cluster *api.MySQLCluster, mysqlServerImage string, rootPassword v1.EnvVar, serviceName string, replicas int, baseServerID uint32) v1.Container {
+func mysqlServerContainer(cluster *v1alpha1.MySQLCluster, mysqlServerImage string, rootPassword v1.EnvVar, serviceName string, replicas int, baseServerID uint32) v1.Container {
 	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Namespace, replicas)
 
 	args := []string{
@@ -232,7 +232,7 @@ func mysqlServerContainer(cluster *api.MySQLCluster, mysqlServerImage string, ro
 	}
 }
 
-func mysqlAgentContainer(cluster *api.MySQLCluster, mysqlAgentImage string, rootPassword v1.EnvVar, serviceName string, replicas int) v1.Container {
+func mysqlAgentContainer(cluster *v1alpha1.MySQLCluster, mysqlAgentImage string, rootPassword v1.EnvVar, serviceName string, replicas int) v1.Container {
 	agentVersion := version.GetBuildVersion()
 	if version := os.Getenv("MYSQL_AGENT_VERSION"); version != "" {
 		agentVersion = version
@@ -281,7 +281,7 @@ func mysqlAgentContainer(cluster *api.MySQLCluster, mysqlAgentImage string, root
 }
 
 // NewForCluster creates a new StatefulSet for the given MySQLCluster.
-func NewForCluster(cluster *api.MySQLCluster, images operatoropts.Images, serviceName string) *apps.StatefulSet {
+func NewForCluster(cluster *v1alpha1.MySQLCluster, images operatoropts.Images, serviceName string) *apps.StatefulSet {
 	rootPassword := mysqlRootPassword(cluster)
 	replicas := int(cluster.Spec.Replicas)
 	baseServerID := cluster.Spec.BaseServerID
@@ -362,9 +362,9 @@ func NewForCluster(cluster *api.MySQLCluster, images operatoropts.Images, servic
 			Name:      cluster.Name,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(cluster, schema.GroupVersionKind{
-					Group:   api.SchemeGroupVersion.Group,
-					Version: api.SchemeGroupVersion.Version,
-					Kind:    api.MySQLClusterCRDResourceKind,
+					Group:   v1alpha1.SchemeGroupVersion.Group,
+					Version: v1alpha1.SchemeGroupVersion.Version,
+					Kind:    v1alpha1.MySQLClusterCRDResourceKind,
 				}),
 			},
 			Labels: map[string]string{

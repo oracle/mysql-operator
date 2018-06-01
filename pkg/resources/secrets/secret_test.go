@@ -19,13 +19,13 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 )
 
 func TestGetRootPasswordSecretName(t *testing.T) {
-	cluster := &api.MySQLCluster{
+	cluster := &v1alpha1.MySQLCluster{
 		ObjectMeta: metav1.ObjectMeta{Name: "example-cluster"},
-		Spec:       api.MySQLClusterSpec{},
+		Spec:       v1alpha1.MySQLClusterSpec{},
 	}
 
 	actual := GetRootPasswordSecretName(cluster)

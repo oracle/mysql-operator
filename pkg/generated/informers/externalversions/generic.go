@@ -19,7 +19,7 @@ package externalversions
 import (
 	"fmt"
 
-	v1 "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	v1alpha1 "github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -50,15 +50,15 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=mysql.oracle.com, Version=v1
-	case v1.SchemeGroupVersion.WithResource("mysqlbackups"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1().MySQLBackups().Informer()}, nil
-	case v1.SchemeGroupVersion.WithResource("mysqlbackupschedules"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1().MySQLBackupSchedules().Informer()}, nil
-	case v1.SchemeGroupVersion.WithResource("mysqlclusters"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1().MySQLClusters().Informer()}, nil
-	case v1.SchemeGroupVersion.WithResource("mysqlrestores"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1().MySQLRestores().Informer()}, nil
+	// Group=mysql.oracle.com, Version=v1alpha1
+	case v1alpha1.SchemeGroupVersion.WithResource("mysqlbackups"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1alpha1().MySQLBackups().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("mysqlbackupschedules"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1alpha1().MySQLBackupSchedules().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("mysqlclusters"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1alpha1().MySQLClusters().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("mysqlrestores"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1alpha1().MySQLRestores().Informer()}, nil
 
 	}
 

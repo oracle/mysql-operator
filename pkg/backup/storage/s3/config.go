@@ -17,7 +17,7 @@ package s3
 import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
-	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 )
 
 // Config holds the credentials required to authenticate with an S3 compliant API.
@@ -30,7 +30,7 @@ type Config struct {
 }
 
 // NewConfig creates an S3 configuration based on the input parameters.
-func NewConfig(storage *v1.Storage, creds map[string]string) *Config {
+func NewConfig(storage *v1alpha1.Storage, creds map[string]string) *Config {
 	return &Config{
 		endpoint:  storage.Config["endpoint"],
 		region:    storage.Config["region"],

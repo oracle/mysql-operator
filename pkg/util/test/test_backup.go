@@ -18,25 +18,25 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 )
 
 type TestMySQLBackup struct {
-	*api.MySQLBackup
+	*v1alpha1.MySQLBackup
 }
 
 func NewTestMySQLBackup() *TestMySQLBackup {
 	return &TestMySQLBackup{
-		MySQLBackup: &api.MySQLBackup{
+		MySQLBackup: &v1alpha1.MySQLBackup{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: metav1.NamespaceDefault,
 			},
-			Spec: api.BackupSpec{
-				Executor: &api.Executor{
+			Spec: v1alpha1.BackupSpec{
+				Executor: &v1alpha1.Executor{
 					Provider:  "mysqldump",
 					Databases: []string{"test"},
 				},
-				Storage: &api.Storage{
+				Storage: &v1alpha1.Storage{
 					Provider: "s3",
 					SecretRef: &corev1.LocalObjectReference{
 						Name: "name",

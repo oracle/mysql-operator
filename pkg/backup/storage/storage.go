@@ -19,7 +19,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/backup/storage/s3"
 )
 
@@ -39,7 +39,7 @@ type Interface interface {
 
 // NewStorageProvider accepts a secret map and uses its contents to determine the
 // desired object storage provider implementation.
-func NewStorageProvider(config *v1.Storage, creds map[string]string) (Interface, error) {
+func NewStorageProvider(config *v1alpha1.Storage, creds map[string]string) (Interface, error) {
 	switch strings.ToLower(config.Provider) {
 	case ProviderS3:
 		return s3.NewStorage(config, creds)

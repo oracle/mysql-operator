@@ -41,13 +41,13 @@ import (
 	"github.com/golang/glog"
 	"github.com/pkg/errors"
 
-	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	v1alpha1 "github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	constants "github.com/oracle/mysql-operator/pkg/constants"
 	controllerutils "github.com/oracle/mysql-operator/pkg/controllers/util"
-	mysqlop "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
+	clientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 	opscheme "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned/scheme"
-	opinformers "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions/mysql/v1"
-	oplisters "github.com/oracle/mysql-operator/pkg/generated/listers/mysql/v1"
+	informersv1alpha1 "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions/mysql/v1alpha1"
+	listersv1alpha1 "github.com/oracle/mysql-operator/pkg/generated/listers/mysql/v1alpha1"
 
 	options "github.com/oracle/mysql-operator/cmd/mysql-operator/app/options"
 	secrets "github.com/oracle/mysql-operator/pkg/resources/secrets"
@@ -82,14 +82,14 @@ type MySQLController struct {
 	opConfig options.MySQLOperatorServer
 
 	kubeClient kubernetes.Interface
-	opClient   mysqlop.Interface
+	opClient   clientset.Interface
 
 	shutdown bool
 	queue    workqueue.RateLimitingInterface
 
 	// clusterLister is able to list/get MySQLClusters from a shared informer's
 	// store.
-	clusterLister oplisters.MySQLClusterLister
+	clusterLister listersv1alpha1.MySQLClusterLister
 	// clusterListerSynced returns true if the MySQLCluster shared informer has
 	// synced at least once.
 	clusterListerSynced cache.InformerSynced
@@ -138,9 +138,9 @@ type MySQLController struct {
 // NewController creates a new MySQLController.
 func NewController(
 	opConfig options.MySQLOperatorServer,
-	opClient mysqlop.Interface,
+	opClient clientset.Interface,
 	kubeClient kubernetes.Interface,
-	clusterInformer opinformers.MySQLClusterInformer,
+	clusterInformer informersv1alpha1.MySQLClusterInformer,
 	statefulSetInformer appsinformers.StatefulSetInformer,
 	podInformer coreinformers.PodInformer,
 	serviceInformer coreinformers.ServiceInformer,
@@ -190,7 +190,7 @@ func NewController(
 			m.enqueueCluster(new)
 		},
 		DeleteFunc: func(obj interface{}) {
-			cluster, ok := obj.(*api.MySQLCluster)
+			cluster, ok := obj.(*v1alpha1.MySQLCluster)
 			if ok {
 				m.onClusterDeleted(cluster.Name)
 			}
@@ -421,7 +421,7 @@ func (m *MySQLController) syncHandler(key string) error {
 }
 
 // ensureMySQLOperatorVersion updates the MySQLOperator resource types that require it to make it consistent with the specifed operator version.
-func (m *MySQLController) ensureMySQLOperatorVersion(c *api.MySQLCluster, ss *apps.StatefulSet, operatorVersion string) error {
+func (m *MySQLController) ensureMySQLOperatorVersion(c *v1alpha1.MySQLCluster, ss *apps.StatefulSet, operatorVersion string) error {
 	// Ensure the Pods belonging to the MySQLCluster are updated to the correct 'mysql-agent' image for the current MySQLOperator version.
 	container := statefulsets.MySQLAgentName
 	pods, err := m.podLister.List(SelectorForCluster(c))
@@ -460,16 +460,16 @@ func (m *MySQLController) ensureMySQLOperatorVersion(c *api.MySQLCluster, ss *ap
 }
 
 // updateClusterStatusForSS updates MySQLCluster statuses based on changes to their associated StatefulSets.
-func (m *MySQLController) updateClusterStatus(cluster *api.MySQLCluster, ss *apps.StatefulSet) error {
+func (m *MySQLController) updateClusterStatus(cluster *v1alpha1.MySQLCluster, ss *apps.StatefulSet) error {
 	glog.V(4).Infof("%s/%s: ss.Spec.Replicas=%d, ss.Status.ReadyReplicas=%d, ss.Status.Replicas=%d",
 		cluster.Namespace, cluster.Name, *ss.Spec.Replicas, ss.Status.ReadyReplicas, ss.Status.Replicas)
 
 	phase := cluster.Status.Phase
 
 	if (ss.Status.ReadyReplicas < ss.Status.Replicas) || (*ss.Spec.Replicas != ss.Status.Replicas) {
-		phase = api.MySQLClusterPending
+		phase = v1alpha1.MySQLClusterPending
 	} else if ss.Status.ReadyReplicas == ss.Status.Replicas {
-		phase = api.MySQLClusterRunning
+		phase = v1alpha1.MySQLClusterRunning
 	}
 
 	if phase != cluster.Status.Phase {
@@ -520,7 +520,7 @@ func (m *MySQLController) handleObject(obj interface{}) {
 	if ownerRef := metav1.GetControllerOf(object); ownerRef != nil {
 		// If this object is not owned by a MySQLCluster, we should not do
 		// anything more with it.
-		if ownerRef.Kind != api.MySQLClusterCRDResourceKind {
+		if ownerRef.Kind != v1alpha1.MySQLClusterCRDResourceKind {
 			return
 		}
 

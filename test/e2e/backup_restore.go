@@ -24,7 +24,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/test/e2e/framework"
 
 	mysqlclientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
@@ -72,8 +72,8 @@ var _ = Describe("Backup/Restore", func() {
 		By("Backing up testdb")
 
 		dbs := []string{framework.TestDBName}
-		backup := backupJig.CreateAndAwaitMySQLDumpBackupOrFail(ns, clusterName, dbs, func(b *v1.MySQLBackup) {
-			b.Spec.Storage = &v1.Storage{
+		backup := backupJig.CreateAndAwaitMySQLDumpBackupOrFail(ns, clusterName, dbs, func(b *v1alpha1.MySQLBackup) {
+			b.Spec.Storage = &v1alpha1.Storage{
 				Provider: "s3",
 				SecretRef: &corev1.LocalObjectReference{
 					Name: secret.Name,

@@ -37,7 +37,7 @@ import (
 	backupcontroller "github.com/oracle/mysql-operator/pkg/controllers/backup"
 	clustermgr "github.com/oracle/mysql-operator/pkg/controllers/cluster/manager"
 	restorecontroller "github.com/oracle/mysql-operator/pkg/controllers/restore"
-	mysqlop "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
+	clientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 	informers "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions"
 	metrics "github.com/oracle/mysql-operator/pkg/util/metrics"
 	signals "github.com/oracle/mysql-operator/pkg/util/signals"
@@ -83,7 +83,7 @@ func Run(opts *options.MySQLAgentOpts) error {
 	}()
 
 	kubeclient := kubernetes.NewForConfigOrDie(kubeconfig)
-	mysqlopClient := mysqlop.NewForConfigOrDie(kubeconfig)
+	mysqlopClient := clientset.NewForConfigOrDie(kubeconfig)
 
 	sharedInformerFactory := informers.NewFilteredSharedInformerFactory(mysqlopClient, 0, opts.Namespace, nil)
 	kubeInformerFactory := kubeinformers.NewFilteredSharedInformerFactory(kubeclient, resyncPeriod(opts)(), opts.Namespace, nil)
@@ -116,9 +116,9 @@ func Run(opts *options.MySQLAgentOpts) error {
 
 	backupController := backupcontroller.NewAgentController(
 		kubeclient,
-		mysqlopClient.MysqlV1(),
-		sharedInformerFactory.Mysql().V1().MySQLBackups(),
-		sharedInformerFactory.Mysql().V1().MySQLClusters(),
+		mysqlopClient.MysqlV1alpha1(),
+		sharedInformerFactory.Mysql().V1alpha1().MySQLBackups(),
+		sharedInformerFactory.Mysql().V1alpha1().MySQLClusters(),
 		kubeInformerFactory.Core().V1().Pods(),
 		opts.Hostname,
 	)
@@ -130,10 +130,10 @@ func Run(opts *options.MySQLAgentOpts) error {
 
 	restoreController := restorecontroller.NewAgentController(
 		kubeclient,
-		mysqlopClient.MysqlV1(),
-		sharedInformerFactory.Mysql().V1().MySQLRestores(),
-		sharedInformerFactory.Mysql().V1().MySQLClusters(),
-		sharedInformerFactory.Mysql().V1().MySQLBackups(),
+		mysqlopClient.MysqlV1alpha1(),
+		sharedInformerFactory.Mysql().V1alpha1().MySQLRestores(),
+		sharedInformerFactory.Mysql().V1alpha1().MySQLClusters(),
+		sharedInformerFactory.Mysql().V1alpha1().MySQLBackups(),
 		kubeInformerFactory.Core().V1().Pods(),
 		opts.Hostname,
 	)

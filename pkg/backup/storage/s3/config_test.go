@@ -17,11 +17,11 @@ package s3
 import (
 	"testing"
 
-	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 )
 
 func TestConfigFromSecretDataWithValidData(t *testing.T) {
-	storage := &v1.Storage{
+	storage := &v1alpha1.Storage{
 		Provider: "s3",
 		Config: map[string]string{
 			"endpoint": "endpoint",
@@ -44,7 +44,7 @@ func TestConfigFromSecretDataWithValidData(t *testing.T) {
 }
 
 func TestConfigFromSecretDataWithInValidData(t *testing.T) {
-	storage := &v1.Storage{
+	storage := &v1alpha1.Storage{
 		Provider: "s3",
 		Config: map[string]string{
 			"endpoint": "endpoint",

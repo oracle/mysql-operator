@@ -30,7 +30,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	"github.com/pkg/errors"
 
-	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	v1 "github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/controllers/cluster/labeler"
 	mysqlclientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 	"github.com/oracle/mysql-operator/pkg/resources/secrets"
@@ -93,7 +93,7 @@ func (j *MySQLClusterTestJig) CreateMySQLClusterOrFail(namespace string, replica
 	name := types.NamespacedName{Namespace: namespace, Name: j.Name}
 	By(fmt.Sprintf("Creating a MySQLCluster %q with .spec.replicas=%d", name, replicas))
 
-	result, err := j.MySQLClient.MysqlV1().MySQLClusters(namespace).Create(cluster)
+	result, err := j.MySQLClient.MysqlV1alpha1().MySQLClusters(namespace).Create(cluster)
 	if err != nil {
 		Failf("Failed to create MySQLCluster %q: %v", name, err)
 	}
@@ -114,7 +114,7 @@ func (j *MySQLClusterTestJig) CreateAndAwaitMySQLClusterOrFail(namespace string,
 func (j *MySQLClusterTestJig) waitForConditionOrFail(namespace, name string, timeout time.Duration, message string, conditionFn func(*v1.MySQLCluster) bool) *v1.MySQLCluster {
 	var cluster *v1.MySQLCluster
 	pollFunc := func() (bool, error) {
-		c, err := j.MySQLClient.MysqlV1().MySQLClusters(namespace).Get(name, metav1.GetOptions{})
+		c, err := j.MySQLClient.MysqlV1alpha1().MySQLClusters(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}

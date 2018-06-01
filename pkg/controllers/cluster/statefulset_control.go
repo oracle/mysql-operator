@@ -19,7 +19,7 @@ import (
 
 	apps "k8s.io/api/apps/v1beta1"
 	kubernetes "k8s.io/client-go/kubernetes"
-	appslisters "k8s.io/client-go/listers/apps/v1beta1"
+	appslistersv1beta1 "k8s.io/client-go/listers/apps/v1beta1"
 
 	"github.com/oracle/mysql-operator/pkg/constants"
 	"github.com/oracle/mysql-operator/pkg/controllers/util"
@@ -36,12 +36,12 @@ type StatefulSetControlInterface interface {
 
 type realStatefulSetControl struct {
 	client            kubernetes.Interface
-	statefulSetLister appslisters.StatefulSetLister
+	statefulSetLister appslistersv1beta1.StatefulSetLister
 }
 
 // NewRealStatefulSetControl creates a concrete implementation of the
 // StatefulSetControlInterface.
-func NewRealStatefulSetControl(client kubernetes.Interface, statefulSetLister appslisters.StatefulSetLister) StatefulSetControlInterface {
+func NewRealStatefulSetControl(client kubernetes.Interface, statefulSetLister appslistersv1beta1.StatefulSetLister) StatefulSetControlInterface {
 	return &realStatefulSetControl{client: client, statefulSetLister: statefulSetLister}
 }
 

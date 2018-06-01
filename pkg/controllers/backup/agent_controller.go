@@ -37,13 +37,13 @@ import (
 	record "k8s.io/client-go/tools/record"
 	workqueue "k8s.io/client-go/util/workqueue"
 
-	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	backuputil "github.com/oracle/mysql-operator/pkg/backup"
 	executor "github.com/oracle/mysql-operator/pkg/backup/executor"
 	controllerutils "github.com/oracle/mysql-operator/pkg/controllers/util"
-	mysqlv1client "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned/typed/mysql/v1"
-	informers "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions/mysql/v1"
-	listers "github.com/oracle/mysql-operator/pkg/generated/listers/mysql/v1"
+	clientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned/typed/mysql/v1alpha1"
+	informersv1alpha1 "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions/mysql/v1alpha1"
+	listersv1alpha1 "github.com/oracle/mysql-operator/pkg/generated/listers/mysql/v1alpha1"
 	kubeutil "github.com/oracle/mysql-operator/pkg/util/kube"
 	metrics "github.com/oracle/mysql-operator/pkg/util/metrics"
 )
@@ -57,7 +57,7 @@ type AgentController struct {
 	podName string
 
 	kubeClient  kubernetes.Interface
-	client      mysqlv1client.MySQLBackupsGetter
+	client      clientset.MySQLBackupsGetter
 	syncHandler func(key string) error
 
 	// podLister is able to list/get Pods from a shared informer's store.
@@ -68,14 +68,14 @@ type AgentController struct {
 
 	// clusterLister is able to list/get MySQLClusters from a shared informer's
 	// store.
-	clusterLister listers.MySQLClusterLister
+	clusterLister listersv1alpha1.MySQLClusterLister
 	// clusterListerSynced returns true if the MySQLCluster shared informer has
 	// synced at least once.
 	clusterListerSynced cache.InformerSynced
 
 	// backupLister is able to list/get MySQLBackups from a shared informer's
 	// store.
-	backupLister listers.MySQLBackupLister
+	backupLister listersv1alpha1.MySQLBackupLister
 	// backupListerSynced returns true if the MySQLBackup shared informer has
 	// synced at least once.
 	backupListerSynced cache.InformerSynced
@@ -89,9 +89,9 @@ type AgentController struct {
 // NewAgentController constructs a new AgentController.
 func NewAgentController(
 	kubeClient kubernetes.Interface,
-	client mysqlv1client.MySQLBackupsGetter,
-	backupInformer informers.MySQLBackupInformer,
-	clusterInformer informers.MySQLClusterInformer,
+	client clientset.MySQLBackupsGetter,
+	backupInformer informersv1alpha1.MySQLBackupInformer,
+	clusterInformer informersv1alpha1.MySQLClusterInformer,
 	podInformer corev1informers.PodInformer,
 	podName string,
 ) *AgentController {
@@ -121,8 +121,8 @@ func NewAgentController(
 	backupInformer.Informer().AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
 			UpdateFunc: func(oldObj, newObj interface{}) {
-				new := newObj.(*api.MySQLBackup)
-				if new.Status.Phase == api.BackupPhaseScheduled && new.Spec.AgentScheduled == c.podName {
+				new := newObj.(*v1alpha1.MySQLBackup)
+				if new.Status.Phase == v1alpha1.BackupPhaseScheduled && new.Spec.AgentScheduled == c.podName {
 					key, err := cache.MetaNamespaceKeyFunc(new)
 					if err != nil {
 						glog.Errorf("Error creating queue key, item not added to queue: %v", err)
@@ -276,10 +276,10 @@ func (controller *AgentController) processBackup(key string) error {
 	// and support users fixing validation errors via updates (rather than
 	// recreation).
 	if validationErr != nil {
-		backup.Status.Phase = api.BackupPhaseFailed
+		backup.Status.Phase = v1alpha1.BackupPhaseFailed
 		backup, err = controller.client.MySQLBackups(ns).Update(backup)
 		if err != nil {
-			return errors.Wrapf(err, "failed to update (phase=%q)", api.BackupPhaseFailed)
+			return errors.Wrapf(err, "failed to update (phase=%q)", v1alpha1.BackupPhaseFailed)
 		}
 		controller.recorder.Eventf(backup, corev1.EventTypeWarning, "FailedValidation", validationErr.Error())
 
@@ -294,10 +294,10 @@ func (controller *AgentController) processBackup(key string) error {
 	return nil
 }
 
-func (controller *AgentController) performBackup(backup *api.MySQLBackup, creds *corev1.Secret) error {
+func (controller *AgentController) performBackup(backup *v1alpha1.MySQLBackup, creds *corev1.Secret) error {
 	// Update backup phase to started.
 	started := time.Now()
-	backup.Status.Phase = api.BackupPhaseStarted
+	backup.Status.Phase = v1alpha1.BackupPhaseStarted
 	backup.Status.TimeStarted = metav1.Time{Time: started}
 	backup, err := controller.client.MySQLBackups(backup.Namespace).Update(backup)
 	if err != nil {
@@ -313,7 +313,7 @@ func (controller *AgentController) performBackup(backup *api.MySQLBackup, creds 
 
 	runner, err := backuputil.NewConfiguredRunner(backup.Spec.Executor, executor.DefaultCreds(), backup.Spec.Storage, credsMap)
 	if err != nil {
-		backup.Status.Phase = api.BackupPhaseFailed
+		backup.Status.Phase = v1alpha1.BackupPhaseFailed
 		backup, updateErr := controller.client.MySQLBackups(backup.Namespace).Update(backup)
 		if updateErr != nil {
 			return errors.Wrapf(err, "failed to mark MySQLBackup %q as failed", kubeutil.NamespaceAndName(backup))
@@ -325,7 +325,7 @@ func (controller *AgentController) performBackup(backup *api.MySQLBackup, creds 
 
 	key, err := runner.Backup(fmt.Sprintf("%s-%s", backup.Spec.ClusterRef.Name, backup.Name))
 	if err != nil {
-		backup.Status.Phase = api.BackupPhaseFailed
+		backup.Status.Phase = v1alpha1.BackupPhaseFailed
 		backup, updateErr := controller.client.MySQLBackups(backup.Namespace).Update(backup)
 		if updateErr != nil {
 			return errors.Wrapf(err, "failed to mark MySQLBackup %q as failed", kubeutil.NamespaceAndName(backup))
@@ -337,9 +337,9 @@ func (controller *AgentController) performBackup(backup *api.MySQLBackup, creds 
 
 	finished := time.Now()
 
-	backup.Status.Phase = api.BackupPhaseComplete
+	backup.Status.Phase = v1alpha1.BackupPhaseComplete
 	backup.Status.TimeCompleted = metav1.Time{Time: finished}
-	backup.Status.Outcome = api.BackupOutcome{Location: key}
+	backup.Status.Outcome = v1alpha1.BackupOutcome{Location: key}
 	backup, err = controller.client.MySQLBackups(backup.Namespace).Update(backup)
 	if err != nil {
 		return errors.Wrapf(err, "failed to mark MySQLBackup %q as complete", kubeutil.NamespaceAndName(backup))
