@@ -28,7 +28,7 @@ The MySQL Operator provides the following core features:
 
 ## Requirements
 
- * Kubernetes 1.7.0 +
+ * Kubernetes 1.8.0 +
 
 ## Contributing
 

@@ -18,8 +18,6 @@ import (
 	"fmt"
 
 	apps "k8s.io/api/apps/v1beta1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubernetes "k8s.io/client-go/kubernetes"
 	appslisters "k8s.io/client-go/listers/apps/v1beta1"
 
@@ -29,12 +27,11 @@ import (
 )
 
 // StatefulSetControlInterface defines the interface that the
-// MySQLClusterController uses to create, update, and delete StatefulSets. It
+// MySQLClusterController uses to create and update StatefulSets. It
 // is implemented as an interface to enable testing.
 type StatefulSetControlInterface interface {
 	CreateStatefulSet(ss *apps.StatefulSet) error
-	DeleteStatefulSet(ss *apps.StatefulSet) error
-	PatchStatefulSet(old *apps.StatefulSet, new *apps.StatefulSet) error
+	Patch(old *apps.StatefulSet, new *apps.StatefulSet) error
 }
 
 type realStatefulSetControl struct {
@@ -53,17 +50,7 @@ func (rssc *realStatefulSetControl) CreateStatefulSet(ss *apps.StatefulSet) erro
 	return err
 }
 
-func (rssc *realStatefulSetControl) DeleteStatefulSet(ss *apps.StatefulSet) error {
-	policy := metav1.DeletePropagationBackground
-	opts := &metav1.DeleteOptions{PropagationPolicy: &policy}
-	err := rssc.client.AppsV1beta1().StatefulSets(ss.Namespace).Delete(ss.Name, opts)
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
-	return err
-}
-
-func (rssc *realStatefulSetControl) PatchStatefulSet(old *apps.StatefulSet, new *apps.StatefulSet) error {
+func (rssc *realStatefulSetControl) Patch(old *apps.StatefulSet, new *apps.StatefulSet) error {
 	_, err := util.PatchStatefulSet(rssc.client, old, new)
 	return err
 }

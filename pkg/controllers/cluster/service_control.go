@@ -16,17 +16,14 @@ package cluster
 
 import (
 	"k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 )
 
-// ServiceControlInterface defines the interface that the
-// MySQLClusterController uses to create, update, and delete Services. It
-// is implemented as an interface to enable testing.
+// ServiceControlInterface defines the interface that the MySQLClusterController
+// uses to create Services. It is implemented as an interface to enable testing.
 type ServiceControlInterface interface {
 	CreateService(s *v1.Service) error
-	DeleteService(s *v1.Service) error
 }
 
 type realServiceControl struct {
@@ -42,13 +39,5 @@ func NewRealServiceControl(client kubernetes.Interface, serviceLister corelister
 
 func (rsc *realServiceControl) CreateService(s *v1.Service) error {
 	_, err := rsc.client.CoreV1().Services(s.Namespace).Create(s)
-	return err
-}
-
-func (rsc *realServiceControl) DeleteService(s *v1.Service) error {
-	err := rsc.client.CoreV1().Services(s.Namespace).Delete(s.Name, nil)
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
 	return err
 }

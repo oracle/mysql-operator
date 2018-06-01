@@ -30,7 +30,7 @@ func NewFakeStatefulSetControl(statefulSetControl StatefulSetControlInterface, c
 	return &fakeStatefulSetControl{statefulSetControl, client}
 }
 
-func (rssc *fakeStatefulSetControl) PatchStatefulSet(old *apps.StatefulSet, new *apps.StatefulSet) error {
+func (rssc *fakeStatefulSetControl) Patch(old *apps.StatefulSet, new *apps.StatefulSet) error {
 	_, err := util.UpdateStatefulSet(rssc.client, new)
 	return err
 }

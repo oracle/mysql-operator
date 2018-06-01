@@ -30,8 +30,6 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	cache "k8s.io/client-go/tools/cache"
 
-	"github.com/golang/glog"
-
 	options "github.com/oracle/mysql-operator/cmd/mysql-operator/app/options"
 	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
 	"github.com/oracle/mysql-operator/pkg/constants"
@@ -101,8 +99,8 @@ func TestSyncClusterValidateError(t *testing.T) {
 	if err == nil {
 		t.Errorf("SyncHandler should return an error when the cluster resource is invalid.")
 	}
-	if err.Error() != `status.phase: Invalid value: "Bad_Phase": invalid phase specified` {
-		t.Error("SyncHandler should return the correct error when the cluster resource is invalid: ", err)
+	if err.Error() != `validating MySQLCluster: status.phase: Invalid value: "Bad_Phase": invalid phase specified` {
+		t.Errorf("SyncHandler should return the correct error when the cluster resource is invalid: %q", err)
 	}
 }
 
@@ -501,7 +499,6 @@ type fakeMySQLControllerInformers struct {
 	statefulSetInformer appsinformers.StatefulSetInformer
 	podInformer         coreinformers.PodInformer
 	serviceInformer     coreinformers.ServiceInformer
-	configMapInformer   coreinformers.ConfigMapInformer
 }
 
 // newFakeMySQLController creates a new fake MySQLController with a fake mysqlop and kube clients and informers
@@ -509,11 +506,6 @@ type fakeMySQLControllerInformers struct {
 func newFakeMySQLController(cluster *api.MySQLCluster, kuberesources ...runtime.Object) (*MySQLController, *fakeMySQLControllerInformers) {
 	mysqlopClient := mysqlfake.NewSimpleClientset(cluster)
 	kubeClient := fake.NewSimpleClientset(kuberesources...)
-
-	serverVersion, err := kubeClient.Discovery().ServerVersion()
-	if err != nil {
-		glog.Fatalf("Failed to discover Kubernetes API server version: %+v", err)
-	}
 
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, util.NoResyncPeriodFunc())
 	mysqlopInformerFactory := mysqlinformer_factory.NewSharedInformerFactory(mysqlopClient, util.NoResyncPeriodFunc())
@@ -523,19 +515,16 @@ func newFakeMySQLController(cluster *api.MySQLCluster, kuberesources ...runtime.
 		statefulSetInformer: kubeInformerFactory.Apps().V1beta1().StatefulSets(),
 		podInformer:         kubeInformerFactory.Core().V1().Pods(),
 		serviceInformer:     kubeInformerFactory.Core().V1().Services(),
-		configMapInformer:   kubeInformerFactory.Core().V1().ConfigMaps(),
 	}
 
 	fakeController := NewController(
 		mockOperatorConfig(),
 		mysqlopClient,
 		kubeClient,
-		serverVersion,
 		fakeInformers.clusterInformer,
 		fakeInformers.statefulSetInformer,
 		fakeInformers.podInformer,
 		fakeInformers.serviceInformer,
-		fakeInformers.configMapInformer,
 		30*time.Second,
 		cluster.Namespace)
 
@@ -543,7 +532,6 @@ func newFakeMySQLController(cluster *api.MySQLCluster, kuberesources ...runtime.
 	fakeController.statefulSetListerSynced = alwaysReady
 	fakeController.podListerSynced = alwaysReady
 	fakeController.serviceListerSynced = alwaysReady
-	fakeController.configMapListerSynced = alwaysReady
 
 	// Override default control structs with customer fakes.
 	fakeController.statefulSetControl = NewFakeStatefulSetControl(fakeController.statefulSetControl, kubeClient)
