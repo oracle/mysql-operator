@@ -7,10 +7,7 @@
 
 ## Build the project and push the Docker image to a registry
 
-Building the project and pushing the resulting images (mysql-agent and
-mysql-operator) to a docker registry is made easy with the Makefile. By default
-this points to our own registries, however, the variables can be modified to
-point to your own. The following will delete the existing built binaries, build
+The following will delete the existing built binaries, build
 the project and the new binaries, create the agent and operator containers with
 those binaries inside and then push them to the destination registry.
 
