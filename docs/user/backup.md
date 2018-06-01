@@ -3,7 +3,8 @@
 ## Introduction
 
 The MySQL Operator allows for on-demand and scheduled backups to be created.
-On-demand backups can be created by submitting a MySQLBackup custom resource. Scheduled backups can be created by submitting a MySQLBackupSchedule custom resource.
+On-demand backups can be created by submitting a Backup custom resource.
+Scheduled backups can be created by submitting a BackupSchedule custom resource.
 
 Whilst we plan to offer different options for backups, we currently only support
 the mysqldump tool, and storage in S3 compatible object storage providers.
@@ -35,13 +36,13 @@ $ kubectl create secret generic s3-credentials --from-literal=accessKey=${S3_ACC
 
 ## On-demand backups
 
-You can request a backup at any time by submitting a MySQLBackup custom resource to the
+You can request a backup at any time by submitting a Backup custom resource to the
 operator. The secretRef is the name of a secret that contains your Object
 Storage credentials. Note: The databases field is mandatory.
 
 ```yaml
 apiVersion: mysql.oracle.com/v1alpa1
-kind: MySQLBackup
+kind: Backup
 metadata:
   name: mysql-backup
 spec:
@@ -139,15 +140,15 @@ Remember to also configure the S3 credentials secret as outlined above.
 ## Scheduled backups
 
 You can request a backup to be performed on a given schedule by submitting a
-MySQLBackupSchedule custom resource to the operator. This will create
-MySQLBackup resources based on the given cron format string. The secretRef is
-the name of a secret that contains your Object Storage credentials. Note: The
-databases field is mandatory. For example, the following will create a backup
-of the employees database every 30 minutes:
+BackupSchedule custom resource to the operator. This will create Backup
+resources based on the given cron format string. The secretRef is the name of a
+secret that contains your Object Storage credentials. Note: The databases field
+is mandatory. For example, the following will create a backup of the employees
+database every 30 minutes:
 
 ```yaml
 apiVersion: mysql.oracle.com/v1alpha1
-kind: MySQLBackupSchedule
+kind: BackupSchedule
 metadata:
   name: mysql-backup-schedule
 spec:

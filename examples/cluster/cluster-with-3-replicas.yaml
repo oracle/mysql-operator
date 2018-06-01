@@ -1,5 +1,5 @@
-apiVersion: mysql.oracle.com/alpha1
-kind: MySQLCluster
+apiVersion: mysql.oracle.com/v1alpha1
+kind: Cluster
 metadata:
   name: mysql
 spec:

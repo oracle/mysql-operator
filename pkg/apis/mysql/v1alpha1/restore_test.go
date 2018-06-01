@@ -25,7 +25,7 @@ import (
 func TestRestoreEnsureDefaults(t *testing.T) {
 	// test a version is set if one does not exist.
 	bv1 := version.GetBuildVersion()
-	r := MySQLRestore{
+	r := Restore{
 		Spec: RestoreSpec{
 			ClusterRef: &corev1.LocalObjectReference{
 				Name: "foo",
@@ -41,7 +41,7 @@ func TestRestoreEnsureDefaults(t *testing.T) {
 	}
 	// test a version is not set if one already exists.
 	bv2 := "test-existing-build-version"
-	r2 := MySQLRestore{}
+	r2 := Restore{}
 	r2.Labels = make(map[string]string)
 	SetOperatorVersionLabel(r2.Labels, bv2)
 	dr2 := *r2.EnsureDefaults()
@@ -52,7 +52,7 @@ func TestRestoreEnsureDefaults(t *testing.T) {
 
 func TestRestoreValidate(t *testing.T) {
 	// Test a malformed restore returns errors.
-	r := MySQLRestore{
+	r := Restore{
 		Spec: RestoreSpec{
 			ClusterRef: &corev1.LocalObjectReference{
 				Name: "foo",

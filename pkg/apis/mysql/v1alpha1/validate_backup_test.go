@@ -24,7 +24,7 @@ import (
 )
 
 func TestEmptyBackupIsInvalid(t *testing.T) {
-	backup := MySQLBackup{}
+	backup := Backup{}
 	err := backup.Validate()
 	if err == nil {
 		t.Error("An empty backup should be invalid")
@@ -32,14 +32,14 @@ func TestEmptyBackupIsInvalid(t *testing.T) {
 }
 
 func TestValidateValidBackup(t *testing.T) {
-	backup := MySQLBackup{
+	backup := Backup{
 		Spec: BackupSpec{
-			Executor: &Executor{
-				Provider:  "mysqldump",
+			Executor: &BackupExecutor{
+				Name:      "mysqldump",
 				Databases: []string{"db1", "db2"},
 			},
-			Storage: &Storage{
-				Provider: "s3",
+			StorageProvider: &BackupStorageProvider{
+				Name: "s3",
 				SecretRef: &corev1.LocalObjectReference{
 					Name: "backup-storage-creds",
 				},
@@ -49,7 +49,7 @@ func TestValidateValidBackup(t *testing.T) {
 					"bucket":   "bucket",
 				},
 			},
-			ClusterRef: &corev1.LocalObjectReference{
+			Cluster: &corev1.LocalObjectReference{
 				Name: "test-cluster",
 			},
 		},
@@ -64,7 +64,7 @@ func TestValidateValidBackup(t *testing.T) {
 
 func TestBackupEnsureDefaultVersionSet(t *testing.T) {
 	expected := version.GetBuildVersion()
-	backup := &MySQLBackup{}
+	backup := &Backup{}
 	backup = backup.EnsureDefaults()
 
 	actual := GetOperatorVersionLabel(backup.Labels)
@@ -75,7 +75,7 @@ func TestBackupEnsureDefaultVersionSet(t *testing.T) {
 
 func TestBackupEnsureDefaultVersionNotSetIfExists(t *testing.T) {
 	version := "v1.0.0"
-	backup := &MySQLBackup{}
+	backup := &Backup{}
 	backup.Labels = make(map[string]string)
 	SetOperatorVersionLabel(backup.Labels, version)
 	backup = backup.EnsureDefaults()
@@ -88,14 +88,14 @@ func TestBackupEnsureDefaultVersionNotSetIfExists(t *testing.T) {
 }
 
 func TestValidateBackupMissingCluster(t *testing.T) {
-	backup := MySQLBackup{
+	backup := Backup{
 		Spec: BackupSpec{
-			Executor: &Executor{
-				Provider:  "mysqldump",
+			Executor: &BackupExecutor{
+				Name:      "mysqldump",
 				Databases: []string{"db1", "db2"},
 			},
-			Storage: &Storage{
-				Provider: "s3",
+			StorageProvider: &BackupStorageProvider{
+				Name: "s3",
 				SecretRef: &corev1.LocalObjectReference{
 					Name: "backup-storage-creds",
 				},
@@ -115,30 +115,28 @@ func TestValidateBackupMissingCluster(t *testing.T) {
 }
 
 func TestValidateBackupMissingSecretRef(t *testing.T) {
-	backup := MySQLBackup{
+	backup := Backup{
 		Spec: BackupSpec{
-			Executor: &Executor{
-				Provider:  "mysqldump",
+			Executor: &BackupExecutor{
+				Name:      "mysqldump",
 				Databases: []string{"db1", "db2"},
 			},
-			Storage: &Storage{
-				Provider: "s3",
+			StorageProvider: &BackupStorageProvider{
+				Name: "s3",
 				Config: map[string]string{
 					"endpoint": "endpoint",
 					"region":   "region",
 					"bucket":   "bucket",
 				},
 			},
-			ClusterRef: &corev1.LocalObjectReference{
+			Cluster: &corev1.LocalObjectReference{
 				Name: "test-cluster",
 			},
 		},
 	}
 
 	err := backup.Validate()
-	if !strings.Contains(err.Error(), "storage.secretRef: Required value") {
-		t.Errorf("Expected backup with missing SecretRef to show 'storage.secretRef: Required value' error. Error is: %s", err)
+	if !strings.Contains(err.Error(), "storageProvider.secretRef: Required value") {
+		t.Errorf("Expected backup with missing SecretRef to show 'storageProvider.secretRef: Required value' error. Error is: %s", err)
 	}
 }
-
-// Error is: storage.secretRef: Required value

@@ -29,59 +29,59 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 )
 
-// MySQLClusterInformer provides access to a shared informer and lister for
-// MySQLClusters.
-type MySQLClusterInformer interface {
+// RestoreInformer provides access to a shared informer and lister for
+// Restores.
+type RestoreInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.MySQLClusterLister
+	Lister() v1alpha1.RestoreLister
 }
 
-type mySQLClusterInformer struct {
+type restoreInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-// NewMySQLClusterInformer constructs a new informer for MySQLCluster type.
+// NewRestoreInformer constructs a new informer for Restore type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewMySQLClusterInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredMySQLClusterInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewRestoreInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredRestoreInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredMySQLClusterInformer constructs a new informer for MySQLCluster type.
+// NewFilteredRestoreInformer constructs a new informer for Restore type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredMySQLClusterInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredRestoreInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MysqlV1alpha1().MySQLClusters(namespace).List(options)
+				return client.MysqlV1alpha1().Restores(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MysqlV1alpha1().MySQLClusters(namespace).Watch(options)
+				return client.MysqlV1alpha1().Restores(namespace).Watch(options)
 			},
 		},
-		&mysql_v1alpha1.MySQLCluster{},
+		&mysql_v1alpha1.Restore{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *mySQLClusterInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredMySQLClusterInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *restoreInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredRestoreInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *mySQLClusterInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&mysql_v1alpha1.MySQLCluster{}, f.defaultInformer)
+func (f *restoreInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&mysql_v1alpha1.Restore{}, f.defaultInformer)
 }
 
-func (f *mySQLClusterInformer) Lister() v1alpha1.MySQLClusterLister {
-	return v1alpha1.NewMySQLClusterLister(f.Informer().GetIndexer())
+func (f *restoreInformer) Lister() v1alpha1.RestoreLister {
+	return v1alpha1.NewRestoreLister(f.Informer().GetIndexer())
 }

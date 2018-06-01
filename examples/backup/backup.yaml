@@ -1,14 +1,14 @@
 apiVersion: mysql.oracle.com/v1alpha1
-kind: MySQLBackup
+kind: Backup
 metadata:
   name: mysql-backup
 spec:
   executor:
-    provider: mysqldump
+    name: mysqldump
     databases:
       - test
-  storage:
-    provider: s3
+  storageProvider:
+    name: s3
     secretRef:
       name: s3-credentials
     config:

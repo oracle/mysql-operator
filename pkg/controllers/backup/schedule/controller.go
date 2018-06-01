@@ -48,15 +48,15 @@ const controllerName = "backupschedule-controller"
 
 const (
 	// CronScheduleValidationError is used as part of the Event 'reason' when a
-	// MySQLBackupSchedule fails validation due to an invalid Cron schedule string.
+	// BackupSchedule fails validation due to an invalid Cron schedule string.
 	CronScheduleValidationError = "CronScheduleValidationError"
 )
 
-// Controller watches the Kubernetes API for changes to MySQLBackupSchedule
+// Controller watches the Kubernetes API for changes to BackupSchedule
 // resources.
 type Controller struct {
 	opClient                   mysqlop.Interface
-	backupScheduleLister       oplisters.MySQLBackupScheduleLister
+	backupScheduleLister       oplisters.BackupScheduleLister
 	backupScheduleListerSynced cache.InformerSynced
 	syncHandler                func(scheduleName string) error
 	queue                      workqueue.RateLimitingInterface
@@ -70,7 +70,7 @@ type Controller struct {
 func NewController(
 	opClient mysqlop.Interface,
 	kubeClient kubernetes.Interface,
-	backupScheduleInformer opinformers.MySQLBackupScheduleInformer,
+	backupScheduleInformer opinformers.BackupScheduleInformer,
 	syncPeriod time.Duration,
 	namespace string,
 ) *Controller {
@@ -96,7 +96,7 @@ func NewController(
 	backupScheduleInformer.Informer().AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
-				bs := obj.(*v1alpha1.MySQLBackupSchedule)
+				bs := obj.(*v1alpha1.BackupSchedule)
 
 				switch bs.Status.Phase {
 				case "", v1alpha1.BackupSchedulePhaseNew, v1alpha1.BackupSchedulePhaseEnabled:
@@ -161,9 +161,9 @@ func (controller *Controller) Run(ctx context.Context, numWorkers int) error {
 }
 
 func (controller *Controller) enqueueAllEnabledSchedules() {
-	backupSchedules, err := controller.backupScheduleLister.MySQLBackupSchedules(controller.namespace).List(labels.NewSelector())
+	backupSchedules, err := controller.backupScheduleLister.BackupSchedules(controller.namespace).List(labels.NewSelector())
 	if err != nil {
-		glog.Errorf("Error listing MySQLBackupSchedules: %v", err)
+		glog.Errorf("Error listing BackupSchedules: %v", err)
 		return
 	}
 
@@ -221,14 +221,14 @@ func (controller *Controller) processSchedule(key string) error {
 	}
 
 	glog.V(6).Info("Getting backup schedule")
-	bs, err := controller.backupScheduleLister.MySQLBackupSchedules(ns).Get(name)
+	bs, err := controller.backupScheduleLister.BackupSchedules(ns).Get(name)
 	if err != nil {
 		// backup schedule no longer exists
 		if apierrors.IsNotFound(err) {
 			glog.Errorf("Backup schedule not found, err: %v", err)
 			return nil
 		}
-		return errors.Wrap(err, "error getting MySQLBackupSchedule")
+		return errors.Wrap(err, "error getting BackupSchedule")
 	}
 
 	switch bs.Status.Phase {
@@ -264,9 +264,9 @@ func (controller *Controller) processSchedule(key string) error {
 
 	// update status if it's changed
 	if currentPhase != bs.Status.Phase {
-		var updatedBackupSchedule *v1alpha1.MySQLBackupSchedule
+		var updatedBackupSchedule *v1alpha1.BackupSchedule
 		err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			updatedBackupSchedule, err = controller.opClient.MysqlV1alpha1().MySQLBackupSchedules(ns).Update(bs)
+			updatedBackupSchedule, err = controller.opClient.MysqlV1alpha1().BackupSchedules(ns).Update(bs)
 			if err != nil {
 				return errors.Wrapf(err, "error updating backup schedule phase to %q", bs.Status.Phase)
 			}
@@ -286,7 +286,7 @@ func (controller *Controller) processSchedule(key string) error {
 	return controller.submitBackupIfDue(bs, cronSchedule)
 }
 
-func parseCronSchedule(item *v1alpha1.MySQLBackupSchedule) (cron.Schedule, []string) {
+func parseCronSchedule(item *v1alpha1.BackupSchedule) (cron.Schedule, []string) {
 	var validationErrors []string
 	var schedule cron.Schedule
 
@@ -321,7 +321,7 @@ func parseCronSchedule(item *v1alpha1.MySQLBackupSchedule) (cron.Schedule, []str
 	return schedule, nil
 }
 
-func (controller *Controller) submitBackupIfDue(item *v1alpha1.MySQLBackupSchedule, cronSchedule cron.Schedule) error {
+func (controller *Controller) submitBackupIfDue(item *v1alpha1.BackupSchedule, cronSchedule cron.Schedule) error {
 	var (
 		now                = controller.clock.Now()
 		isDue, nextRunTime = getNextRunTime(item, cronSchedule, now)
@@ -336,8 +336,8 @@ func (controller *Controller) submitBackupIfDue(item *v1alpha1.MySQLBackupSchedu
 	// trigger a Backup if it's time.
 	glog.Infof("Backup schedule %s[%s] is due, submitting Backup", item.Name, item.Spec.Schedule)
 	backup := getBackup(item, now)
-	if _, err := controller.opClient.MysqlV1alpha1().MySQLBackups(backup.Namespace).Create(backup); err != nil {
-		return errors.Wrap(err, "error creating MySQLBackup")
+	if _, err := controller.opClient.MysqlV1alpha1().Backups(backup.Namespace).Create(backup); err != nil {
+		return errors.Wrap(err, "error creating Backup")
 	}
 
 	bs := item.DeepCopy()
@@ -345,7 +345,7 @@ func (controller *Controller) submitBackupIfDue(item *v1alpha1.MySQLBackupSchedu
 	bs.Status.LastBackup = metav1.NewTime(now)
 
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		if _, err := controller.opClient.MysqlV1alpha1().MySQLBackupSchedules(bs.Namespace).Update(bs); err != nil {
+		if _, err := controller.opClient.MysqlV1alpha1().BackupSchedules(bs.Namespace).Update(bs); err != nil {
 			return errors.Wrapf(err, "error updating backup schedule's LastBackup time to %v", bs.Status.LastBackup)
 		}
 		return nil
@@ -359,7 +359,7 @@ func (controller *Controller) submitBackupIfDue(item *v1alpha1.MySQLBackupSchedu
 
 // getNextRunTime gets the latest run time (if the backup schedule hasn't run
 // yet, this will be the zero value which will trigger an immediate backup).
-func getNextRunTime(bs *v1alpha1.MySQLBackupSchedule, cronSchedule cron.Schedule, asOf time.Time) (bool, time.Time) {
+func getNextRunTime(bs *v1alpha1.BackupSchedule, cronSchedule cron.Schedule, asOf time.Time) (bool, time.Time) {
 	lastBackupTime := bs.Status.LastBackup.Time
 
 	nextRunTime := cronSchedule.Next(lastBackupTime)
@@ -367,8 +367,8 @@ func getNextRunTime(bs *v1alpha1.MySQLBackupSchedule, cronSchedule cron.Schedule
 	return asOf.After(nextRunTime), nextRunTime
 }
 
-func getBackup(item *v1alpha1.MySQLBackupSchedule, timestamp time.Time) *v1alpha1.MySQLBackup {
-	backup := &v1alpha1.MySQLBackup{
+func getBackup(item *v1alpha1.BackupSchedule, timestamp time.Time) *v1alpha1.Backup {
+	backup := &v1alpha1.Backup{
 		Spec: item.Spec.BackupTemplate,
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: item.Namespace,

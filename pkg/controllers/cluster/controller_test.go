@@ -50,7 +50,11 @@ func mockOperatorConfig() options.MySQLOperatorServer {
 
 func TestMessageResourceExistsFormatString(t *testing.T) {
 	ss := statefulsets.NewForCluster(
-		&v1alpha1.MySQLCluster{
+		&v1alpha1.Cluster{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Cluster",
+				APIVersion: "mysql.oracle.com/v1alpha1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-cluster",
 				Namespace: "default",
@@ -59,7 +63,7 @@ func TestMessageResourceExistsFormatString(t *testing.T) {
 		mockOperatorConfig().Images,
 		"test-cluster",
 	)
-	expected := "StatefulSet default/test-cluster already exists and is not managed by MySQLCluster"
+	expected := "StatefulSet default/test-cluster already exists and is not managed by Cluster"
 	msg := fmt.Sprintf(MessageResourceExists, "StatefulSet", ss.Namespace, ss.Name)
 	if msg != expected {
 		t.Errorf("Got %q, expected %q", msg, expected)
@@ -67,7 +71,7 @@ func TestMessageResourceExistsFormatString(t *testing.T) {
 }
 
 func TestSyncBadNameSpaceKeyError(t *testing.T) {
-	cluster := mockMySQLCluster(buildversion.GetBuildVersion(), "test-cluster", "test-namespace", int32(3))
+	cluster := mockCluster(buildversion.GetBuildVersion(), "test-cluster", "test-namespace", int32(3))
 	fakeController, _ := newFakeMySQLController(cluster)
 
 	key := "a/bad/namespace/key"
@@ -79,7 +83,7 @@ func TestSyncBadNameSpaceKeyError(t *testing.T) {
 
 // TODO: mysqlcluster 'test-namespace/test-cluster' in work queue no longer exists
 func TestSyncClusterNoLongerExistsError(t *testing.T) {
-	cluster := mockMySQLCluster(buildversion.GetBuildVersion(), "test-cluster", "test-namespace", int32(3))
+	cluster := mockCluster(buildversion.GetBuildVersion(), "test-cluster", "test-namespace", int32(3))
 	fakeController, fakeInformers := newFakeMySQLController(cluster)
 	fakeInformers.clusterInformer.Informer().GetStore().Delete(cluster)
 	key, _ := cache.MetaNamespaceKeyFunc(cluster)
@@ -90,7 +94,7 @@ func TestSyncClusterNoLongerExistsError(t *testing.T) {
 }
 
 func TestSyncClusterValidateError(t *testing.T) {
-	cluster := mockMySQLCluster(buildversion.GetBuildVersion(), "test-cluster", "test-namespace", int32(3))
+	cluster := mockCluster(buildversion.GetBuildVersion(), "test-cluster", "test-namespace", int32(3))
 	cluster.Status.Phase = "Bad_Phase"
 	fakeController, fakeInformers := newFakeMySQLController(cluster)
 	fakeInformers.clusterInformer.Informer().GetStore().Add(cluster)
@@ -99,7 +103,7 @@ func TestSyncClusterValidateError(t *testing.T) {
 	if err == nil {
 		t.Errorf("SyncHandler should return an error when the cluster resource is invalid.")
 	}
-	if err.Error() != `validating MySQLCluster: status.phase: Invalid value: "Bad_Phase": invalid phase specified` {
+	if err.Error() != `validating Cluster: status.phase: Invalid value: "Bad_Phase": invalid phase specified` {
 		t.Errorf("SyncHandler should return the correct error when the cluster resource is invalid: %q", err)
 	}
 }
@@ -109,7 +113,7 @@ func TestSyncEnsureClusterLabels(t *testing.T) {
 	name := "test-cluster"
 	namespace := "test-namespace"
 	replicas := int32(3)
-	cluster := mockMySQLCluster(version, name, namespace, replicas)
+	cluster := mockCluster(version, name, namespace, replicas)
 	cluster.Labels = nil
 
 	fakeController, fakeInformers := newFakeMySQLController(cluster)
@@ -117,24 +121,24 @@ func TestSyncEnsureClusterLabels(t *testing.T) {
 	key, _ := cache.MetaNamespaceKeyFunc(cluster)
 	err := fakeController.syncHandler(key)
 	if err != nil {
-		t.Fatalf("Unexpected MySQLCluster syncHandler error: %+v", err)
+		t.Fatalf("Unexpected Cluster syncHandler error: %+v", err)
 	}
 
 	assertOperatorClusterInvariants(t, fakeController, namespace, name, version)
 }
 
 func assertOperatorClusterInvariants(t *testing.T, controller *MySQLController, namespace string, name string, version string) {
-	cluster, err := controller.opClient.MysqlV1alpha1().MySQLClusters(namespace).Get(name, metav1.GetOptions{})
+	cluster, err := controller.opClient.MysqlV1alpha1().Clusters(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
-		t.Fatalf("Get client MySQLCluster err: %+v", err)
+		t.Fatalf("Get client Cluster err: %+v", err)
 	}
-	clName := cluster.Labels[constants.MySQLClusterLabel]
+	clName := cluster.Labels[constants.ClusterLabel]
 	if clName != name {
-		t.Errorf("Expected MySQLCluster to have name label '%s', got '%s'.", version, clName)
+		t.Errorf("Expected Cluster to have name label '%s', got '%s'.", version, clName)
 	}
 	clVersion := cluster.Labels[constants.MySQLOperatorVersionLabel]
 	if clVersion != version {
-		t.Errorf("Expected MySQLCluster to have version label '%s', got '%s'.", version, clVersion)
+		t.Errorf("Expected Cluster to have version label '%s', got '%s'.", version, clVersion)
 	}
 }
 
@@ -143,36 +147,36 @@ func TestSyncEnsureSecret(t *testing.T) {
 	name := "test-cluster"
 	namespace := "test-namespace"
 	replicas := int32(3)
-	cluster := mockMySQLCluster(version, name, namespace, replicas)
+	cluster := mockCluster(version, name, namespace, replicas)
 
 	fakeController, fakeInformers := newFakeMySQLController(cluster)
 	fakeInformers.clusterInformer.Informer().GetStore().Add(cluster)
 	key, _ := cache.MetaNamespaceKeyFunc(cluster)
 	err := fakeController.syncHandler(key)
 	if err != nil {
-		t.Fatalf("Unexpected MySQLCluster syncHandler error: %+v", err)
+		t.Fatalf("Unexpected Cluster syncHandler error: %+v", err)
 	}
 
 	assertOperatorSecretInvariants(t, fakeController, cluster)
 }
 
-func assertOperatorSecretInvariants(t *testing.T, controller *MySQLController, cluster *v1alpha1.MySQLCluster) {
+func assertOperatorSecretInvariants(t *testing.T, controller *MySQLController, cluster *v1alpha1.Cluster) {
 	secretName := secrets.GetRootPasswordSecretName(cluster)
 	secret, err := controller.kubeClient.CoreV1().Secrets(cluster.Namespace).Get(secretName, metav1.GetOptions{})
 	if err != nil {
-		t.Fatalf("Get client MySQLCluster secret error: %+v", err)
+		t.Fatalf("Get client Cluster secret error: %+v", err)
 	}
 	if secret == nil {
-		t.Fatalf("Expected MySQLCluster to have an associated secret.")
+		t.Fatalf("Expected Cluster to have an associated secret.")
 	}
 	if secret.Namespace != cluster.Namespace {
-		t.Errorf("Expected MySQLCluster secret to have namespace '%s', got '%s'.", secret.Namespace, cluster.Namespace)
+		t.Errorf("Expected Cluster secret to have namespace '%s', got '%s'.", secret.Namespace, cluster.Namespace)
 	}
 	if secret.Name != secretName {
-		t.Errorf("Expected MySQLCluster secret to have name '%s', got '%s'.", secret.Name, secretName)
+		t.Errorf("Expected Cluster secret to have name '%s', got '%s'.", secret.Name, secretName)
 	}
 	if secret.Data["password"] == nil {
-		t.Fatalf("Expected MySQLCluster secret to have an associated password.")
+		t.Fatalf("Expected Cluster secret to have an associated password.")
 	}
 }
 
@@ -181,39 +185,39 @@ func TestSyncEnsureService(t *testing.T) {
 	name := "test-cluster"
 	namespace := "test-namespace"
 	replicas := int32(3)
-	cluster := mockMySQLCluster(version, name, namespace, replicas)
+	cluster := mockCluster(version, name, namespace, replicas)
 
 	fakeController, fakeInformers := newFakeMySQLController(cluster)
 	fakeInformers.clusterInformer.Informer().GetStore().Add(cluster)
 	key, _ := cache.MetaNamespaceKeyFunc(cluster)
 	err := fakeController.syncHandler(key)
 	if err != nil {
-		t.Fatalf("Unexpected MySQLCluster syncHandler error: %+v", err)
+		t.Fatalf("Unexpected Cluster syncHandler error: %+v", err)
 	}
 
 	assertOperatorServiceInvariants(t, fakeController, cluster)
 }
 
-func assertOperatorServiceInvariants(t *testing.T, controller *MySQLController, cluster *v1alpha1.MySQLCluster) {
+func assertOperatorServiceInvariants(t *testing.T, controller *MySQLController, cluster *v1alpha1.Cluster) {
 	kubeClient := controller.kubeClient
 	service, err := kubeClient.CoreV1().Services(cluster.Namespace).Get(cluster.Name, metav1.GetOptions{})
 	if err != nil {
-		t.Fatalf("Get client MySQLCluster service error: %+v", err)
+		t.Fatalf("Get client Cluster service error: %+v", err)
 	}
 	if service == nil {
-		t.Fatalf("Expected MySQLCluster to have an associated service.")
+		t.Fatalf("Expected Cluster to have an associated service.")
 	}
 	if service.Namespace != cluster.Namespace {
-		t.Errorf("Expected MySQLCluster service to have namespace '%s', got '%s'.", service.Namespace, cluster.Namespace)
+		t.Errorf("Expected Cluster service to have namespace '%s', got '%s'.", service.Namespace, cluster.Namespace)
 	}
 	if service.Name != cluster.Name {
-		t.Errorf("Expected MySQLCluster service to have name '%s', got '%s'.", service.Name, cluster.Name)
+		t.Errorf("Expected Cluster service to have name '%s', got '%s'.", service.Name, cluster.Name)
 	}
 	if service.OwnerReferences == nil {
-		t.Fatalf("Expected MySQLCluster service to have an associated owner reference to the parent MySQLCluster.")
+		t.Fatalf("Expected Cluster service to have an associated owner reference to the parent Cluster.")
 	} else {
 		if !hasOwnerReference(service.OwnerReferences, cluster) {
-			t.Errorf("Expected MySQLCluster service to have an associated owner reference to the parent MySQLCluster.")
+			t.Errorf("Expected Cluster service to have an associated owner reference to the parent Cluster.")
 		}
 	}
 }
@@ -223,52 +227,52 @@ func TestSyncEnsureStatefulSet(t *testing.T) {
 	name := "test-cluster"
 	namespace := "test-namespace"
 	replicas := int32(3)
-	cluster := mockMySQLCluster(version, name, namespace, replicas)
+	cluster := mockCluster(version, name, namespace, replicas)
 
 	fakeController, fakeInformers := newFakeMySQLController(cluster)
 	fakeInformers.clusterInformer.Informer().GetStore().Add(cluster)
 	key, _ := cache.MetaNamespaceKeyFunc(cluster)
 	err := fakeController.syncHandler(key)
 	if err != nil {
-		t.Fatalf("Unexpected MySQLCluster syncHandler error: %+v", err)
+		t.Fatalf("Unexpected Cluster syncHandler error: %+v", err)
 	}
 
 	assertOperatorStatefulSetInvariants(t, fakeController, cluster)
 }
 
-func assertOperatorStatefulSetInvariants(t *testing.T, controller *MySQLController, cluster *v1alpha1.MySQLCluster) {
+func assertOperatorStatefulSetInvariants(t *testing.T, controller *MySQLController, cluster *v1alpha1.Cluster) {
 	kubeClient := controller.kubeClient
 	statefulset, err := kubeClient.AppsV1beta1().StatefulSets(cluster.Namespace).Get(cluster.Name, metav1.GetOptions{})
 	if err != nil {
-		t.Fatalf("Get client MySQLCluster statefulset error: %+v", err)
+		t.Fatalf("Get client Cluster statefulset error: %+v", err)
 	}
 	if statefulset == nil {
-		t.Fatalf("Expected MySQLCluster to have an associated statefulset.")
+		t.Fatalf("Expected Cluster to have an associated statefulset.")
 	}
 	if statefulset.Namespace != cluster.Namespace {
-		t.Errorf("Expected MySQLCluster statefulset to have namespace '%s', got '%s'.", statefulset.Namespace, cluster.Namespace)
+		t.Errorf("Expected Cluster statefulset to have namespace '%s', got '%s'.", statefulset.Namespace, cluster.Namespace)
 	}
 	if statefulset.Name != cluster.Name {
-		t.Errorf("Expected MySQLCluster statefulset to have name '%s', got '%s'.", statefulset.Name, cluster.Name)
+		t.Errorf("Expected Cluster statefulset to have name '%s', got '%s'.", statefulset.Name, cluster.Name)
 	}
 	if statefulset.OwnerReferences == nil {
-		t.Fatalf("Expected MySQLCluster statefulset to have an associated owner reference to the parent MySQLCluster.")
+		t.Fatalf("Expected Cluster statefulset to have an associated owner reference to the parent Cluster.")
 	} else {
 		if !hasOwnerReference(statefulset.OwnerReferences, cluster) {
-			t.Errorf("Expected MySQLCluster statefulset to have an associated owner reference to the parent MySQLCluster.")
+			t.Errorf("Expected Cluster statefulset to have an associated owner reference to the parent Cluster.")
 		}
 	}
 	if *statefulset.Spec.Replicas != cluster.Spec.Replicas {
-		t.Errorf("Expected MySQLCluster statefulset to have Replicas '%d', got '%d'.", cluster.Spec.Replicas, *statefulset.Spec.Replicas)
+		t.Errorf("Expected Cluster statefulset to have Replicas '%d', got '%d'.", cluster.Spec.Replicas, *statefulset.Spec.Replicas)
 	}
 	if statefulset.Spec.Template.Spec.Containers == nil || len(statefulset.Spec.Template.Spec.Containers) != 2 {
-		t.Fatalf("Expected MySQLCluster to have an associated statefulset with two pod templates.")
+		t.Fatalf("Expected Cluster to have an associated statefulset with two pod templates.")
 	}
 	if !hasContainer(statefulset.Spec.Template.Spec.Containers, "mysql") {
-		t.Errorf("Expected MySQLCluster statefulset to have template container 'mysql'.")
+		t.Errorf("Expected Cluster statefulset to have template container 'mysql'.")
 	}
 	if !hasContainer(statefulset.Spec.Template.Spec.Containers, "mysql-agent") {
-		t.Errorf("Expected MySQLCluster statefulset to have template container 'mysql-agent'.")
+		t.Errorf("Expected Cluster statefulset to have template container 'mysql-agent'.")
 	}
 }
 
@@ -278,7 +282,7 @@ func TestEnsureMySQLOperatorVersionWhenNotRequired(t *testing.T) {
 	name := "test-ensure-operator-version"
 	namespace := "test-namespace"
 	replicas := int32(3)
-	cluster := mockMySQLCluster(originalOperatorVersion, name, namespace, replicas)
+	cluster := mockCluster(originalOperatorVersion, name, namespace, replicas)
 	statefulSet := mockClusterStatefulSet(cluster)
 	pods := mockClusterPods(statefulSet)
 
@@ -307,7 +311,7 @@ func TestEnsureMySQLOperatorVersionWhenRequired(t *testing.T) {
 	name := "test-ensure-operator-version"
 	namespace := "test-namespace"
 	replicas := int32(3)
-	cluster := mockMySQLCluster(originalOperatorVersion, name, namespace, replicas)
+	cluster := mockCluster(originalOperatorVersion, name, namespace, replicas)
 	statefulSet := mockClusterStatefulSet(cluster)
 	pods := mockClusterPods(statefulSet)
 
@@ -333,14 +337,14 @@ func TestEnsureMySQLOperatorVersionWhenRequired(t *testing.T) {
 func assertOperatorVersionInvariants(t *testing.T, controller *MySQLController, namespace string, name string, version string) {
 	expectedImageVersion := mockOperatorConfig().Images.MySQLAgentImage + ":" + version
 
-	// Check MySQLCluster has the correct operator version
-	updatedCluster, err := controller.opClient.MysqlV1alpha1().MySQLClusters(namespace).Get(name, metav1.GetOptions{})
+	// Check Cluster has the correct operator version
+	updatedCluster, err := controller.opClient.MysqlV1alpha1().Clusters(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
-		t.Fatalf("Get client MySQLCluster err: %+v", err)
+		t.Fatalf("Get client Cluster err: %+v", err)
 	}
 	if !SelectorForClusterOperatorVersion(version).Matches(labels.Set(updatedCluster.Labels)) {
 		clVersion := updatedCluster.Labels[constants.MySQLOperatorVersionLabel]
-		t.Errorf("Expected MySQLCluster to have version label '%s', got '%s'.", version, clVersion)
+		t.Errorf("Expected Cluster to have version label '%s', got '%s'.", version, clVersion)
 	}
 
 	// Check StatefulSets has the correct operator version.
@@ -391,7 +395,7 @@ func TestMySQLControllerSyncClusterFromScratch(t *testing.T) {
 	name := "from-scratch"
 	namespace := "test-namespace"
 	replicas := int32(3)
-	cluster := mockMySQLCluster(version, name, namespace, replicas)
+	cluster := mockCluster(version, name, namespace, replicas)
 
 	// create mock mysqloperator controller and prepoulate infromer
 	fakeController, fakeInformers := newFakeMySQLController(cluster)
@@ -405,13 +409,13 @@ func TestMySQLControllerSyncClusterFromScratch(t *testing.T) {
 	assertOperatorServiceInvariants(t, fakeController, cluster)
 	assertOperatorStatefulSetInvariants(t, fakeController, cluster)
 	assertOperatorVersionInvariants(t, fakeController, namespace, name, version)
-	cluster, err := fakeController.opClient.MysqlV1alpha1().MySQLClusters(namespace).Get(name, metav1.GetOptions{})
+	cluster, err := fakeController.opClient.MysqlV1alpha1().Clusters(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
-		t.Fatalf("Get client MySQLCluster err: %+v", err)
+		t.Fatalf("Get client Cluster err: %+v", err)
 	}
 }
 
-func hasOwnerReference(ownerReferences []metav1.OwnerReference, cluster *v1alpha1.MySQLCluster) bool {
+func hasOwnerReference(ownerReferences []metav1.OwnerReference, cluster *v1alpha1.Cluster) bool {
 	for _, or := range ownerReferences {
 		if or.APIVersion == cluster.APIVersion && or.Kind == cluster.Kind && or.Name == cluster.Name {
 			return true
@@ -429,18 +433,18 @@ func hasContainer(containers []v1.Container, name string) bool {
 	return false
 }
 
-func mockMySQLCluster(operatorVersion string, name string, namespace string, replicas int32) *v1alpha1.MySQLCluster {
-	cluster := &v1alpha1.MySQLCluster{
+func mockCluster(operatorVersion string, name string, namespace string, replicas int32) *v1alpha1.Cluster {
+	cluster := &v1alpha1.Cluster{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "MySQLCluster",
+			Kind:       "Cluster",
 			APIVersion: "mysql.oracle.com/v1alpha1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
-			Labels:    map[string]string{constants.MySQLClusterLabel: name, constants.MySQLOperatorVersionLabel: operatorVersion},
+			Labels:    map[string]string{constants.ClusterLabel: name, constants.MySQLOperatorVersionLabel: operatorVersion},
 		},
-		Spec: v1alpha1.MySQLClusterSpec{
+		Spec: v1alpha1.ClusterSpec{
 			Replicas: replicas,
 		},
 	}
@@ -448,7 +452,7 @@ func mockMySQLCluster(operatorVersion string, name string, namespace string, rep
 	return cluster
 }
 
-func mockClusterStatefulSet(cluster *v1alpha1.MySQLCluster) *apps.StatefulSet {
+func mockClusterStatefulSet(cluster *v1alpha1.Cluster) *apps.StatefulSet {
 	return statefulsets.NewForCluster(cluster, mockOperatorConfig().Images, cluster.Name)
 }
 
@@ -475,7 +479,7 @@ func mockClusterPod(ss *apps.StatefulSet, ordinal int) *v1.Pod {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-%d", ss.Name, ordinal),
 			Namespace: ss.Namespace,
-			Labels:    map[string]string{constants.MySQLClusterLabel: clusterName, constants.MySQLOperatorVersionLabel: operatorVersion},
+			Labels:    map[string]string{constants.ClusterLabel: clusterName, constants.MySQLOperatorVersionLabel: operatorVersion},
 		},
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{
@@ -486,14 +490,14 @@ func mockClusterPod(ss *apps.StatefulSet, ordinal int) *v1.Pod {
 	return pod
 }
 
-// mock MySQLCluster controller **********
+// mock Cluster controller **********
 
 func alwaysReady() bool { return true }
 
 // fakeMySQLControllerInformers contain references to the set of underlying informers associated
 // with a newFakeMySQLController.
 type fakeMySQLControllerInformers struct {
-	clusterInformer     informersv1alpha1.MySQLClusterInformer
+	clusterInformer     informersv1alpha1.ClusterInformer
 	statefulSetInformer appsinformers.StatefulSetInformer
 	podInformer         coreinformers.PodInformer
 	serviceInformer     coreinformers.ServiceInformer
@@ -501,7 +505,7 @@ type fakeMySQLControllerInformers struct {
 
 // newFakeMySQLController creates a new fake MySQLController with a fake mysqlop and kube clients and informers
 // for unit testing.
-func newFakeMySQLController(cluster *v1alpha1.MySQLCluster, kuberesources ...runtime.Object) (*MySQLController, *fakeMySQLControllerInformers) {
+func newFakeMySQLController(cluster *v1alpha1.Cluster, kuberesources ...runtime.Object) (*MySQLController, *fakeMySQLControllerInformers) {
 	mysqlopClient := mysqlfake.NewSimpleClientset(cluster)
 	kubeClient := fake.NewSimpleClientset(kuberesources...)
 
@@ -509,7 +513,7 @@ func newFakeMySQLController(cluster *v1alpha1.MySQLCluster, kuberesources ...run
 	mysqlopInformerFactory := informerfactory.NewSharedInformerFactory(mysqlopClient, util.NoResyncPeriodFunc())
 
 	fakeInformers := &fakeMySQLControllerInformers{
-		clusterInformer:     mysqlopInformerFactory.Mysql().V1alpha1().MySQLClusters(),
+		clusterInformer:     mysqlopInformerFactory.Mysql().V1alpha1().Clusters(),
 		statefulSetInformer: kubeInformerFactory.Apps().V1beta1().StatefulSets(),
 		podInformer:         kubeInformerFactory.Core().V1().Pods(),
 		serviceInformer:     kubeInformerFactory.Core().V1().Services(),

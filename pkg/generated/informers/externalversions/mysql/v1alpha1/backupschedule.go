@@ -29,59 +29,59 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 )
 
-// MySQLBackupInformer provides access to a shared informer and lister for
-// MySQLBackups.
-type MySQLBackupInformer interface {
+// BackupScheduleInformer provides access to a shared informer and lister for
+// BackupSchedules.
+type BackupScheduleInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.MySQLBackupLister
+	Lister() v1alpha1.BackupScheduleLister
 }
 
-type mySQLBackupInformer struct {
+type backupScheduleInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-// NewMySQLBackupInformer constructs a new informer for MySQLBackup type.
+// NewBackupScheduleInformer constructs a new informer for BackupSchedule type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewMySQLBackupInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredMySQLBackupInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewBackupScheduleInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredBackupScheduleInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredMySQLBackupInformer constructs a new informer for MySQLBackup type.
+// NewFilteredBackupScheduleInformer constructs a new informer for BackupSchedule type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredMySQLBackupInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredBackupScheduleInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MysqlV1alpha1().MySQLBackups(namespace).List(options)
+				return client.MysqlV1alpha1().BackupSchedules(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MysqlV1alpha1().MySQLBackups(namespace).Watch(options)
+				return client.MysqlV1alpha1().BackupSchedules(namespace).Watch(options)
 			},
 		},
-		&mysql_v1alpha1.MySQLBackup{},
+		&mysql_v1alpha1.BackupSchedule{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *mySQLBackupInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredMySQLBackupInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *backupScheduleInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredBackupScheduleInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *mySQLBackupInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&mysql_v1alpha1.MySQLBackup{}, f.defaultInformer)
+func (f *backupScheduleInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&mysql_v1alpha1.BackupSchedule{}, f.defaultInformer)
 }
 
-func (f *mySQLBackupInformer) Lister() v1alpha1.MySQLBackupLister {
-	return v1alpha1.NewMySQLBackupLister(f.Informer().GetIndexer())
+func (f *backupScheduleInformer) Lister() v1alpha1.BackupScheduleLister {
+	return v1alpha1.NewBackupScheduleLister(f.Informer().GetIndexer())
 }

@@ -33,7 +33,7 @@ type Provider struct {
 
 // NewStorage creates a provider capable of storing and retreiving objects against the specified
 // 's3' storage configuration and credentials.
-func NewStorage(config *v1alpha1.Storage, creds map[string]string) (*Provider, error) {
+func NewStorage(config *v1alpha1.BackupStorageProvider, creds map[string]string) (*Provider, error) {
 	cfg := NewConfig(config, creds)
 	if err := cfg.Validate(); err != nil {
 		return nil, err

@@ -28,57 +28,57 @@ import (
 )
 
 type clusterUpdaterInterface interface {
-	UpdateClusterStatus(cluster *v1alpha1.MySQLCluster, status *v1alpha1.MySQLClusterStatus) error
-	UpdateClusterLabels(cluster *v1alpha1.MySQLCluster, lbls labels.Set) error
+	UpdateClusterStatus(cluster *v1alpha1.Cluster, status *v1alpha1.ClusterStatus) error
+	UpdateClusterLabels(cluster *v1alpha1.Cluster, lbls labels.Set) error
 }
 
 type clusterUpdater struct {
 	client clientset.Interface
-	lister listersv1alpha1.MySQLClusterLister
+	lister listersv1alpha1.ClusterLister
 }
 
-func newClusterUpdater(client clientset.Interface, lister listersv1alpha1.MySQLClusterLister) clusterUpdaterInterface {
+func newClusterUpdater(client clientset.Interface, lister listersv1alpha1.ClusterLister) clusterUpdaterInterface {
 	return &clusterUpdater{client: client, lister: lister}
 }
 
-func (csu *clusterUpdater) UpdateClusterStatus(cluster *v1alpha1.MySQLCluster, status *v1alpha1.MySQLClusterStatus) error {
+func (csu *clusterUpdater) UpdateClusterStatus(cluster *v1alpha1.Cluster, status *v1alpha1.ClusterStatus) error {
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		cluster.Status = *status
-		_, updateErr := csu.client.MysqlV1alpha1().MySQLClusters(cluster.Namespace).Update(cluster)
+		_, updateErr := csu.client.MysqlV1alpha1().Clusters(cluster.Namespace).Update(cluster)
 		if updateErr == nil {
 			return nil
 		}
 
-		updated, err := csu.lister.MySQLClusters(cluster.Namespace).Get(cluster.Name)
+		updated, err := csu.lister.Clusters(cluster.Namespace).Get(cluster.Name)
 		if err != nil {
-			glog.Errorf("Error getting updated MySQLCluster %s/%s: %v", cluster.Namespace, cluster.Name, err)
+			glog.Errorf("Error getting updated Cluster %s/%s: %v", cluster.Namespace, cluster.Name, err)
 			return err
 		}
 
-		// Copy the MySQLCluster so we don't mutate the cache.
+		// Copy the Cluster so we don't mutate the cache.
 		cluster = updated.DeepCopy()
 		return updateErr
 	})
 }
 
-func (csu *clusterUpdater) UpdateClusterLabels(cluster *v1alpha1.MySQLCluster, lbls labels.Set) error {
+func (csu *clusterUpdater) UpdateClusterLabels(cluster *v1alpha1.Cluster, lbls labels.Set) error {
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		cluster.Labels = labels.Merge(labels.Set(cluster.Labels), lbls)
-		_, updateErr := csu.client.MysqlV1alpha1().MySQLClusters(cluster.Namespace).Update(cluster)
+		_, updateErr := csu.client.MysqlV1alpha1().Clusters(cluster.Namespace).Update(cluster)
 		if updateErr == nil {
 			return nil
 		}
 
 		key := fmt.Sprintf("%s/%s", cluster.GetNamespace(), cluster.GetName())
-		glog.V(4).Infof("Conflict updating MySQLCluster labels. Getting updated MySQLCluster %s from cache...", key)
+		glog.V(4).Infof("Conflict updating Cluster labels. Getting updated Cluster %s from cache...", key)
 
-		updated, err := csu.lister.MySQLClusters(cluster.GetNamespace()).Get(cluster.GetName())
+		updated, err := csu.lister.Clusters(cluster.GetNamespace()).Get(cluster.GetName())
 		if err != nil {
-			glog.Errorf("Error getting updated MySQLCluster %s: %v", key, err)
+			glog.Errorf("Error getting updated Cluster %s: %v", key, err)
 			return err
 		}
 
-		// Copy the MySQLCluster so we don't mutate the cache.
+		// Copy the Cluster so we don't mutate the cache.
 		cluster = updated.DeepCopy()
 		return updateErr
 	})

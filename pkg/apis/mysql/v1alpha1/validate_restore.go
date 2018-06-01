@@ -22,7 +22,7 @@ import (
 	"github.com/oracle/mysql-operator/pkg/constants"
 )
 
-func validateRestore(restore *MySQLRestore) field.ErrorList {
+func validateRestore(restore *Restore) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	allErrs = append(allErrs, validateRestoreSpec(restore.Spec, field.NewPath("spec"))...)

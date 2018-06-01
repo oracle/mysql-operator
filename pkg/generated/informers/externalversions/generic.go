@@ -51,14 +51,14 @@ func (f *genericInformer) Lister() cache.GenericLister {
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
 	// Group=mysql.oracle.com, Version=v1alpha1
-	case v1alpha1.SchemeGroupVersion.WithResource("mysqlbackups"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1alpha1().MySQLBackups().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("mysqlbackupschedules"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1alpha1().MySQLBackupSchedules().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("mysqlclusters"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1alpha1().MySQLClusters().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("mysqlrestores"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1alpha1().MySQLRestores().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("backups"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1alpha1().Backups().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("backupschedules"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1alpha1().BackupSchedules().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("clusters"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1alpha1().Clusters().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("restores"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1alpha1().Restores().Informer()}, nil
 
 	}
 

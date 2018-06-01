@@ -39,11 +39,11 @@ type Interface interface {
 
 // NewStorageProvider accepts a secret map and uses its contents to determine the
 // desired object storage provider implementation.
-func NewStorageProvider(config *v1alpha1.Storage, creds map[string]string) (Interface, error) {
-	switch strings.ToLower(config.Provider) {
+func NewStorageProvider(config *v1alpha1.BackupStorageProvider, creds map[string]string) (Interface, error) {
+	switch strings.ToLower(config.Name) {
 	case ProviderS3:
 		return s3.NewStorage(config, creds)
 	default:
-		return nil, fmt.Errorf("unknown backup storage provider %q", config.Provider)
+		return nil, fmt.Errorf("unknown backup storage provider %q", config.Name)
 	}
 }

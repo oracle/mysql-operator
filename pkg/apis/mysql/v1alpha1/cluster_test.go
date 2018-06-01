@@ -39,7 +39,7 @@ func TestInvalidVersion(t *testing.T) {
 }
 
 func TestDefaultReplicas(t *testing.T) {
-	cluster := &MySQLCluster{}
+	cluster := &Cluster{}
 	cluster.EnsureDefaults()
 
 	if cluster.Spec.Replicas != defaultReplicas {
@@ -48,7 +48,7 @@ func TestDefaultReplicas(t *testing.T) {
 }
 
 func TestDefaultBaseServerID(t *testing.T) {
-	cluster := &MySQLCluster{}
+	cluster := &Cluster{}
 	cluster.EnsureDefaults()
 
 	if cluster.Spec.BaseServerID != defaultBaseServerID {
@@ -57,7 +57,7 @@ func TestDefaultBaseServerID(t *testing.T) {
 }
 
 func TestDefaultVersion(t *testing.T) {
-	cluster := &MySQLCluster{}
+	cluster := &Cluster{}
 	cluster.EnsureDefaults()
 
 	if cluster.Spec.Version != defaultVersion {
@@ -66,15 +66,15 @@ func TestDefaultVersion(t *testing.T) {
 }
 
 func TestRequiresConfigMount(t *testing.T) {
-	cluster := &MySQLCluster{}
+	cluster := &Cluster{}
 	cluster.EnsureDefaults()
 
 	if cluster.RequiresConfigMount() {
 		t.Errorf("Cluster without configRef should not require a config mount")
 	}
 
-	cluster = &MySQLCluster{
-		Spec: MySQLClusterSpec{
+	cluster = &Cluster{
+		Spec: ClusterSpec{
 			ConfigRef: &corev1.LocalObjectReference{
 				Name: "customconfig",
 			},
@@ -87,13 +87,13 @@ func TestRequiresConfigMount(t *testing.T) {
 }
 
 func TestRequiresCustomSSLSetup(t *testing.T) {
-	cluster := &MySQLCluster{}
+	cluster := &Cluster{}
 	cluster.EnsureDefaults()
 
 	assert.False(t, cluster.RequiresCustomSSLSetup(), "Cluster without SSLSecretRef should not require custom SSL setup")
 
-	cluster = &MySQLCluster{
-		Spec: MySQLClusterSpec{
+	cluster = &Cluster{
+		Spec: ClusterSpec{
 			SSLSecretRef: &corev1.LocalObjectReference{
 				Name: "custom-ssl-secret",
 			},

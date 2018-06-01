@@ -27,7 +27,7 @@ import (
 )
 
 // PodControlInterface defines the interface that the
-// MySQLClusterController uses to create, update, and delete mysql pods. It
+// ClusterController uses to create, update, and delete mysql pods. It
 // is implemented as an interface to enable testing.
 type PodControlInterface interface {
 	PatchPod(old *v1.Pod, new *v1.Pod) error

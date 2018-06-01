@@ -109,7 +109,7 @@ Now let's create a new MySQL cluster. Create a cluster.yaml file with the follow
 
 ```yaml
 apiVersion: mysql.oracle.com/v1
-kind: MySQLCluster
+kind: Cluster
 metadata:
   name: myappdb
 ```
@@ -126,7 +126,7 @@ You should now have a cluster in the default namespace
 ```
 $ kubectl get mysqlclusters
 NAME      KIND
-myappdb   MySQLCluster.v1alpha1.mysql.oracle.com
+myappdb   Cluster.v1alpha1.mysql.oracle.com
 ```
 
 To find out how to create larger clusters, and configure storage see [Clusters](user/clusters.md#clusters).

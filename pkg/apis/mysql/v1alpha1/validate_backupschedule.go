@@ -18,7 +18,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-func validateBackupSchedule(bs *MySQLBackupSchedule) field.ErrorList {
+func validateBackupSchedule(bs *BackupSchedule) field.ErrorList {
 	allErrs := field.ErrorList{}
 	allErrs = append(allErrs, validateBackupScheduleSpec(bs.Spec, field.NewPath("spec"))...)
 	return allErrs

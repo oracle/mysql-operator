@@ -21,7 +21,7 @@ import (
 
 // DefaultClusterName is the default name assigned to InnoDB clusters created by
 // the MySQL operator.
-const DefaultClusterName = "MySQLCluster"
+const DefaultClusterName = "Cluster"
 
 // MySQLDBPort is port on which MySQL listens for client connections.
 const MySQLDBPort = 3306

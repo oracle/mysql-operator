@@ -20,27 +20,27 @@ func TestRemoveInstanceFromCluster(t *testing.T) {
 		kind := getKind(t, file)
 		t.Logf("validating file: %s of kind: %v", file, kind)
 		switch kind {
-		case "MySQLCluster":
-			validateMySQLCluster(t, file)
-		case "MySQLBackup":
-			validateMySQLBackup(t, file)
-		case "MySQLRestore":
-			validateMySQLRestore(t, file)
-		case "MySQLBackupSchedule":
-			validateMySQLBackupSchedule(t, file)
+		case "Cluster":
+			validateCluster(t, file)
+		case "Backup":
+			validateBackup(t, file)
+		case "Restore":
+			validateRestore(t, file)
+		case "BackupSchedule":
+			validateBackupSchedule(t, file)
 		default:
 			t.Logf("ignoring file: %s of kind: %v", file, kind)
 		}
 	}
 }
 
-func validateMySQLCluster(t *testing.T, file string) {
+func validateCluster(t *testing.T, file string) {
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
 		t.Errorf("Failed to read file: %s, err: %v", file, err)
 		return
 	}
-	var r v1alpha1.MySQLCluster
+	var r v1alpha1.Cluster
 	err = yaml.Unmarshal(bytes, &r)
 	if err != nil {
 		t.Errorf("Failed to parse file: %s, err: %v", file, err)
@@ -54,20 +54,20 @@ func validateMySQLCluster(t *testing.T, file string) {
 	}
 }
 
-func validateMySQLBackup(t *testing.T, file string) {
+func validateBackup(t *testing.T, file string) {
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
 		t.Errorf("Failed to read file: %s, err: %v", file, err)
 		return
 	}
-	var r v1alpha1.MySQLBackup
+	var r v1alpha1.Backup
 	err = yaml.Unmarshal(bytes, &r)
 	if err != nil {
 		t.Errorf("Failed to parse file: %s, err: %v", file, err)
 		return
 	}
-	r.Spec.ClusterRef = &corev1.LocalObjectReference{}
-	r.Spec.Storage.SecretRef = &corev1.LocalObjectReference{Name: "test"}
+	r.Spec.Cluster = &corev1.LocalObjectReference{}
+	r.Spec.StorageProvider.SecretRef = &corev1.LocalObjectReference{Name: "test"}
 	resource := r.EnsureDefaults()
 	err = resource.Validate()
 	if err != nil {
@@ -76,13 +76,13 @@ func validateMySQLBackup(t *testing.T, file string) {
 	}
 }
 
-func validateMySQLRestore(t *testing.T, file string) {
+func validateRestore(t *testing.T, file string) {
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
 		t.Errorf("Failed to read file: %s, err: %v", file, err)
 		return
 	}
-	var r v1alpha1.MySQLRestore
+	var r v1alpha1.Restore
 	err = yaml.Unmarshal(bytes, &r)
 	if err != nil {
 		t.Errorf("Failed to parse file: %s, err: %v", file, err)
@@ -96,13 +96,13 @@ func validateMySQLRestore(t *testing.T, file string) {
 	}
 }
 
-func validateMySQLBackupSchedule(t *testing.T, file string) {
+func validateBackupSchedule(t *testing.T, file string) {
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
 		t.Errorf("Failed to read file: %s, err: %v", file, err)
 		return
 	}
-	var r v1alpha1.MySQLBackupSchedule
+	var r v1alpha1.BackupSchedule
 	err = yaml.Unmarshal(bytes, &r)
 	if err != nil {
 		t.Errorf("Failed to parse file: %s, err: %v", file, err)

@@ -49,7 +49,7 @@ import (
 
 const agentControllerAgentName = "agent-restore-controller"
 
-// AgentController handles the excution of MySQLRestores on a specific (primary)
+// AgentController handles the excution of Restores on a specific (primary)
 // mysql-agent. It is run in each mysql-agent.
 // TODO: Probably should only be run iff the local mysql instance is a primary.
 type AgentController struct {
@@ -57,13 +57,13 @@ type AgentController struct {
 	podName string
 
 	kubeClient  kubernetes.Interface
-	client      clientset.MySQLRestoresGetter
+	client      clientset.RestoresGetter
 	syncHandler func(key string) error
 
-	// restoreLister is able to list/get MySQLRestores from a shared informer's
+	// restoreLister is able to list/get Restores from a shared informer's
 	// store.
-	restoreLister listersv1alpha1.MySQLRestoreLister
-	// restoreListerSynced returns true if the MySQLRestore shared informer has
+	restoreLister listersv1alpha1.RestoreLister
+	// restoreListerSynced returns true if the Restore shared informer has
 	// synced at least once.
 	restoreListerSynced cache.InformerSynced
 
@@ -73,17 +73,17 @@ type AgentController struct {
 	// least once.
 	podListerSynced cache.InformerSynced
 
-	// clusterLister is able to list/get MySQLClusters from a shared informer's
+	// clusterLister is able to list/get Clusters from a shared informer's
 	// store.
-	clusterLister listersv1alpha1.MySQLClusterLister
-	// clusterListerSynced returns true if the MySQLCluster shared informer has
+	clusterLister listersv1alpha1.ClusterLister
+	// clusterListerSynced returns true if the Cluster shared informer has
 	// synced at least once.
 	clusterListerSynced cache.InformerSynced
 
-	// backupLister is able to list/get MySQLBackups from a shared informer's
+	// backupLister is able to list/get Backups from a shared informer's
 	// store.
-	backupLister listersv1alpha1.MySQLBackupLister
-	// backupListerSynced returns true if the MySQLBackup shared informer has
+	backupLister listersv1alpha1.BackupLister
+	// backupListerSynced returns true if the Backup shared informer has
 	// synced at least once.
 	backupListerSynced cache.InformerSynced
 
@@ -96,10 +96,10 @@ type AgentController struct {
 // NewAgentController constructs a new AgentController.
 func NewAgentController(
 	kubeClient kubernetes.Interface,
-	client clientset.MySQLRestoresGetter,
-	restoreInformer informersv1alpha1.MySQLRestoreInformer,
-	clusterInformer informersv1alpha1.MySQLClusterInformer,
-	backupInformer informersv1alpha1.MySQLBackupInformer,
+	client clientset.RestoresGetter,
+	restoreInformer informersv1alpha1.RestoreInformer,
+	clusterInformer informersv1alpha1.ClusterInformer,
+	backupInformer informersv1alpha1.BackupInformer,
 	podInformer corev1informers.PodInformer,
 	podName string,
 ) *AgentController {
@@ -131,7 +131,7 @@ func NewAgentController(
 	restoreInformer.Informer().AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
 			UpdateFunc: func(oldObj, newObj interface{}) {
-				new := newObj.(*v1alpha1.MySQLRestore)
+				new := newObj.(*v1alpha1.Restore)
 				if new.Status.Phase == v1alpha1.RestorePhaseScheduled && new.Spec.AgentScheduled == c.podName {
 					key, err := cache.MetaNamespaceKeyFunc(new)
 					if err != nil {
@@ -141,7 +141,7 @@ func NewAgentController(
 					c.queue.Add(key)
 					return
 				}
-				glog.V(2).Infof("MySQLRestore %q is not Scheduled, skipping (phase=%q)",
+				glog.V(2).Infof("Restore %q is not Scheduled, skipping (phase=%q)",
 					kubeutil.NamespaceAndName(new), new.Status.Phase)
 
 			},
@@ -238,9 +238,9 @@ func (controller *AgentController) processRestore(key string) error {
 	}
 
 	// Get resource from store.
-	restore, err := controller.restoreLister.MySQLRestores(ns).Get(name)
+	restore, err := controller.restoreLister.Restores(ns).Get(name)
 	if err != nil {
-		return errors.Wrap(err, "error getting MySQLRestore")
+		return errors.Wrap(err, "error getting Restore")
 	}
 
 	// Don't modify items in the cache.
@@ -249,7 +249,7 @@ func (controller *AgentController) processRestore(key string) error {
 	restore = restore.EnsureDefaults()
 
 	var (
-		backup *v1alpha1.MySQLBackup
+		backup *v1alpha1.Backup
 		creds  *corev1.Secret
 	)
 
@@ -260,8 +260,8 @@ func (controller *AgentController) processRestore(key string) error {
 		validationErrs := field.ErrorList{}
 		fldPath := field.NewPath("spec")
 
-		// Check the referenced MySQLCluster exists.
-		_, err := controller.clusterLister.MySQLClusters(ns).Get(restore.Spec.ClusterRef.Name)
+		// Check the referenced Cluster exists.
+		_, err := controller.clusterLister.Clusters(ns).Get(restore.Spec.ClusterRef.Name)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				return err
@@ -270,8 +270,8 @@ func (controller *AgentController) processRestore(key string) error {
 				field.NotFound(fldPath.Child("clusterRef").Child("name"), restore.Spec.ClusterRef.Name))
 		}
 
-		// Check the referenced MySQLBackup exists.
-		backup, err = controller.backupLister.MySQLBackups(ns).Get(restore.Spec.BackupRef.Name)
+		// Check the referenced Backup exists.
+		backup, err = controller.backupLister.Backups(ns).Get(restore.Spec.BackupRef.Name)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				return err
@@ -280,27 +280,27 @@ func (controller *AgentController) processRestore(key string) error {
 				field.NotFound(fldPath.Child("backupRef").Child("name"), restore.Spec.BackupRef.Name))
 		}
 
-		creds, err = controller.kubeClient.CoreV1().Secrets(ns).Get(backup.Spec.Storage.SecretRef.Name, metav1.GetOptions{})
+		creds, err = controller.kubeClient.CoreV1().Secrets(ns).Get(backup.Spec.StorageProvider.SecretRef.Name, metav1.GetOptions{})
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				return errors.Wrap(err, "getting backup credentials secret")
 			}
 			validationErrs = append(validationErrs,
-				field.NotFound(fldPath.Child("backupRef").Child("name"), backup.Spec.Storage.SecretRef.Name))
+				field.NotFound(fldPath.Child("backupRef").Child("name"), backup.Spec.StorageProvider.SecretRef.Name))
 		}
 		if len(validationErrs) > 0 {
 			validationErr = validationErrs.ToAggregate()
 		}
 	}
 
-	// If the MySQLRestore is not valid emit an event to that effect and mark
+	// If the Restore is not valid emit an event to that effect and mark
 	// it as failed.
 	// TODO(apryde): Maybe we should add an UpdateFunc to the restoreInformer
 	// and support users fixing validation errors via updates (rather than
 	// recreation).
 	if validationErr != nil {
 		restore.Status.Phase = v1alpha1.RestorePhaseFailed
-		restore, err = controller.client.MySQLRestores(ns).Update(restore)
+		restore, err = controller.client.Restores(ns).Update(restore)
 		if err != nil {
 			return errors.Wrapf(err, "failed to update (phase=%q)", v1alpha1.RestorePhaseFailed)
 		}
@@ -317,14 +317,14 @@ func (controller *AgentController) processRestore(key string) error {
 	return nil
 }
 
-func (controller *AgentController) performRestore(restore *v1alpha1.MySQLRestore, backup *v1alpha1.MySQLBackup, creds *corev1.Secret) error {
+func (controller *AgentController) performRestore(restore *v1alpha1.Restore, backup *v1alpha1.Backup, creds *corev1.Secret) error {
 	// Update restore phase to started.
 	started := time.Now()
 	restore.Status.Phase = v1alpha1.RestorePhaseStarted
 	restore.Status.TimeStarted = metav1.Time{Time: started}
-	restore, err := controller.client.MySQLRestores(restore.Namespace).Update(restore)
+	restore, err := controller.client.Restores(restore.Namespace).Update(restore)
 	if err != nil {
-		return errors.Wrapf(err, "failed to mark MySQLRestore %q as started", kubeutil.NamespaceAndName(restore))
+		return errors.Wrapf(err, "failed to mark Restore %q as started", kubeutil.NamespaceAndName(restore))
 	}
 
 	// TODO: Should backuputil.NewConfiguredRunner accept a map[string][]byte
@@ -334,12 +334,12 @@ func (controller *AgentController) performRestore(restore *v1alpha1.MySQLRestore
 		credsMap[k] = string(v)
 	}
 
-	runner, err := backuputil.NewConfiguredRunner(backup.Spec.Executor, executor.DefaultCreds(), backup.Spec.Storage, credsMap)
+	runner, err := backuputil.NewConfiguredRunner(backup.Spec.Executor, executor.DefaultCreds(), backup.Spec.StorageProvider, credsMap)
 	if err != nil {
 		restore.Status.Phase = v1alpha1.RestorePhaseFailed
-		restore, updateErr := controller.client.MySQLRestores(restore.Namespace).Update(restore)
+		restore, updateErr := controller.client.Restores(restore.Namespace).Update(restore)
 		if updateErr != nil {
-			return errors.Wrapf(err, "failed to mark MySQLRestore %q as failed", kubeutil.NamespaceAndName(restore))
+			return errors.Wrapf(err, "failed to mark Restore %q as failed", kubeutil.NamespaceAndName(restore))
 		}
 
 		controller.recorder.Event(restore, corev1.EventTypeWarning, "FailedValidation", err.Error())
@@ -349,9 +349,9 @@ func (controller *AgentController) performRestore(restore *v1alpha1.MySQLRestore
 	err = runner.Restore(backup.Status.Outcome.Location)
 	if err != nil {
 		restore.Status.Phase = v1alpha1.RestorePhaseFailed
-		restore, updateErr := controller.client.MySQLRestores(restore.Namespace).Update(restore)
+		restore, updateErr := controller.client.Restores(restore.Namespace).Update(restore)
 		if updateErr != nil {
-			return errors.Wrapf(err, "failed to mark MySQLRestore %q as failed", kubeutil.NamespaceAndName(restore))
+			return errors.Wrapf(err, "failed to mark Restore %q as failed", kubeutil.NamespaceAndName(restore))
 		}
 
 		controller.recorder.Event(restore, corev1.EventTypeWarning, "RestoreFailed", err.Error())
@@ -362,13 +362,13 @@ func (controller *AgentController) performRestore(restore *v1alpha1.MySQLRestore
 
 	restore.Status.Phase = v1alpha1.RestorePhaseComplete
 	restore.Status.TimeCompleted = metav1.Time{Time: finished}
-	restore, err = controller.client.MySQLRestores(restore.Namespace).Update(restore)
+	restore, err = controller.client.Restores(restore.Namespace).Update(restore)
 	if err != nil {
-		return errors.Wrapf(err, "failed to mark MySQLRestore %q as complete", kubeutil.NamespaceAndName(restore))
+		return errors.Wrapf(err, "failed to mark Restore %q as complete", kubeutil.NamespaceAndName(restore))
 	}
 
 	metrics.IncEventCounter(clusterRestoreCount)
-	glog.Infof("MySQLRestore %q succeeded in %v", restore.Name, finished.Sub(started))
+	glog.Infof("Restore %q succeeded in %v", restore.Name, finished.Sub(started))
 	controller.recorder.Event(restore, corev1.EventTypeNormal, "Success", "Restore complete")
 
 	return nil

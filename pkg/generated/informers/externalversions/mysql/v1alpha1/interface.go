@@ -22,14 +22,14 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
-	// MySQLBackups returns a MySQLBackupInformer.
-	MySQLBackups() MySQLBackupInformer
-	// MySQLBackupSchedules returns a MySQLBackupScheduleInformer.
-	MySQLBackupSchedules() MySQLBackupScheduleInformer
-	// MySQLClusters returns a MySQLClusterInformer.
-	MySQLClusters() MySQLClusterInformer
-	// MySQLRestores returns a MySQLRestoreInformer.
-	MySQLRestores() MySQLRestoreInformer
+	// Backups returns a BackupInformer.
+	Backups() BackupInformer
+	// BackupSchedules returns a BackupScheduleInformer.
+	BackupSchedules() BackupScheduleInformer
+	// Clusters returns a ClusterInformer.
+	Clusters() ClusterInformer
+	// Restores returns a RestoreInformer.
+	Restores() RestoreInformer
 }
 
 type version struct {
@@ -43,22 +43,22 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// MySQLBackups returns a MySQLBackupInformer.
-func (v *version) MySQLBackups() MySQLBackupInformer {
-	return &mySQLBackupInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// Backups returns a BackupInformer.
+func (v *version) Backups() BackupInformer {
+	return &backupInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// MySQLBackupSchedules returns a MySQLBackupScheduleInformer.
-func (v *version) MySQLBackupSchedules() MySQLBackupScheduleInformer {
-	return &mySQLBackupScheduleInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// BackupSchedules returns a BackupScheduleInformer.
+func (v *version) BackupSchedules() BackupScheduleInformer {
+	return &backupScheduleInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// MySQLClusters returns a MySQLClusterInformer.
-func (v *version) MySQLClusters() MySQLClusterInformer {
-	return &mySQLClusterInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// Clusters returns a ClusterInformer.
+func (v *version) Clusters() ClusterInformer {
+	return &clusterInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// MySQLRestores returns a MySQLRestoreInformer.
-func (v *version) MySQLRestores() MySQLRestoreInformer {
-	return &mySQLRestoreInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// Restores returns a RestoreInformer.
+func (v *version) Restores() RestoreInformer {
+	return &restoreInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

@@ -22,7 +22,7 @@ import (
 	"github.com/oracle/mysql-operator/pkg/constants"
 )
 
-func validateBackup(backup *MySQLBackup) field.ErrorList {
+func validateBackup(backup *Backup) field.ErrorList {
 	allErrs := field.ErrorList{}
 	allErrs = append(allErrs, validateBackupLabels(backup.Labels, field.NewPath("labels"))...)
 	allErrs = append(allErrs, validateBackupSpec(backup.Spec, field.NewPath("spec"))...)
@@ -48,14 +48,14 @@ func validateBackupSpec(spec BackupSpec, fldPath *field.Path) field.ErrorList {
 		allErrs = append(allErrs, validateExecutor(spec.Executor, field.NewPath("executor"))...)
 	}
 
-	if spec.Storage == nil {
-		allErrs = append(allErrs, field.Required(fldPath.Child("storage"), "missing storage"))
+	if spec.StorageProvider == nil {
+		allErrs = append(allErrs, field.Required(fldPath.Child("storageProvider"), "missing storage provider"))
 	} else {
-		allErrs = append(allErrs, validateStorage(spec.Storage, field.NewPath("storage"))...)
+		allErrs = append(allErrs, validateStorage(spec.StorageProvider, field.NewPath("storageProvider"))...)
 	}
 
-	if spec.ClusterRef == nil {
-		allErrs = append(allErrs, field.Required(fldPath.Child("clusterRef"), "missing cluster"))
+	if spec.Cluster == nil {
+		allErrs = append(allErrs, field.Required(fldPath.Child("cluster"), "missing cluster"))
 	}
 
 	return allErrs

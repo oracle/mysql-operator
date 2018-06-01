@@ -29,7 +29,7 @@ import (
 const clusterStatusOutput = `
 mysqlx: [Warning] Using a password on the command line interface can be insecure.
 {
-    "clusterName": "MySQLCluster",
+    "clusterName": "Cluster",
     "defaultReplicaSet": {
         "name": "default",
         "primary": "mysql-test-cluster-0.service.namespace.svc.cluster.local:3306",
@@ -103,7 +103,7 @@ func TestGetClusterStatus(t *testing.T) {
 		"--no-wizard",
 		"--uri", "root:foo@localhost.service.namespace.svc.cluster.local:3306",
 		"--py",
-		"-e", "print dba.get_cluster('MySQLCluster').status()",
+		"-e", "print dba.get_cluster('Cluster').status()",
 	}
 	if !reflect.DeepEqual(fcmd.RunLog[0], expectedCall) {
 		t.Errorf("Expected call %+v, got %+v", expectedCall, fcmd.RunLog[0])
@@ -113,8 +113,8 @@ func TestGetClusterStatus(t *testing.T) {
 		t.Fatalf("Expected err = nil, got: %v", err)
 	}
 
-	if status.ClusterName != "MySQLCluster" {
-		t.Errorf("Expected status.ClusterName = \"MySQLCluster\", got %q", status.ClusterName)
+	if status.ClusterName != "Cluster" {
+		t.Errorf("Expected status.ClusterName = \"Cluster\", got %q", status.ClusterName)
 	}
 
 	n := len(status.DefaultReplicaSet.Topology)
@@ -154,7 +154,7 @@ mysqlx: [Warning] Using a password on the command line interface can be insecure
 		"--no-wizard",
 		"--uri", "root:foo@localhost.service.namespace.svc.cluster.local:3306",
 		"--py",
-		"-e", fmt.Sprintf("print dba.get_cluster('MySQLCluster').check_instance_state('%s')", instanceURI),
+		"-e", fmt.Sprintf("print dba.get_cluster('Cluster').check_instance_state('%s')", instanceURI),
 	}
 	if !reflect.DeepEqual(fcmd.RunLog[0], expectedCall) {
 		t.Errorf("Expected call %+v, got %+v", expectedCall, fcmd.RunLog[0])
@@ -198,7 +198,7 @@ func TestRemoveInstanceFromCluster(t *testing.T) {
 		"--no-wizard",
 		"--uri", "root:foo@localhost:3306",
 		"--py",
-		"-e", `dba.get_cluster('MySQLCluster').remove_instance('root:foo@mysql-cluster-1:3306', {'force': True})`,
+		"-e", `dba.get_cluster('Cluster').remove_instance('root:foo@mysql-cluster-1:3306', {'force': True})`,
 	}
 	if !reflect.DeepEqual(fcmd.RunLog[0], expectedCall) {
 		t.Errorf("Expected call %+v, got %+v", expectedCall, fcmd.RunLog[0])
@@ -219,10 +219,10 @@ func TestNewErrorFromStderr(t *testing.T) {
 			name: "create_cluster",
 			output: `Traceback (most recent call last):
   File "<string>", line 1, in <module>
-mysqlsh.DBError: MySQL Error (1062): Dba.create_cluster: Duplicate entry 'MySQLCluster' for key 'cluster_name'`,
+mysqlsh.DBError: MySQL Error (1062): Dba.create_cluster: Duplicate entry 'Cluster' for key 'cluster_name'`,
 			expected: &Error{
 				Type:    "mysqlsh.DBError",
-				Message: "MySQL Error (1062): Dba.create_cluster: Duplicate entry 'MySQLCluster' for key 'cluster_name'",
+				Message: "MySQL Error (1062): Dba.create_cluster: Duplicate entry 'Cluster' for key 'cluster_name'",
 			},
 		}, {
 			name: "get_cluster",

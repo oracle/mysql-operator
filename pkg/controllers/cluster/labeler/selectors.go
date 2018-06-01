@@ -22,35 +22,35 @@ import (
 )
 
 // PrimarySelector returns a label selector that selects only primaries of a
-// MySQLCluster's Pods.
+// Cluster's Pods.
 func PrimarySelector(name string) labels.Selector {
 	return labels.SelectorFromSet(labels.Set{
-		constants.MySQLClusterLabel:     name,
-		constants.LabelMySQLClusterRole: constants.MySQLClusterRolePrimary,
+		constants.ClusterLabel:     name,
+		constants.LabelClusterRole: constants.ClusterRolePrimary,
 	})
 }
 
 // SecondarySelector returns a label selector that selects only secondaries of a
-// MySQLCluster's Pods.
+// Cluster's Pods.
 func SecondarySelector(name string) labels.Selector {
 	return labels.SelectorFromSet(labels.Set{
-		constants.MySQLClusterLabel:     name,
-		constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
+		constants.ClusterLabel:     name,
+		constants.LabelClusterRole: constants.ClusterRoleSecondary,
 	})
 }
 
 // NonPrimarySelector returns a label selector that selects all Pods excluding
-// primaries of a MySQLCluster.
+// primaries of a Cluster.
 func NonPrimarySelector(name string) labels.Selector {
-	s := labels.SelectorFromSet(labels.Set{constants.MySQLClusterLabel: name})
-	requirement, _ := labels.NewRequirement(constants.LabelMySQLClusterRole, selection.NotIn, []string{constants.MySQLClusterRolePrimary})
+	s := labels.SelectorFromSet(labels.Set{constants.ClusterLabel: name})
+	requirement, _ := labels.NewRequirement(constants.LabelClusterRole, selection.NotIn, []string{constants.ClusterRolePrimary})
 	return s.Add(*requirement)
 }
 
 // HasRoleSelector returns a label selector that selects all Pods for a
-// MySQLCluster that have been labeled as having a role.
+// Cluster that have been labeled as having a role.
 func HasRoleSelector(name string) labels.Selector {
-	s := labels.SelectorFromSet(labels.Set{constants.MySQLClusterLabel: name})
-	requirement, _ := labels.NewRequirement(constants.LabelMySQLClusterRole, selection.Exists, []string{})
+	s := labels.SelectorFromSet(labels.Set{constants.ClusterLabel: name})
+	requirement, _ := labels.NewRequirement(constants.LabelClusterRole, selection.Exists, []string{})
 	return s.Add(*requirement)
 }

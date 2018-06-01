@@ -27,8 +27,8 @@ import (
 
 // SelectorForCluster creates a labels.Selector to match a given clusters
 // associated resources.
-func SelectorForCluster(c *v1alpha1.MySQLCluster) labels.Selector {
-	return labels.SelectorFromSet(labels.Set{constants.MySQLClusterLabel: c.Name})
+func SelectorForCluster(c *v1alpha1.Cluster) labels.Selector {
+	return labels.SelectorFromSet(labels.Set{constants.ClusterLabel: c.Name})
 }
 
 // SelectorForClusterOperatorVersion creates a labels.Selector to match a given clusters

@@ -14,18 +14,18 @@
 
 package constants
 
-// MySQLClusterLabel is applied to all components of a MySQL cluster
-const MySQLClusterLabel = "v1alpha1.mysql.oracle.com/cluster"
+// ClusterLabel is applied to all components of a MySQL cluster
+const ClusterLabel = "v1alpha1.mysql.oracle.com/cluster"
 
 // MySQLOperatorVersionLabel denotes the version of the MySQLOperator and
 // MySQLOperatorAgent running in the cluster.
 const MySQLOperatorVersionLabel = "v1alpha1.mysql.oracle.com/version"
 
-// LabelMySQLClusterRole specifies the role of a Pod within a MySQLCluster.
-const LabelMySQLClusterRole = "v1alpha1.mysql.oracle.com/role"
+// LabelClusterRole specifies the role of a Pod within a Cluster.
+const LabelClusterRole = "v1alpha1.mysql.oracle.com/role"
 
-// MySQLClusterRolePrimary denotes a primary InnoDB cluster member.
-const MySQLClusterRolePrimary = "primary"
+// ClusterRolePrimary denotes a primary InnoDB cluster member.
+const ClusterRolePrimary = "primary"
 
-// MySQLClusterRoleSecondary denotes a secondary InnoDB cluster member.
-const MySQLClusterRoleSecondary = "secondary"
+// ClusterRoleSecondary denotes a secondary InnoDB cluster member.
+const ClusterRoleSecondary = "secondary"

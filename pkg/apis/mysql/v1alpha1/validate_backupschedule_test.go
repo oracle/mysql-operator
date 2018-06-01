@@ -24,7 +24,7 @@ import (
 )
 
 func TestEmptyBackupScheduleIsInvalid(t *testing.T) {
-	bs := MySQLBackupSchedule{}
+	bs := BackupSchedule{}
 	err := bs.Validate()
 	if err == nil {
 		t.Error("An empty backup schedule should be invalid")
@@ -32,16 +32,16 @@ func TestEmptyBackupScheduleIsInvalid(t *testing.T) {
 }
 
 func TestValidateValidBackupSchedule(t *testing.T) {
-	bs := MySQLBackupSchedule{
+	bs := BackupSchedule{
 		Spec: BackupScheduleSpec{
 			Schedule: "* * * * * *",
 			BackupTemplate: BackupSpec{
-				Executor: &Executor{
-					Provider:  "mysqldump",
+				Executor: &BackupExecutor{
+					Name:      "mysqldump",
 					Databases: []string{"db1", "db2"},
 				},
-				Storage: &Storage{
-					Provider: "s3",
+				StorageProvider: &BackupStorageProvider{
+					Name: "s3",
 					SecretRef: &corev1.LocalObjectReference{
 						Name: "backup-storage-creds",
 					},
@@ -51,7 +51,7 @@ func TestValidateValidBackupSchedule(t *testing.T) {
 						"bucket":   "bucket",
 					},
 				},
-				ClusterRef: &corev1.LocalObjectReference{
+				Cluster: &corev1.LocalObjectReference{
 					Name: "test-cluster",
 				},
 			},
@@ -67,7 +67,7 @@ func TestValidateValidBackupSchedule(t *testing.T) {
 
 func TestBackupScheduleEnsureDefaultVersionSet(t *testing.T) {
 	expected := version.GetBuildVersion()
-	bs := &MySQLBackupSchedule{}
+	bs := &BackupSchedule{}
 	bs = bs.EnsureDefaults()
 
 	actual := GetOperatorVersionLabel(bs.Labels)
@@ -78,7 +78,7 @@ func TestBackupScheduleEnsureDefaultVersionSet(t *testing.T) {
 
 func TestBackupScheduleEnsureDefaultVersionNotSetIfExists(t *testing.T) {
 	version := "v1.0.0"
-	bs := &MySQLBackupSchedule{}
+	bs := &BackupSchedule{}
 	bs.Labels = make(map[string]string)
 	SetOperatorVersionLabel(bs.Labels, version)
 	bs = bs.EnsureDefaults()
@@ -91,16 +91,16 @@ func TestBackupScheduleEnsureDefaultVersionNotSetIfExists(t *testing.T) {
 }
 
 func TestValidateBackupScheduleMissingCluster(t *testing.T) {
-	bs := MySQLBackupSchedule{
+	bs := BackupSchedule{
 		Spec: BackupScheduleSpec{
 			Schedule: "* * * * * *",
 			BackupTemplate: BackupSpec{
-				Executor: &Executor{
-					Provider:  "mysqldump",
+				Executor: &BackupExecutor{
+					Name:      "mysqldump",
 					Databases: []string{"db1", "db2"},
 				},
-				Storage: &Storage{
-					Provider: "s3",
+				StorageProvider: &BackupStorageProvider{
+					Name: "s3",
 					SecretRef: &corev1.LocalObjectReference{
 						Name: "backup-storage-creds",
 					},
@@ -122,23 +122,23 @@ func TestValidateBackupScheduleMissingCluster(t *testing.T) {
 }
 
 func TestValidateBackupScheduleMissingSecretRef(t *testing.T) {
-	bs := MySQLBackupSchedule{
+	bs := BackupSchedule{
 		Spec: BackupScheduleSpec{
 			Schedule: "* * * * * *",
 			BackupTemplate: BackupSpec{
-				Executor: &Executor{
-					Provider:  "mysqldump",
+				Executor: &BackupExecutor{
+					Name:      "mysqldump",
 					Databases: []string{"db1", "db2"},
 				},
-				Storage: &Storage{
-					Provider: "s3",
+				StorageProvider: &BackupStorageProvider{
+					Name: "s3",
 					Config: map[string]string{
 						"endpoint": "endpoint",
 						"region":   "region",
 						"bucket":   "bucket",
 					},
 				},
-				ClusterRef: &corev1.LocalObjectReference{
+				Cluster: &corev1.LocalObjectReference{
 					Name: "test-cluster",
 				},
 				AgentScheduled: "hostname-1",
@@ -147,7 +147,7 @@ func TestValidateBackupScheduleMissingSecretRef(t *testing.T) {
 	}
 
 	err := bs.Validate()
-	if !strings.Contains(err.Error(), "storage.secretRef: Required value") {
-		t.Errorf("Expected backup schedule with missing SecretRef to show 'storage.secretRef: Required value' error. Error is: %s", err)
+	if !strings.Contains(err.Error(), "storageProvider.secretRef: Required value") {
+		t.Errorf("Expected backup schedule with missing SecretRef to show 'storageProvider.secretRef: Required value' error. Error is: %s", err)
 	}
 }

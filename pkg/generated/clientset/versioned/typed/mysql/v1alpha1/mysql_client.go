@@ -23,10 +23,10 @@ import (
 
 type MysqlV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	MySQLBackupsGetter
-	MySQLBackupSchedulesGetter
-	MySQLClustersGetter
-	MySQLRestoresGetter
+	BackupsGetter
+	BackupSchedulesGetter
+	ClustersGetter
+	RestoresGetter
 }
 
 // MysqlV1alpha1Client is used to interact with features provided by the mysql.oracle.com group.
@@ -34,20 +34,20 @@ type MysqlV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *MysqlV1alpha1Client) MySQLBackups(namespace string) MySQLBackupInterface {
-	return newMySQLBackups(c, namespace)
+func (c *MysqlV1alpha1Client) Backups(namespace string) BackupInterface {
+	return newBackups(c, namespace)
 }
 
-func (c *MysqlV1alpha1Client) MySQLBackupSchedules(namespace string) MySQLBackupScheduleInterface {
-	return newMySQLBackupSchedules(c, namespace)
+func (c *MysqlV1alpha1Client) BackupSchedules(namespace string) BackupScheduleInterface {
+	return newBackupSchedules(c, namespace)
 }
 
-func (c *MysqlV1alpha1Client) MySQLClusters(namespace string) MySQLClusterInterface {
-	return newMySQLClusters(c, namespace)
+func (c *MysqlV1alpha1Client) Clusters(namespace string) ClusterInterface {
+	return newClusters(c, namespace)
 }
 
-func (c *MysqlV1alpha1Client) MySQLRestores(namespace string) MySQLRestoreInterface {
-	return newMySQLRestores(c, namespace)
+func (c *MysqlV1alpha1Client) Restores(namespace string) RestoreInterface {
+	return newRestores(c, namespace)
 }
 
 // NewForConfig creates a new MysqlV1alpha1Client for the given config.

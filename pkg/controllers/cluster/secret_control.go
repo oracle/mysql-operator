@@ -23,11 +23,11 @@ import (
 	"github.com/oracle/mysql-operator/pkg/resources/secrets"
 )
 
-// SecretControlInterface defines the interface that the MySQLClusterController
+// SecretControlInterface defines the interface that the ClusterController
 // uses to get and create Secrets. It is implemented as an interface to enable
 // testing.
 type SecretControlInterface interface {
-	GetForCluster(cluster *v1alpha1.MySQLCluster) (*v1.Secret, error)
+	GetForCluster(cluster *v1alpha1.Cluster) (*v1.Secret, error)
 	CreateSecret(s *v1.Secret) error
 }
 
@@ -41,7 +41,7 @@ func NewRealSecretControl(client kubernetes.Interface) SecretControlInterface {
 	return &realSecretControl{client: client}
 }
 
-func (rsc *realSecretControl) GetForCluster(cluster *v1alpha1.MySQLCluster) (*v1.Secret, error) {
+func (rsc *realSecretControl) GetForCluster(cluster *v1alpha1.Cluster) (*v1.Secret, error) {
 	return rsc.client.CoreV1().
 		Secrets(cluster.Namespace).
 		Get(secrets.GetRootPasswordSecretName(cluster), metav1.GetOptions{})

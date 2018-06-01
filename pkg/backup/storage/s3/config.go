@@ -30,7 +30,7 @@ type Config struct {
 }
 
 // NewConfig creates an S3 configuration based on the input parameters.
-func NewConfig(storage *v1alpha1.Storage, creds map[string]string) *Config {
+func NewConfig(storage *v1alpha1.BackupStorageProvider, creds map[string]string) *Config {
 	return &Config{
 		endpoint:  storage.Config["endpoint"],
 		region:    storage.Config["region"],

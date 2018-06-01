@@ -20,7 +20,7 @@ import (
 )
 
 // ConfigMapControlInterface defines the interface that the
-// MySQLClusterController uses to create Configmaps. It is implemented as an
+// ClusterController uses to create Configmaps. It is implemented as an
 // interface to enable testing.
 type ConfigMapControlInterface interface {
 	CreateConfigMap(c *v1.ConfigMap) error

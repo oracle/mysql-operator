@@ -16,7 +16,7 @@ data:
   password: bXktc3VwZXItc2VjcmV0LXBhc3M=
 ---
 apiVersion: mysql.oracle.com/v1alpha1
-kind: MySQLCluster
+kind: Cluster
 metadata:
   name: mysql-wordpress
 spec:

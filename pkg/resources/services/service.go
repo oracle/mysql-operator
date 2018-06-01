@@ -24,18 +24,18 @@ import (
 )
 
 // NewForCluster will return a new headless Kubernetes service for a MySQL cluster
-func NewForCluster(cluster *v1alpha1.MySQLCluster) *corev1.Service {
+func NewForCluster(cluster *v1alpha1.Cluster) *corev1.Service {
 	mysqlPort := corev1.ServicePort{Port: 3306}
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Labels:    map[string]string{constants.MySQLClusterLabel: cluster.Name},
+			Labels:    map[string]string{constants.ClusterLabel: cluster.Name},
 			Name:      cluster.Name,
 			Namespace: cluster.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(cluster, schema.GroupVersionKind{
 					Group:   v1alpha1.SchemeGroupVersion.Group,
 					Version: v1alpha1.SchemeGroupVersion.Version,
-					Kind:    v1alpha1.MySQLClusterCRDResourceKind,
+					Kind:    v1alpha1.ClusterCRDResourceKind,
 				}),
 			},
 			Annotations: map[string]string{
@@ -45,7 +45,7 @@ func NewForCluster(cluster *v1alpha1.MySQLCluster) *corev1.Service {
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{mysqlPort},
 			Selector: map[string]string{
-				constants.MySQLClusterLabel: cluster.Name,
+				constants.ClusterLabel: cluster.Name,
 			},
 			ClusterIP: corev1.ClusterIPNone,
 		},

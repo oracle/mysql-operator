@@ -38,14 +38,14 @@ var _ = Describe("Pod crash", func() {
 		mcs = f.MySQLClientSet
 	})
 
-	It("should be the case that single-primary MySQLClusters recover from Pods crashing", func() {
+	It("should be the case that single-primary Clusters recover from Pods crashing", func() {
 		clusterName := "pod-crash"
 		ns := f.Namespace.Name
 		grace := int64(0) // kill don't gracefully terminate
 
-		jig := framework.NewMySQLClusterTestJig(mcs, cs, clusterName)
+		jig := framework.NewClusterTestJig(mcs, cs, clusterName)
 
-		cluster := jig.CreateAndAwaitMySQLClusterOrFail(ns, 3, nil, framework.DefaultTimeout)
+		cluster := jig.CreateAndAwaitClusterOrFail(ns, 3, nil, framework.DefaultTimeout)
 
 		primary := framework.GetReadyPrimaryPodName(cs, ns, cluster.Name)
 
@@ -79,14 +79,14 @@ var _ = Describe("Pod crash", func() {
 		Expect(actual).To(Equal(expected))
 	})
 
-	It("should be the case that multi-primary MySQLClusters recover from Pods crashing", func() {
+	It("should be the case that multi-primary Clusters recover from Pods crashing", func() {
 		clusterName := "pod-crash"
 		ns := f.Namespace.Name
 		grace := int64(0) // kill don't gracefully terminate
 
-		jig := framework.NewMySQLClusterTestJig(mcs, cs, clusterName)
+		jig := framework.NewClusterTestJig(mcs, cs, clusterName)
 
-		cluster := jig.CreateAndAwaitMySQLClusterOrFail(ns, 3, func(cluster *v1alpha1.MySQLCluster) {
+		cluster := jig.CreateAndAwaitClusterOrFail(ns, 3, func(cluster *v1alpha1.Cluster) {
 			cluster.Spec.MultiMaster = true
 		}, framework.DefaultTimeout)
 

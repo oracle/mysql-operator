@@ -43,12 +43,12 @@ type Interface interface {
 }
 
 // New builds a new backup executor.
-func New(executor *v1alpha1.Executor, creds map[string]string) (Interface, error) {
-	switch strings.ToLower(executor.Provider) {
+func New(executor *v1alpha1.BackupExecutor, creds map[string]string) (Interface, error) {
+	switch strings.ToLower(executor.Name) {
 	case MySQLDumpProvider:
 		return mysqldump.NewExecutor(executor, creds)
 	default:
-		return nil, fmt.Errorf("unknown backup executor provider %q", executor.Provider)
+		return nil, fmt.Errorf("unknown backup executor provider %q", executor.Name)
 	}
 }
 

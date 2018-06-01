@@ -64,16 +64,16 @@ const (
 	// synced.
 	SuccessSynced = "Synced"
 	// ErrResourceExists is used as part of the Event 'reason' when a
-	// MySQLCluster fails to sync due to a resource of the same name already
+	// Cluster fails to sync due to a resource of the same name already
 	// existing.
 	ErrResourceExists = "ErrResourceExists"
 
 	// MessageResourceExists is the message used for Events when a resource
 	// fails to sync due to a resource already existing.
-	MessageResourceExists = "%s %s/%s already exists and is not managed by MySQLCluster"
+	MessageResourceExists = "%s %s/%s already exists and is not managed by Cluster"
 	// MessageResourceSynced is the message used for an Event fired when a
-	// MySQLCluster is synced successfully
-	MessageResourceSynced = "MySQLCluster synced successfully"
+	// Cluster is synced successfully
+	MessageResourceSynced = "Cluster synced successfully"
 )
 
 // The MySQLController watches the Kubernetes API for changes to MySQL resources
@@ -87,13 +87,13 @@ type MySQLController struct {
 	shutdown bool
 	queue    workqueue.RateLimitingInterface
 
-	// clusterLister is able to list/get MySQLClusters from a shared informer's
+	// clusterLister is able to list/get Clusters from a shared informer's
 	// store.
-	clusterLister listersv1alpha1.MySQLClusterLister
-	// clusterListerSynced returns true if the MySQLCluster shared informer has
+	clusterLister listersv1alpha1.ClusterLister
+	// clusterListerSynced returns true if the Cluster shared informer has
 	// synced at least once.
 	clusterListerSynced cache.InformerSynced
-	// clusterUpdater implements control logic for updating MySQLCluster
+	// clusterUpdater implements control logic for updating Cluster
 	// statuses. Implemented as an interface to enable testing.
 	clusterUpdater clusterUpdaterInterface
 
@@ -104,7 +104,7 @@ type MySQLController struct {
 	// has synced at least once.
 	statefulSetListerSynced cache.InformerSynced
 	// statefulSetControl enables control of StatefulSets associated with
-	// MySQLClusters.
+	// Clusters.
 	statefulSetControl StatefulSetControlInterface
 
 	// podLister is able to list/get Pods from a shared
@@ -114,7 +114,7 @@ type MySQLController struct {
 	// has synced at least once.
 	podListerSynced cache.InformerSynced
 	// podControl enables control of Pods associated with
-	// MySQLClusters.
+	// Clusters.
 	podControl PodControlInterface
 
 	// serviceLister is able to list/get Services from a shared informer's
@@ -124,10 +124,10 @@ type MySQLController struct {
 	// has synced at least once.
 	serviceListerSynced cache.InformerSynced
 
-	// serviceControl enables control of Services associated with MySQLClusters.
+	// serviceControl enables control of Services associated with Clusters.
 	serviceControl ServiceControlInterface
 
-	// secretControl enables control of Services associated with MySQLClusters.
+	// secretControl enables control of Services associated with Clusters.
 	secretControl SecretControlInterface
 
 	// recorder is an event recorder for recording Event resources to the
@@ -140,7 +140,7 @@ func NewController(
 	opConfig options.MySQLOperatorServer,
 	opClient clientset.Interface,
 	kubeClient kubernetes.Interface,
-	clusterInformer informersv1alpha1.MySQLClusterInformer,
+	clusterInformer informersv1alpha1.ClusterInformer,
 	statefulSetInformer appsinformers.StatefulSetInformer,
 	podInformer coreinformers.PodInformer,
 	serviceInformer coreinformers.ServiceInformer,
@@ -190,7 +190,7 @@ func NewController(
 			m.enqueueCluster(new)
 		},
 		DeleteFunc: func(obj interface{}) {
-			cluster, ok := obj.(*v1alpha1.MySQLCluster)
+			cluster, ok := obj.(*v1alpha1.Cluster)
 			if ok {
 				m.onClusterDeleted(cluster.Name)
 			}
@@ -208,7 +208,7 @@ func NewController(
 
 			// If cluster is ready ...
 			if newStatefulSet.Status.ReadyReplicas == newStatefulSet.Status.Replicas {
-				clusterName, ok := newStatefulSet.Labels[constants.MySQLClusterLabel]
+				clusterName, ok := newStatefulSet.Labels[constants.ClusterLabel]
 				if ok {
 					m.onClusterReady(clusterName)
 				}
@@ -229,10 +229,10 @@ func (m *MySQLController) Run(ctx context.Context, threadiness int) {
 	defer utilruntime.HandleCrash()
 	defer m.queue.ShutDown()
 
-	glog.Info("Starting MySQLCluster controller")
+	glog.Info("Starting Cluster controller")
 
 	// Wait for the caches to be synced before starting workers
-	glog.Info("Waiting for MySQLCluster controller informer caches to sync")
+	glog.Info("Waiting for Cluster controller informer caches to sync")
 	if !controllerutils.WaitForCacheSync("mysql cluster", ctx.Done(),
 		m.clusterListerSynced,
 		m.statefulSetListerSynced,
@@ -241,14 +241,14 @@ func (m *MySQLController) Run(ctx context.Context, threadiness int) {
 		return
 	}
 
-	glog.Info("Starting MySQLCluster controller workers")
+	glog.Info("Starting Cluster controller workers")
 	// Launch two workers to process Foo resources
 	for i := 0; i < threadiness; i++ {
 		go wait.Until(m.runWorker, time.Second, ctx.Done())
 	}
 
-	glog.Info("Started MySQLCluster controller workers")
-	defer glog.Info("Shutting down MySQLCluster controller workers")
+	glog.Info("Started Cluster controller workers")
+	defer glog.Info("Shutting down Cluster controller workers")
 	<-ctx.Done()
 }
 
@@ -293,7 +293,7 @@ func (m *MySQLController) processNextWorkItem() bool {
 }
 
 // syncHandler compares the actual state with the desired, and attempts to
-// converge the two. It then updates the Status block of the MySQLCluster
+// converge the two. It then updates the Status block of the Cluster
 // resource with the current status of the resource.
 func (m *MySQLController) syncHandler(key string) error {
 	// Convert the namespace/name string into a distinct namespace and name.
@@ -305,10 +305,10 @@ func (m *MySQLController) syncHandler(key string) error {
 
 	nsName := types.NamespacedName{Namespace: namespace, Name: name}
 
-	// Get the MySQLCluster resource with this namespace/name.
-	cluster, err := m.clusterLister.MySQLClusters(namespace).Get(name)
+	// Get the Cluster resource with this namespace/name.
+	cluster, err := m.clusterLister.Clusters(namespace).Get(name)
 	if err != nil {
-		// The MySQLCluster resource may no longer exist, in which case we stop processing.
+		// The Cluster resource may no longer exist, in which case we stop processing.
 		if apierrors.IsNotFound(err) {
 			utilruntime.HandleError(fmt.Errorf("mysqlcluster '%s' in work queue no longer exists", key))
 			return nil
@@ -318,7 +318,7 @@ func (m *MySQLController) syncHandler(key string) error {
 
 	cluster.EnsureDefaults()
 	if err = cluster.Validate(); err != nil {
-		return errors.Wrap(err, "validating MySQLCluster")
+		return errors.Wrap(err, "validating Cluster")
 	}
 
 	operatorVersion := buildversion.GetBuildVersion()
@@ -329,7 +329,7 @@ func (m *MySQLController) syncHandler(key string) error {
 		if cluster.Labels == nil {
 			cluster.Labels = make(map[string]string)
 		}
-		cluster.Labels[constants.MySQLClusterLabel] = cluster.Name
+		cluster.Labels[constants.ClusterLabel] = cluster.Name
 		cluster.Labels[constants.MySQLOperatorVersionLabel] = buildversion.GetBuildVersion()
 		return m.clusterUpdater.UpdateClusterLabels(cluster.DeepCopy(), labels.Set(cluster.Labels))
 	}
@@ -357,7 +357,7 @@ func (m *MySQLController) syncHandler(key string) error {
 		return err
 	}
 
-	// If the Service is not controlled by this MySQLCluster resource, we should
+	// If the Service is not controlled by this Cluster resource, we should
 	// log a warning to the event recorder and return.
 	if !metav1.IsControlledBy(svc, cluster) {
 		msg := fmt.Sprintf(MessageResourceExists, "Service", svc.Namespace, svc.Name)
@@ -380,7 +380,7 @@ func (m *MySQLController) syncHandler(key string) error {
 		return err
 	}
 
-	// If the StatefulSet is not controlled by this MySQLCluster resource, we
+	// If the StatefulSet is not controlled by this Cluster resource, we
 	// should log a warning to the event recorder and return.
 	if !metav1.IsControlledBy(ss, cluster) {
 		msg := fmt.Sprintf(MessageResourceExists, "StatefulSet", ss.Namespace, ss.Name)
@@ -394,7 +394,7 @@ func (m *MySQLController) syncHandler(key string) error {
 		return err
 	}
 
-	// If this number of the replicas on the MySQLCluster does not equal the
+	// If this number of the replicas on the Cluster does not equal the
 	// current desired replicas on the StatefulSet, we should update the
 	// StatefulSet resource.
 	if cluster.Spec.Replicas != *ss.Spec.Replicas {
@@ -409,7 +409,7 @@ func (m *MySQLController) syncHandler(key string) error {
 		}
 	}
 
-	// Finally, we update the status block of the MySQLCluster resource to
+	// Finally, we update the status block of the Cluster resource to
 	// reflect the current state of the world.
 	err = m.updateClusterStatus(cluster, ss)
 	if err != nil {
@@ -421,8 +421,8 @@ func (m *MySQLController) syncHandler(key string) error {
 }
 
 // ensureMySQLOperatorVersion updates the MySQLOperator resource types that require it to make it consistent with the specifed operator version.
-func (m *MySQLController) ensureMySQLOperatorVersion(c *v1alpha1.MySQLCluster, ss *apps.StatefulSet, operatorVersion string) error {
-	// Ensure the Pods belonging to the MySQLCluster are updated to the correct 'mysql-agent' image for the current MySQLOperator version.
+func (m *MySQLController) ensureMySQLOperatorVersion(c *v1alpha1.Cluster, ss *apps.StatefulSet, operatorVersion string) error {
+	// Ensure the Pods belonging to the Cluster are updated to the correct 'mysql-agent' image for the current MySQLOperator version.
 	container := statefulsets.MySQLAgentName
 	pods, err := m.podLister.List(SelectorForCluster(c))
 	for _, pod := range pods {
@@ -446,30 +446,30 @@ func (m *MySQLController) ensureMySQLOperatorVersion(c *v1alpha1.MySQLCluster, s
 		}
 	}
 
-	// Ensure the MySQLCluster is updated with the correct MySQLOperator version.
+	// Ensure the Cluster is updated with the correct MySQLOperator version.
 	if !SelectorForClusterOperatorVersion(operatorVersion).Matches(labels.Set(c.Labels)) {
 		glog.Infof("Upgrading cluster statefulset '%s/%s' to latest operator version: %s", c.Namespace, c.Name, operatorVersion)
 		copy := c.DeepCopy()
 		copy.Labels[constants.MySQLOperatorVersionLabel] = operatorVersion
 		err := m.clusterUpdater.UpdateClusterLabels(copy, labels.Set(copy.Labels))
 		if err != nil {
-			return errors.Wrap(err, "upgrade operator version: MySQLClusterUpdate failed")
+			return errors.Wrap(err, "upgrade operator version: ClusterUpdate failed")
 		}
 	}
 	return nil
 }
 
-// updateClusterStatusForSS updates MySQLCluster statuses based on changes to their associated StatefulSets.
-func (m *MySQLController) updateClusterStatus(cluster *v1alpha1.MySQLCluster, ss *apps.StatefulSet) error {
+// updateClusterStatusForSS updates Cluster statuses based on changes to their associated StatefulSets.
+func (m *MySQLController) updateClusterStatus(cluster *v1alpha1.Cluster, ss *apps.StatefulSet) error {
 	glog.V(4).Infof("%s/%s: ss.Spec.Replicas=%d, ss.Status.ReadyReplicas=%d, ss.Status.Replicas=%d",
 		cluster.Namespace, cluster.Name, *ss.Spec.Replicas, ss.Status.ReadyReplicas, ss.Status.Replicas)
 
 	phase := cluster.Status.Phase
 
 	if (ss.Status.ReadyReplicas < ss.Status.Replicas) || (*ss.Spec.Replicas != ss.Status.Replicas) {
-		phase = v1alpha1.MySQLClusterPending
+		phase = v1alpha1.ClusterPhasePending
 	} else if ss.Status.ReadyReplicas == ss.Status.Replicas {
-		phase = v1alpha1.MySQLClusterRunning
+		phase = v1alpha1.ClusterPhaseRunning
 	}
 
 	if phase != cluster.Status.Phase {
@@ -483,9 +483,9 @@ func (m *MySQLController) updateClusterStatus(cluster *v1alpha1.MySQLCluster, ss
 	return nil
 }
 
-// enqueueCluster takes a MySQLCluster resource and converts it into a
+// enqueueCluster takes a Cluster resource and converts it into a
 // namespace/name string which is then put onto the work queue. This method
-// should *not* be passed resources of any type other than MySQLCluster.
+// should *not* be passed resources of any type other than Cluster.
 func (m *MySQLController) enqueueCluster(obj interface{}) {
 	key, err := cache.MetaNamespaceKeyFunc(obj)
 	if err != nil {
@@ -518,15 +518,15 @@ func (m *MySQLController) handleObject(obj interface{}) {
 
 	glog.V(4).Infof("Processing object: %s", object.GetName())
 	if ownerRef := metav1.GetControllerOf(object); ownerRef != nil {
-		// If this object is not owned by a MySQLCluster, we should not do
+		// If this object is not owned by a Cluster, we should not do
 		// anything more with it.
-		if ownerRef.Kind != v1alpha1.MySQLClusterCRDResourceKind {
+		if ownerRef.Kind != v1alpha1.ClusterCRDResourceKind {
 			return
 		}
 
-		cluster, err := m.clusterLister.MySQLClusters(object.GetNamespace()).Get(ownerRef.Name)
+		cluster, err := m.clusterLister.Clusters(object.GetNamespace()).Get(ownerRef.Name)
 		if err != nil {
-			glog.V(4).Infof("ignoring orphaned object '%s' of MySQLCluster '%s'", object.GetSelfLink(), ownerRef.Name)
+			glog.V(4).Infof("ignoring orphaned object '%s' of Cluster '%s'", object.GetSelfLink(), ownerRef.Name)
 			return
 		}
 

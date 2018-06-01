@@ -22,7 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-func validateCluster(c *MySQLCluster) field.ErrorList {
+func validateCluster(c *Cluster) field.ErrorList {
 	allErrs := field.ErrorList{}
 	allErrs = append(allErrs, validateClusterMetadata(c.ObjectMeta, field.NewPath("metadata"))...)
 	allErrs = append(allErrs, validateClusterSpec(c.Spec, field.NewPath("spec"))...)
@@ -41,7 +41,7 @@ func validateClusterMetadata(m metav1.ObjectMeta, fldPath *field.Path) field.Err
 func validateName(name string, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
-	if len(name) > MySQLClusterNameMaxLen {
+	if len(name) > ClusterNameMaxLen {
 		msg := fmt.Sprintf("longer than maximum supported length %d (see: https://bugs.mysql.com/bug.php?id=90601)", MaxInnoDBClusterMembers)
 		allErrs = append(allErrs, field.Invalid(fldPath, name, msg))
 	}
@@ -49,7 +49,7 @@ func validateName(name string, fldPath *field.Path) field.ErrorList {
 	return allErrs
 }
 
-func validateClusterSpec(s MySQLClusterSpec, fldPath *field.Path) field.ErrorList {
+func validateClusterSpec(s ClusterSpec, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	allErrs = append(allErrs, validateVersion(s.Version, fldPath.Child("version"))...)
@@ -59,7 +59,7 @@ func validateClusterSpec(s MySQLClusterSpec, fldPath *field.Path) field.ErrorLis
 	return allErrs
 }
 
-func validateClusterStatus(s MySQLClusterStatus, fldPath *field.Path) field.ErrorList {
+func validateClusterStatus(s ClusterStatus, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	allErrs = append(allErrs, validatePhase(s.Phase, fldPath.Child("phase"))...)
 	return allErrs
@@ -83,9 +83,9 @@ func validateBaseServerID(baseServerID uint32, fldPath *field.Path) field.ErrorL
 	return append(allErrs, field.Invalid(fldPath, strconv.FormatUint(uint64(baseServerID), 10), "invalid baseServerId specified"))
 }
 
-func validatePhase(phase MySQLClusterPhase, fldPath *field.Path) field.ErrorList {
+func validatePhase(phase ClusterPhase, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
-	for _, validPhase := range MySQLClusterValidPhases {
+	for _, validPhase := range ValidClusterPhases {
 		if phase == validPhase {
 			return allErrs
 		}

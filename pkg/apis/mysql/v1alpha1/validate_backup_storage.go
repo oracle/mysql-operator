@@ -26,21 +26,21 @@ const (
 	ProviderS3 = "s3"
 )
 
-func validateStorage(storage *Storage, fldPath *field.Path) field.ErrorList {
+func validateStorage(storage *BackupStorageProvider, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
-	if storage.Provider == "" {
-		allErrs = append(allErrs, field.Required(fldPath.Child("provider"), ""))
+	if storage.Name == "" {
+		allErrs = append(allErrs, field.Required(fldPath.Child("name"), ""))
 	}
 
 	if storage.Config == nil {
 		allErrs = append(allErrs, field.Required(fldPath.Child("config"), ""))
 	} else {
-		switch strings.ToLower(storage.Provider) {
+		switch strings.ToLower(storage.Name) {
 		case ProviderS3:
 			allErrs = append(allErrs, validateS3StorageConfig(storage.Config, field.NewPath("config"))...)
 		default:
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("provider"), storage, fmt.Sprintf("invalid storage name '%s'. Permitted names: s3.", storage.Provider)))
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("name"), storage, fmt.Sprintf("invalid storage name '%s'. Permitted names: s3.", storage.Name)))
 		}
 	}
 

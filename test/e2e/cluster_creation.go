@@ -24,16 +24,16 @@ import (
 	"github.com/oracle/mysql-operator/test/e2e/framework"
 )
 
-var _ = Describe("MySQLCluster creation", func() {
+var _ = Describe("Cluster creation", func() {
 	f := framework.NewDefaultFramework("cluster-creation")
 
 	It("should be possible to create a basic 3 member cluster with a 28 character name", func() {
 		clusterName := "basic-twenty-eight-char-name"
 		Expect(clusterName).To(HaveLen(28))
 
-		jig := framework.NewMySQLClusterTestJig(f.MySQLClientSet, f.ClientSet, clusterName)
+		jig := framework.NewClusterTestJig(f.MySQLClientSet, f.ClientSet, clusterName)
 
-		cluster := jig.CreateAndAwaitMySQLClusterOrFail(f.Namespace.Name, 3, nil, framework.DefaultTimeout)
+		cluster := jig.CreateAndAwaitClusterOrFail(f.Namespace.Name, 3, nil, framework.DefaultTimeout)
 
 		expected, err := framework.WriteSQLTest(cluster, cluster.Name+"-0")
 		Expect(err).NotTo(HaveOccurred())
@@ -47,9 +47,9 @@ var _ = Describe("MySQLCluster creation", func() {
 		clusterName := "multi-master"
 		replicas := int32(3)
 
-		jig := framework.NewMySQLClusterTestJig(f.MySQLClientSet, f.ClientSet, clusterName)
+		jig := framework.NewClusterTestJig(f.MySQLClientSet, f.ClientSet, clusterName)
 
-		cluster := jig.CreateAndAwaitMySQLClusterOrFail(f.Namespace.Name, replicas, func(cluster *v1alpha1.MySQLCluster) {
+		cluster := jig.CreateAndAwaitClusterOrFail(f.Namespace.Name, replicas, func(cluster *v1alpha1.Cluster) {
 			cluster.Spec.MultiMaster = true
 		}, framework.DefaultTimeout)
 

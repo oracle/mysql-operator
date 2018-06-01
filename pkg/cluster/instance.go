@@ -31,7 +31,7 @@ import (
 type Instance struct {
 	// Namespace is the Kubernetes Namespace in which the instance is running.
 	Namespace string
-	// ClusterName is the name of the MySQLCluster to which the instance
+	// ClusterName is the name of the Cluster to which the instance
 	// belongs.
 	ClusterName string
 	// ParentName is the name of the StatefulSet to which the instance belongs.

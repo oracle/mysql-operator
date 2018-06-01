@@ -42,7 +42,7 @@ type runner struct {
 
 // NewConfiguredRunner creates a runner configured with the Backup/Restore target executor and
 // storage configurations.
-func NewConfiguredRunner(execConfig *v1alpha1.Executor, execCreds map[string]string, storeConfig *v1alpha1.Storage, storeCreds map[string]string) (Runner, error) {
+func NewConfiguredRunner(execConfig *v1alpha1.BackupExecutor, execCreds map[string]string, storeConfig *v1alpha1.BackupStorageProvider, storeCreds map[string]string) (Runner, error) {
 	exec, err := executor.New(execConfig, execCreds)
 	if err != nil {
 		return nil, err

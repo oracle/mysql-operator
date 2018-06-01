@@ -23,9 +23,9 @@ import (
 )
 
 func TestGetRootPasswordSecretName(t *testing.T) {
-	cluster := &v1alpha1.MySQLCluster{
+	cluster := &v1alpha1.Cluster{
 		ObjectMeta: metav1.ObjectMeta{Name: "example-cluster"},
-		Spec:       v1alpha1.MySQLClusterSpec{},
+		Spec:       v1alpha1.ClusterSpec{},
 	}
 
 	actual := GetRootPasswordSecretName(cluster)

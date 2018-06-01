@@ -33,13 +33,13 @@ func isValidExecutorProvider(provider string) bool {
 	return false
 }
 
-func validateExecutor(executor *Executor, fldPath *field.Path) field.ErrorList {
+func validateExecutor(executor *BackupExecutor, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
-	if executor.Provider == "" {
-		allErrs = append(allErrs, field.Required(fldPath.Child("provider"), ""))
-	} else if !isValidExecutorProvider(executor.Provider) {
-		allErrs = append(allErrs, field.Invalid(fldPath.Child("provider"), executor, fmt.Sprintf("invalid provider name '%s'", executor.Provider)))
+	if executor.Name == "" {
+		allErrs = append(allErrs, field.Required(fldPath.Child("name"), ""))
+	} else if !isValidExecutorProvider(executor.Name) {
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("name"), executor, fmt.Sprintf("invalid provider name %q", executor.Name)))
 	}
 
 	if executor.Databases == nil || len(executor.Databases) == 0 {

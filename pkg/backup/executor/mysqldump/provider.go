@@ -43,7 +43,7 @@ type Executor struct {
 
 // NewExecutor creates a provider capable of creating and restoring backups with the mysqldump
 // tool.
-func NewExecutor(executor *v1alpha1.Executor, creds map[string]string) (*Executor, error) {
+func NewExecutor(executor *v1alpha1.BackupExecutor, creds map[string]string) (*Executor, error) {
 	cfg := NewConfig(executor, creds)
 	err := cfg.Validate()
 	if err != nil {

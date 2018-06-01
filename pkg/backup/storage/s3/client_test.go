@@ -21,8 +21,8 @@ import (
 )
 
 func TestClientWithInvalidData(t *testing.T) {
-	storage := &v1alpha1.Storage{
-		Provider: "s3",
+	storage := &v1alpha1.BackupStorageProvider{
+		Name: "s3",
 		Config: map[string]string{
 			"region": "region",
 			"bucket": "bucket",

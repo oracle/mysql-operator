@@ -27,17 +27,17 @@ import (
 
 // NewMysqlRootPassword returns a Kubernetes secret containing a
 // generated MySQL root password.
-func NewMysqlRootPassword(cluster *v1alpha1.MySQLCluster) *corev1.Secret {
+func NewMysqlRootPassword(cluster *v1alpha1.Cluster) *corev1.Secret {
 	CreateSecret := RandomAlphanumericString(16)
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Labels: map[string]string{constants.MySQLClusterLabel: cluster.Name},
+			Labels: map[string]string{constants.ClusterLabel: cluster.Name},
 			Name:   GetRootPasswordSecretName(cluster),
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(cluster, schema.GroupVersionKind{
 					Group:   v1alpha1.SchemeGroupVersion.Group,
 					Version: v1alpha1.SchemeGroupVersion.Version,
-					Kind:    v1alpha1.MySQLClusterCRDResourceKind,
+					Kind:    v1alpha1.ClusterCRDResourceKind,
 				}),
 			},
 			Namespace: cluster.Namespace,
@@ -49,6 +49,6 @@ func NewMysqlRootPassword(cluster *v1alpha1.MySQLCluster) *corev1.Secret {
 
 // GetRootPasswordSecretName returns the root password secret name for the
 // given mysql cluster.
-func GetRootPasswordSecretName(cluster *v1alpha1.MySQLCluster) string {
+func GetRootPasswordSecretName(cluster *v1alpha1.Cluster) string {
 	return fmt.Sprintf("%s-root-password", cluster.Name)
 }
