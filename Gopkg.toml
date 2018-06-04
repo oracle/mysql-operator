@@ -22,13 +22,11 @@
 # Code generation dependencies
 required = [
   "k8s.io/code-generator/cmd/client-gen",
-  # needed by generated clientsets, but not an explicit dep in client-gen itself
-  "k8s.io/apimachinery/pkg/apimachinery/registered",
-
+  "k8s.io/code-generator/cmd/conversion-gen",
   "k8s.io/code-generator/cmd/deepcopy-gen",
   "k8s.io/code-generator/cmd/defaulter-gen",
-  "k8s.io/code-generator/cmd/lister-gen",
   "k8s.io/code-generator/cmd/informer-gen",
+  "k8s.io/code-generator/cmd/lister-gen",
 ]
 
 [[constraint]]
@@ -49,23 +47,23 @@ required = [
 
 [[constraint]]
   name = "k8s.io/api"
-  branch = "release-1.9"
+  version = "kubernetes-1.10.0"
 
 [[constraint]]
   branch = "release-1.9"
   name = "k8s.io/apimachinery"
 
 [[constraint]]
-  branch = "release-1.9"
   name = "k8s.io/apiserver"
+  version = "kubernetes-1.10.0"
 
 [[constraint]]
   name = "k8s.io/client-go"
-  version = "~6.0"
+  version = "kubernetes-1.10.0"
 
 [[constraint]]
-  branch = "release-1.9"
   name = "k8s.io/code-generator"
+  version = "kubernetes-1.10.0"
 
 [[constraint]]
   branch = "master"
@@ -75,9 +73,12 @@ required = [
   branch = "master"
   name = "github.com/heptiolabs/healthcheck"
 
+# gengo needs to be manually pinned to the version listed in code-generators
+# Gopkg.toml, because the k8s project does not produce Gopkg.toml files & dep
+# does not parse the Godeps.json file to determine revisions to use.
 [[override]]
-  branch = "master"
   name = "k8s.io/gengo"
+  revision = "b6c426f7730e6d66e6e476a85d1c3eb7633880e0"
 
 [[constraint]]
   name = "github.com/robfig/cron"

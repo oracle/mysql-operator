@@ -150,9 +150,10 @@ type ClusterStatus struct {
 
 // +genclient
 // +genclient:noStatus
+// +resource:path=mysqlclusters
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Cluster represents a cluster spec and associated metadata
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type Cluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
@@ -160,8 +161,9 @@ type Cluster struct {
 	Status            ClusterStatus `json:"status"`
 }
 
-// ClusterList is a placeholder type for a list of MySQL clusters
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// ClusterList is a placeholder type for a list of MySQL clusters
 type ClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
@@ -257,10 +259,11 @@ type BackupStatus struct {
 
 // +genclient
 // +genclient:noStatus
+// +resource:path=mysqlbackups
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Backup is a MySQL Operator resource that represents a backup of a MySQL
 // cluster.
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type Backup struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
@@ -269,8 +272,9 @@ type Backup struct {
 	Status BackupStatus `json:"status"`
 }
 
-// BackupList is a list of Backups.
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// BackupList is a list of Backups.
 type BackupList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
@@ -318,10 +322,11 @@ type ScheduleStatus struct {
 
 // +genclient
 // +genclient:noStatus
+// +resource:path=mysqlbackupschedules
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // BackupSchedule is a MySQL Operator resource that represents a backup
 // schedule of a MySQL cluster.
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type BackupSchedule struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
@@ -330,8 +335,9 @@ type BackupSchedule struct {
 	Status ScheduleStatus     `json:"status,omitempty"`
 }
 
-// BackupScheduleList is a list of BackupSchedules.
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// BackupScheduleList is a list of BackupSchedules.
 type BackupScheduleList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
@@ -390,10 +396,11 @@ type RestoreStatus struct {
 
 // +genclient
 // +genclient:noStatus
+// +resource:path=mysqlrestores
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Restore is a MySQL Operator resource that represents the restoration of
 // backup of a MySQL cluster.
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type Restore struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
@@ -402,8 +409,9 @@ type Restore struct {
 	Status RestoreStatus `json:"status"`
 }
 
-// RestoreList is a list of Restores.
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// RestoreList is a list of Restores.
 type RestoreList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`

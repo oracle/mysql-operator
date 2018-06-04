@@ -59,10 +59,10 @@ rules:
   - apiGroups:
     - mysql.oracle.com
     resources:
-    - backups
-    - backupschedules
-    - clusters
-    - restores
+    - mysqlbackups
+    - mysqlbackupschedules
+    - mysqlclusters
+    - mysqlrestores
     verbs:
     - get
     - list
