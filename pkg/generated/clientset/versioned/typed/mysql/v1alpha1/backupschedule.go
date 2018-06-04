@@ -61,7 +61,7 @@ func (c *backupSchedules) Get(name string, options v1.GetOptions) (result *v1alp
 	result = &v1alpha1.BackupSchedule{}
 	err = c.client.Get().
 		Namespace(c.ns).
-		Resource("backupschedules").
+		Resource("mysqlbackupschedules").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
 		Do().
@@ -74,7 +74,7 @@ func (c *backupSchedules) List(opts v1.ListOptions) (result *v1alpha1.BackupSche
 	result = &v1alpha1.BackupScheduleList{}
 	err = c.client.Get().
 		Namespace(c.ns).
-		Resource("backupschedules").
+		Resource("mysqlbackupschedules").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Do().
 		Into(result)
@@ -86,7 +86,7 @@ func (c *backupSchedules) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
-		Resource("backupschedules").
+		Resource("mysqlbackupschedules").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Watch()
 }
@@ -96,7 +96,7 @@ func (c *backupSchedules) Create(backupSchedule *v1alpha1.BackupSchedule) (resul
 	result = &v1alpha1.BackupSchedule{}
 	err = c.client.Post().
 		Namespace(c.ns).
-		Resource("backupschedules").
+		Resource("mysqlbackupschedules").
 		Body(backupSchedule).
 		Do().
 		Into(result)
@@ -108,7 +108,7 @@ func (c *backupSchedules) Update(backupSchedule *v1alpha1.BackupSchedule) (resul
 	result = &v1alpha1.BackupSchedule{}
 	err = c.client.Put().
 		Namespace(c.ns).
-		Resource("backupschedules").
+		Resource("mysqlbackupschedules").
 		Name(backupSchedule.Name).
 		Body(backupSchedule).
 		Do().
@@ -120,7 +120,7 @@ func (c *backupSchedules) Update(backupSchedule *v1alpha1.BackupSchedule) (resul
 func (c *backupSchedules) Delete(name string, options *v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
-		Resource("backupschedules").
+		Resource("mysqlbackupschedules").
 		Name(name).
 		Body(options).
 		Do().
@@ -131,7 +131,7 @@ func (c *backupSchedules) Delete(name string, options *v1.DeleteOptions) error {
 func (c *backupSchedules) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
-		Resource("backupschedules").
+		Resource("mysqlbackupschedules").
 		VersionedParams(&listOptions, scheme.ParameterCodec).
 		Body(options).
 		Do().
@@ -143,7 +143,7 @@ func (c *backupSchedules) Patch(name string, pt types.PatchType, data []byte, su
 	result = &v1alpha1.BackupSchedule{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
-		Resource("backupschedules").
+		Resource("mysqlbackupschedules").
 		SubResource(subresources...).
 		Name(name).
 		Body(data).

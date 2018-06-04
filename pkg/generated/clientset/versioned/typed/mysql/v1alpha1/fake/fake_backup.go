@@ -30,7 +30,7 @@ type FakeBackups struct {
 	ns   string
 }
 
-var backupsResource = schema.GroupVersionResource{Group: "mysql.oracle.com", Version: "v1alpha1", Resource: "backups"}
+var backupsResource = schema.GroupVersionResource{Group: "mysql.oracle.com", Version: "v1alpha1", Resource: "mysqlbackups"}
 
 var backupsKind = schema.GroupVersionKind{Group: "mysql.oracle.com", Version: "v1alpha1", Kind: "Backup"}
 

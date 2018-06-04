@@ -61,7 +61,7 @@ func (c *clusters) Get(name string, options v1.GetOptions) (result *v1alpha1.Clu
 	result = &v1alpha1.Cluster{}
 	err = c.client.Get().
 		Namespace(c.ns).
-		Resource("clusters").
+		Resource("mysqlclusters").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
 		Do().
@@ -74,7 +74,7 @@ func (c *clusters) List(opts v1.ListOptions) (result *v1alpha1.ClusterList, err 
 	result = &v1alpha1.ClusterList{}
 	err = c.client.Get().
 		Namespace(c.ns).
-		Resource("clusters").
+		Resource("mysqlclusters").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Do().
 		Into(result)
@@ -86,7 +86,7 @@ func (c *clusters) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
-		Resource("clusters").
+		Resource("mysqlclusters").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Watch()
 }
@@ -96,7 +96,7 @@ func (c *clusters) Create(cluster *v1alpha1.Cluster) (result *v1alpha1.Cluster, 
 	result = &v1alpha1.Cluster{}
 	err = c.client.Post().
 		Namespace(c.ns).
-		Resource("clusters").
+		Resource("mysqlclusters").
 		Body(cluster).
 		Do().
 		Into(result)
@@ -108,7 +108,7 @@ func (c *clusters) Update(cluster *v1alpha1.Cluster) (result *v1alpha1.Cluster, 
 	result = &v1alpha1.Cluster{}
 	err = c.client.Put().
 		Namespace(c.ns).
-		Resource("clusters").
+		Resource("mysqlclusters").
 		Name(cluster.Name).
 		Body(cluster).
 		Do().
@@ -120,7 +120,7 @@ func (c *clusters) Update(cluster *v1alpha1.Cluster) (result *v1alpha1.Cluster, 
 func (c *clusters) Delete(name string, options *v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
-		Resource("clusters").
+		Resource("mysqlclusters").
 		Name(name).
 		Body(options).
 		Do().
@@ -131,7 +131,7 @@ func (c *clusters) Delete(name string, options *v1.DeleteOptions) error {
 func (c *clusters) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
-		Resource("clusters").
+		Resource("mysqlclusters").
 		VersionedParams(&listOptions, scheme.ParameterCodec).
 		Body(options).
 		Do().
@@ -143,7 +143,7 @@ func (c *clusters) Patch(name string, pt types.PatchType, data []byte, subresour
 	result = &v1alpha1.Cluster{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
-		Resource("clusters").
+		Resource("mysqlclusters").
 		SubResource(subresources...).
 		Name(name).
 		Body(data).

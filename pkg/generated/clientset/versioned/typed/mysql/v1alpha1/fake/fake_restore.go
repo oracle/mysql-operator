@@ -30,7 +30,7 @@ type FakeRestores struct {
 	ns   string
 }
 
-var restoresResource = schema.GroupVersionResource{Group: "mysql.oracle.com", Version: "v1alpha1", Resource: "restores"}
+var restoresResource = schema.GroupVersionResource{Group: "mysql.oracle.com", Version: "v1alpha1", Resource: "mysqlrestores"}
 
 var restoresKind = schema.GroupVersionKind{Group: "mysql.oracle.com", Version: "v1alpha1", Kind: "Restore"}
 

@@ -61,7 +61,7 @@ func (c *restores) Get(name string, options v1.GetOptions) (result *v1alpha1.Res
 	result = &v1alpha1.Restore{}
 	err = c.client.Get().
 		Namespace(c.ns).
-		Resource("restores").
+		Resource("mysqlrestores").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
 		Do().
@@ -74,7 +74,7 @@ func (c *restores) List(opts v1.ListOptions) (result *v1alpha1.RestoreList, err 
 	result = &v1alpha1.RestoreList{}
 	err = c.client.Get().
 		Namespace(c.ns).
-		Resource("restores").
+		Resource("mysqlrestores").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Do().
 		Into(result)
@@ -86,7 +86,7 @@ func (c *restores) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
-		Resource("restores").
+		Resource("mysqlrestores").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Watch()
 }
@@ -96,7 +96,7 @@ func (c *restores) Create(restore *v1alpha1.Restore) (result *v1alpha1.Restore, 
 	result = &v1alpha1.Restore{}
 	err = c.client.Post().
 		Namespace(c.ns).
-		Resource("restores").
+		Resource("mysqlrestores").
 		Body(restore).
 		Do().
 		Into(result)
@@ -108,7 +108,7 @@ func (c *restores) Update(restore *v1alpha1.Restore) (result *v1alpha1.Restore, 
 	result = &v1alpha1.Restore{}
 	err = c.client.Put().
 		Namespace(c.ns).
-		Resource("restores").
+		Resource("mysqlrestores").
 		Name(restore.Name).
 		Body(restore).
 		Do().
@@ -120,7 +120,7 @@ func (c *restores) Update(restore *v1alpha1.Restore) (result *v1alpha1.Restore, 
 func (c *restores) Delete(name string, options *v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
-		Resource("restores").
+		Resource("mysqlrestores").
 		Name(name).
 		Body(options).
 		Do().
@@ -131,7 +131,7 @@ func (c *restores) Delete(name string, options *v1.DeleteOptions) error {
 func (c *restores) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
-		Resource("restores").
+		Resource("mysqlrestores").
 		VersionedParams(&listOptions, scheme.ParameterCodec).
 		Body(options).
 		Do().
@@ -143,7 +143,7 @@ func (c *restores) Patch(name string, pt types.PatchType, data []byte, subresour
 	result = &v1alpha1.Restore{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
-		Resource("restores").
+		Resource("mysqlrestores").
 		SubResource(subresources...).
 		Name(name).
 		Body(data).

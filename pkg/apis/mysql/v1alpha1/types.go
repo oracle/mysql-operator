@@ -140,7 +140,6 @@ var ValidClusterPhases = []ClusterPhase{
 
 // ClusterStatus defines the current status of a MySQL cluster
 // propagating useful information back to the cluster admin
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type ClusterStatus struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
@@ -150,7 +149,7 @@ type ClusterStatus struct {
 
 // +genclient
 // +genclient:noStatus
-// +resource:path=mysqlclusters
+// +resourceName=mysqlclusters
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Cluster represents a cluster spec and associated metadata
@@ -259,7 +258,7 @@ type BackupStatus struct {
 
 // +genclient
 // +genclient:noStatus
-// +resource:path=mysqlbackups
+// +resourceName=mysqlbackups
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Backup is a MySQL Operator resource that represents a backup of a MySQL
@@ -322,7 +321,7 @@ type ScheduleStatus struct {
 
 // +genclient
 // +genclient:noStatus
-// +resource:path=mysqlbackupschedules
+// +resourceName=mysqlbackupschedules
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // BackupSchedule is a MySQL Operator resource that represents a backup
@@ -396,7 +395,7 @@ type RestoreStatus struct {
 
 // +genclient
 // +genclient:noStatus
-// +resource:path=mysqlrestores
+// +resourceName=mysqlrestores
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Restore is a MySQL Operator resource that represents the restoration of
