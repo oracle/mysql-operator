@@ -40,7 +40,7 @@ operator. The secretRef is the name of a secret that contains your Object
 Storage credentials. Note: The databases field is mandatory.
 
 ```yaml
-apiVersion: "mysql.oracle.com/v1"
+apiVersion: mysql.oracle.com/v1alpa1
 kind: MySQLBackup
 metadata:
   name: mysql-backup
@@ -63,30 +63,30 @@ spec:
 
 ### On-demand backups - executor configuration
 
-A backup spec requires an 'executor' to support the backup and restore of 
+A backup spec requires an 'executor' to support the backup and restore of
 database content.
 
-Currently, the 'mysqldump' utility is provided, although further executors may 
+Currently, the 'mysqldump' utility is provided, although further executors may
 be added in the future.
 
-You should additionally configure the list of databases to include in the 
+You should additionally configure the list of databases to include in the
 backup.
 
 ### On-demand backups - storage configuration
 
-A backup spec requires a 'storage' mechanism to save the backed up 
+A backup spec requires a 'storage' mechanism to save the backed up
 content of a database.
 
-Currently, 'S3' based object storage is provided, although further providers 
+Currently, 'S3' based object storage is provided, although further providers
 may be added in the future.
 
 #### On-demand backups - OCI S3 storage configuration
 
-When configuring an S3 endpoint you should ensure that it is correct for your 
-backing provider and that you have pre-created the desired bucket. 
+When configuring an S3 endpoint you should ensure that it is correct for your
+backing provider and that you have pre-created the desired bucket.
 
-For example, An Oracle OCI backend for the tenancy 'mytenancy', region 
-'us-phoenix-1', and bucket 'mybucket', should have the storage element 
+For example, An Oracle OCI backend for the tenancy 'mytenancy', region
+'us-phoenix-1', and bucket 'mybucket', should have the storage element
 configured as follows:
 
 ```yaml
@@ -98,7 +98,7 @@ configured as follows:
   ...
 ```
 
-The bucket should also be valid for the secret credentials specified previously. 
+The bucket should also be valid for the secret credentials specified previously.
 
 #### On-demand backups - Amazon S3 storage configuration
 
@@ -146,7 +146,7 @@ databases field is mandatory. For example, the following will create a backup
 of the employees database every 30 minutes:
 
 ```yaml
-apiVersion: "mysql.oracle.com/v1"
+apiVersion: mysql.oracle.com/v1alpha1
 kind: MySQLBackupSchedule
 metadata:
   name: mysql-backup-schedule

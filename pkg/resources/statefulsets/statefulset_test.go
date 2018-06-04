@@ -19,11 +19,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	options "github.com/oracle/mysql-operator/cmd/mysql-operator/app/options"
-	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 )
 
 func mockOperatorConfig() options.MySQLOperatorServer {
@@ -33,9 +33,9 @@ func mockOperatorConfig() options.MySQLOperatorServer {
 }
 
 func TestMySQLRootPasswordNoSecretRef(t *testing.T) {
-	cluster := &api.MySQLCluster{
+	cluster := &v1alpha1.MySQLCluster{
 		ObjectMeta: metav1.ObjectMeta{Name: "cluster"},
-		Spec:       api.MySQLClusterSpec{},
+		Spec:       v1alpha1.MySQLClusterSpec{},
 	}
 
 	actual := mysqlRootPassword(cluster).ValueFrom.SecretKeyRef.Name
@@ -46,9 +46,9 @@ func TestMySQLRootPasswordNoSecretRef(t *testing.T) {
 }
 
 func TestMySQLRootPasswordWithSecretRef(t *testing.T) {
-	cluster := &api.MySQLCluster{
-		Spec: api.MySQLClusterSpec{
-			SecretRef: &v1.LocalObjectReference{Name: "secret"},
+	cluster := &v1alpha1.MySQLCluster{
+		Spec: v1alpha1.MySQLClusterSpec{
+			SecretRef: &corev1.LocalObjectReference{Name: "secret"},
 		},
 	}
 
@@ -60,9 +60,9 @@ func TestMySQLRootPasswordWithSecretRef(t *testing.T) {
 }
 
 func TestClusterWithoutPVCHasBackupContainerAndVolumes(t *testing.T) {
-	cluster := &api.MySQLCluster{
-		Spec: api.MySQLClusterSpec{
-			SecretRef: &v1.LocalObjectReference{Name: "secret"},
+	cluster := &v1alpha1.MySQLCluster{
+		Spec: v1alpha1.MySQLClusterSpec{
+			SecretRef: &corev1.LocalObjectReference{Name: "secret"},
 		},
 	}
 
@@ -79,11 +79,11 @@ func TestClusterWithoutPVCHasBackupContainerAndVolumes(t *testing.T) {
 }
 
 func TestClusterWithPVCHasBackupContainerAndVolumes(t *testing.T) {
-	cluster := &api.MySQLCluster{
-		Spec: api.MySQLClusterSpec{
-			SecretRef:                 &v1.LocalObjectReference{Name: "secret"},
-			VolumeClaimTemplate:       &v1.PersistentVolumeClaim{},
-			BackupVolumeClaimTemplate: &v1.PersistentVolumeClaim{},
+	cluster := &v1alpha1.MySQLCluster{
+		Spec: v1alpha1.MySQLClusterSpec{
+			SecretRef:                 &corev1.LocalObjectReference{Name: "secret"},
+			VolumeClaimTemplate:       &corev1.PersistentVolumeClaim{},
+			BackupVolumeClaimTemplate: &corev1.PersistentVolumeClaim{},
 		},
 	}
 
@@ -101,8 +101,8 @@ func TestClusterWithPVCHasBackupContainerAndVolumes(t *testing.T) {
 
 func TestClusterHasNodeSelector(t *testing.T) {
 	nvmeSelector := map[string]string{"disk": "nvme"}
-	cluster := &api.MySQLCluster{
-		Spec: api.MySQLClusterSpec{
+	cluster := &v1alpha1.MySQLCluster{
+		Spec: v1alpha1.MySQLClusterSpec{
 			NodeSelector: nvmeSelector,
 		},
 	}
@@ -115,9 +115,9 @@ func TestClusterHasNodeSelector(t *testing.T) {
 }
 
 func TestClusterCustomConfig(t *testing.T) {
-	cluster := &api.MySQLCluster{
-		Spec: api.MySQLClusterSpec{
-			ConfigRef: &v1.LocalObjectReference{
+	cluster := &v1alpha1.MySQLCluster{
+		Spec: v1alpha1.MySQLClusterSpec{
+			ConfigRef: &corev1.LocalObjectReference{
 				Name: "mycnf",
 			},
 		},
@@ -142,9 +142,9 @@ func TestClusterCustomConfig(t *testing.T) {
 }
 
 func TestClusterCustomSSLSetup(t *testing.T) {
-	cluster := &api.MySQLCluster{
-		Spec: api.MySQLClusterSpec{
-			SSLSecretRef: &v1.LocalObjectReference{
+	cluster := &v1alpha1.MySQLCluster{
+		Spec: v1alpha1.MySQLClusterSpec{
+			SSLSecretRef: &corev1.LocalObjectReference{
 				Name: "my-ssl",
 			},
 		},

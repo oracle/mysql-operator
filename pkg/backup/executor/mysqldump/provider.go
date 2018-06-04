@@ -28,7 +28,7 @@ import (
 
 	utilexec "k8s.io/utils/exec"
 
-	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 )
 
 const (
@@ -43,7 +43,7 @@ type Executor struct {
 
 // NewExecutor creates a provider capable of creating and restoring backups with the mysqldump
 // tool.
-func NewExecutor(executor *v1.Executor, creds map[string]string) (*Executor, error) {
+func NewExecutor(executor *v1alpha1.Executor, creds map[string]string) (*Executor, error) {
 	cfg := NewConfig(executor, creds)
 	err := cfg.Validate()
 	if err != nil {

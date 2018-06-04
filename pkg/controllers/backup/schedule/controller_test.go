@@ -31,7 +31,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	constants "github.com/oracle/mysql-operator/pkg/constants"
 	"github.com/oracle/mysql-operator/pkg/controllers/util"
 	mysqlfake "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned/fake"
@@ -48,12 +48,12 @@ func TestProcessSchedule(t *testing.T) {
 	tests := []struct {
 		name                             string
 		scheduleKey                      string
-		schedule                         *api.MySQLBackupSchedule
+		schedule                         *v1alpha1.MySQLBackupSchedule
 		fakeClockTime                    string
 		expectedErr                      bool
-		expectedSchedulePhaseUpdate      *api.MySQLBackupSchedule
-		expectedScheduleLastBackupUpdate *api.MySQLBackupSchedule
-		expectedBackupCreate             *api.MySQLBackup
+		expectedSchedulePhaseUpdate      *v1alpha1.MySQLBackupSchedule
+		expectedScheduleLastBackupUpdate *v1alpha1.MySQLBackupSchedule
+		expectedBackupCreate             *v1alpha1.MySQLBackup
 		expectedEvents                   []string
 	}{
 		{
@@ -70,17 +70,17 @@ func TestProcessSchedule(t *testing.T) {
 		},
 		{
 			name:           "schedule with phase FailedValidation does not get processed",
-			schedule:       NewTestMySQLBackupSchedule("ns", "name").WithPhase(api.BackupSchedulePhaseFailedValidation).MySQLBackupSchedule,
+			schedule:       NewTestMySQLBackupSchedule("ns", "name").WithPhase(v1alpha1.BackupSchedulePhaseFailedValidation).MySQLBackupSchedule,
 			expectedErr:    false,
 			expectedEvents: []string{},
 		},
 		{
 			name:        "schedule with phase New gets validated and failed if invalid",
-			schedule:    NewTestMySQLBackupSchedule("ns", "name").WithPhase(api.BackupSchedulePhaseNew).MySQLBackupSchedule,
+			schedule:    NewTestMySQLBackupSchedule("ns", "name").WithPhase(v1alpha1.BackupSchedulePhaseNew).MySQLBackupSchedule,
 			expectedErr: false,
 			expectedSchedulePhaseUpdate: NewTestMySQLBackupSchedule("ns", "name").
 				WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
-				WithPhase(api.BackupSchedulePhaseFailedValidation).
+				WithPhase(v1alpha1.BackupSchedulePhaseFailedValidation).
 				MySQLBackupSchedule,
 			expectedEvents: []string{"Warning CronScheduleValidationError Schedule must be a non-empty valid Cron expression"},
 		},
@@ -90,52 +90,52 @@ func TestProcessSchedule(t *testing.T) {
 			expectedErr: false,
 			expectedSchedulePhaseUpdate: NewTestMySQLBackupSchedule("ns", "name").
 				WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
-				WithPhase(api.BackupSchedulePhaseFailedValidation).
+				WithPhase(v1alpha1.BackupSchedulePhaseFailedValidation).
 				MySQLBackupSchedule,
 			expectedEvents: []string{"Warning CronScheduleValidationError Schedule must be a non-empty valid Cron expression"},
 		},
 		{
 			name:        "schedule with phase Enabled gets re-validated and failed if invalid",
-			schedule:    NewTestMySQLBackupSchedule("ns", "name").WithPhase(api.BackupSchedulePhaseEnabled).MySQLBackupSchedule,
+			schedule:    NewTestMySQLBackupSchedule("ns", "name").WithPhase(v1alpha1.BackupSchedulePhaseEnabled).MySQLBackupSchedule,
 			expectedErr: false,
 			expectedSchedulePhaseUpdate: NewTestMySQLBackupSchedule("ns", "name").
 				WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
-				WithPhase(api.BackupSchedulePhaseFailedValidation).
+				WithPhase(v1alpha1.BackupSchedulePhaseFailedValidation).
 				MySQLBackupSchedule,
 			expectedEvents: []string{"Warning CronScheduleValidationError Schedule must be a non-empty valid Cron expression"},
 		},
 		{
 			name:          "schedule with phase New gets validated and triggers a backup",
-			schedule:      NewTestMySQLBackupSchedule("ns", "name").WithPhase(api.BackupSchedulePhaseNew).WithCronSchedule("@every 5m").MySQLBackupSchedule,
+			schedule:      NewTestMySQLBackupSchedule("ns", "name").WithPhase(v1alpha1.BackupSchedulePhaseNew).WithCronSchedule("@every 5m").MySQLBackupSchedule,
 			fakeClockTime: "2017-01-01 12:00:00",
 			expectedErr:   false,
 			expectedSchedulePhaseUpdate: NewTestMySQLBackupSchedule("ns", "name").WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
-				WithPhase(api.BackupSchedulePhaseEnabled).WithCronSchedule("@every 5m").MySQLBackupSchedule,
+				WithPhase(v1alpha1.BackupSchedulePhaseEnabled).WithCronSchedule("@every 5m").MySQLBackupSchedule,
 			expectedBackupCreate: NewTestMySQLBackup().WithNamespace("ns").WithName("name-20170101120000").WithLabel("backup-schedule", "name").MySQLBackup,
 			expectedScheduleLastBackupUpdate: NewTestMySQLBackupSchedule("ns", "name").WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
-				WithPhase(api.BackupSchedulePhaseEnabled).WithCronSchedule("@every 5m").WithLastBackupTime("2017-01-01 12:00:00").MySQLBackupSchedule,
+				WithPhase(v1alpha1.BackupSchedulePhaseEnabled).WithCronSchedule("@every 5m").WithLastBackupTime("2017-01-01 12:00:00").MySQLBackupSchedule,
 			expectedEvents: []string{},
 		},
 		{
 			name: "schedule with phase Enabled gets re-validated and triggers a backup if valid",
 			schedule: NewTestMySQLBackupSchedule("ns", "name").WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
-				WithPhase(api.BackupSchedulePhaseEnabled).WithCronSchedule("@every 5m").MySQLBackupSchedule,
+				WithPhase(v1alpha1.BackupSchedulePhaseEnabled).WithCronSchedule("@every 5m").MySQLBackupSchedule,
 			fakeClockTime:        "2017-01-01 12:00:00",
 			expectedErr:          false,
 			expectedBackupCreate: NewTestMySQLBackup().WithNamespace("ns").WithName("name-20170101120000").WithLabel("backup-schedule", "name").MySQLBackup,
 			expectedScheduleLastBackupUpdate: NewTestMySQLBackupSchedule("ns", "name").WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
-				WithPhase(api.BackupSchedulePhaseEnabled).WithCronSchedule("@every 5m").WithLastBackupTime("2017-01-01 12:00:00").MySQLBackupSchedule,
+				WithPhase(v1alpha1.BackupSchedulePhaseEnabled).WithCronSchedule("@every 5m").WithLastBackupTime("2017-01-01 12:00:00").MySQLBackupSchedule,
 			expectedEvents: []string{},
 		},
 		{
 			name: "schedule that's already run gets LastBackup updated",
 			schedule: NewTestMySQLBackupSchedule("ns", "name").WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
-				WithPhase(api.BackupSchedulePhaseEnabled).WithCronSchedule("@every 5m").WithLastBackupTime("2000-01-01 00:00:00").MySQLBackupSchedule,
+				WithPhase(v1alpha1.BackupSchedulePhaseEnabled).WithCronSchedule("@every 5m").WithLastBackupTime("2000-01-01 00:00:00").MySQLBackupSchedule,
 			fakeClockTime:        "2017-01-01 12:00:00",
 			expectedErr:          false,
 			expectedBackupCreate: NewTestMySQLBackup().WithNamespace("ns").WithName("name-20170101120000").WithLabel("backup-schedule", "name").MySQLBackup,
 			expectedScheduleLastBackupUpdate: NewTestMySQLBackupSchedule("ns", "name").WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
-				WithPhase(api.BackupSchedulePhaseEnabled).WithCronSchedule("@every 5m").WithLastBackupTime("2017-01-01 12:00:00").MySQLBackupSchedule,
+				WithPhase(v1alpha1.BackupSchedulePhaseEnabled).WithCronSchedule("@every 5m").WithLastBackupTime("2017-01-01 12:00:00").MySQLBackupSchedule,
 			expectedEvents: []string{},
 		},
 	}
@@ -151,7 +151,7 @@ func TestProcessSchedule(t *testing.T) {
 			c := NewController(
 				mysqlopclient,
 				kubeclient,
-				mysqlopInformerFactory.Mysql().V1().MySQLBackupSchedules(),
+				mysqlopInformerFactory.Mysql().V1alpha1().MySQLBackupSchedules(),
 				time.Duration(0),
 				metav1.NamespaceDefault,
 			)
@@ -170,7 +170,7 @@ func TestProcessSchedule(t *testing.T) {
 			c.clock = clock.NewFakeClock(testTime)
 
 			if test.schedule != nil {
-				mysqlopInformerFactory.Mysql().V1().MySQLBackupSchedules().Informer().GetStore().Add(test.schedule)
+				mysqlopInformerFactory.Mysql().V1alpha1().MySQLBackupSchedules().Informer().GetStore().Add(test.schedule)
 
 				// this is necessary so the Update() call returns the appropriate object
 				mysqlopclient.PrependReactor("update", "mysqlbackupschedules", func(action core.Action) (bool, runtime.Object, error) {
@@ -194,7 +194,7 @@ func TestProcessSchedule(t *testing.T) {
 
 			if upd := test.expectedSchedulePhaseUpdate; upd != nil {
 				action := core.NewUpdateAction(
-					api.SchemeGroupVersion.WithResource("mysqlbackupschedules"),
+					v1alpha1.SchemeGroupVersion.WithResource("mysqlbackupschedules"),
 					upd.Namespace,
 					upd)
 				expectedActions = append(expectedActions, action)
@@ -202,7 +202,7 @@ func TestProcessSchedule(t *testing.T) {
 
 			if created := test.expectedBackupCreate; created != nil {
 				action := core.NewCreateAction(
-					api.SchemeGroupVersion.WithResource("mysqlbackups"),
+					v1alpha1.SchemeGroupVersion.WithResource("mysqlbackups"),
 					created.Namespace,
 					created)
 				expectedActions = append(expectedActions, action)
@@ -210,7 +210,7 @@ func TestProcessSchedule(t *testing.T) {
 
 			if upd := test.expectedScheduleLastBackupUpdate; upd != nil {
 				action := core.NewUpdateAction(
-					api.SchemeGroupVersion.WithResource("mysqlbackupschedules"),
+					v1alpha1.SchemeGroupVersion.WithResource("mysqlbackupschedules"),
 					upd.Namespace,
 					upd)
 				expectedActions = append(expectedActions, action)
@@ -232,41 +232,41 @@ func TestProcessSchedule(t *testing.T) {
 func TestGetNextRunTime(t *testing.T) {
 	tests := []struct {
 		name                      string
-		schedule                  *api.MySQLBackupSchedule
+		schedule                  *v1alpha1.MySQLBackupSchedule
 		lastRanOffset             string
 		expectedDue               bool
 		expectedNextRunTimeOffset string
 	}{
 		{
 			name:                      "first run",
-			schedule:                  &api.MySQLBackupSchedule{Spec: api.BackupScheduleSpec{Schedule: "@every 5m"}},
+			schedule:                  &v1alpha1.MySQLBackupSchedule{Spec: v1alpha1.BackupScheduleSpec{Schedule: "@every 5m"}},
 			expectedDue:               true,
 			expectedNextRunTimeOffset: "5m",
 		},
 		{
 			name:                      "just ran",
-			schedule:                  &api.MySQLBackupSchedule{Spec: api.BackupScheduleSpec{Schedule: "@every 5m"}},
+			schedule:                  &v1alpha1.MySQLBackupSchedule{Spec: v1alpha1.BackupScheduleSpec{Schedule: "@every 5m"}},
 			lastRanOffset:             "0s",
 			expectedDue:               false,
 			expectedNextRunTimeOffset: "5m",
 		},
 		{
 			name:                      "almost but not quite time to run",
-			schedule:                  &api.MySQLBackupSchedule{Spec: api.BackupScheduleSpec{Schedule: "@every 5m"}},
+			schedule:                  &v1alpha1.MySQLBackupSchedule{Spec: v1alpha1.BackupScheduleSpec{Schedule: "@every 5m"}},
 			lastRanOffset:             "4m59s",
 			expectedDue:               false,
 			expectedNextRunTimeOffset: "5m",
 		},
 		{
 			name:                      "time to run again",
-			schedule:                  &api.MySQLBackupSchedule{Spec: api.BackupScheduleSpec{Schedule: "@every 5m"}},
+			schedule:                  &v1alpha1.MySQLBackupSchedule{Spec: v1alpha1.BackupScheduleSpec{Schedule: "@every 5m"}},
 			lastRanOffset:             "5m",
 			expectedDue:               true,
 			expectedNextRunTimeOffset: "5m",
 		},
 		{
 			name:                      "several runs missed",
-			schedule:                  &api.MySQLBackupSchedule{Spec: api.BackupScheduleSpec{Schedule: "@every 5m"}},
+			schedule:                  &v1alpha1.MySQLBackupSchedule{Spec: v1alpha1.BackupScheduleSpec{Schedule: "@every 5m"}},
 			lastRanOffset:             "5h",
 			expectedDue:               true,
 			expectedNextRunTimeOffset: "5m",
@@ -308,11 +308,11 @@ func TestParseCronSchedule(t *testing.T) {
 	// Start with a Schedule with:
 	// - schedule: once a day at 9am
 	// - last backup: 2017-08-10 12:27:00 (just happened)
-	s := &api.MySQLBackupSchedule{
-		Spec: api.BackupScheduleSpec{
+	s := &v1alpha1.MySQLBackupSchedule{
+		Spec: v1alpha1.BackupScheduleSpec{
 			Schedule: "0 9 * * *",
 		},
-		Status: api.ScheduleStatus{
+		Status: v1alpha1.ScheduleStatus{
 			LastBackup: metav1.NewTime(now),
 		},
 	}
@@ -350,64 +350,64 @@ func TestParseCronSchedule(t *testing.T) {
 func TestGetBackup(t *testing.T) {
 	tests := []struct {
 		name           string
-		schedule       *api.MySQLBackupSchedule
+		schedule       *v1alpha1.MySQLBackupSchedule
 		testClockTime  string
-		expectedBackup *api.MySQLBackup
+		expectedBackup *v1alpha1.MySQLBackup
 	}{
 		{
 			name: "ensure name is formatted correctly (AM time)",
-			schedule: &api.MySQLBackupSchedule{
+			schedule: &v1alpha1.MySQLBackupSchedule{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "foo",
 					Name:      "bar",
 				},
-				Spec: api.BackupScheduleSpec{
-					BackupTemplate: api.BackupSpec{},
+				Spec: v1alpha1.BackupScheduleSpec{
+					BackupTemplate: v1alpha1.BackupSpec{},
 				},
 			},
 			testClockTime: "2017-07-25 09:15:00",
-			expectedBackup: &api.MySQLBackup{
+			expectedBackup: &v1alpha1.MySQLBackup{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "foo",
 					Name:      "bar-20170725091500",
 				},
-				Spec: api.BackupSpec{},
+				Spec: v1alpha1.BackupSpec{},
 			},
 		},
 		{
 			name: "ensure name is formatted correctly (PM time)",
-			schedule: &api.MySQLBackupSchedule{
+			schedule: &v1alpha1.MySQLBackupSchedule{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "foo",
 					Name:      "bar",
 				},
-				Spec: api.BackupScheduleSpec{
-					BackupTemplate: api.BackupSpec{},
+				Spec: v1alpha1.BackupScheduleSpec{
+					BackupTemplate: v1alpha1.BackupSpec{},
 				},
 			},
 			testClockTime: "2017-07-25 14:15:00",
-			expectedBackup: &api.MySQLBackup{
+			expectedBackup: &v1alpha1.MySQLBackup{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "foo",
 					Name:      "bar-20170725141500",
 				},
-				Spec: api.BackupSpec{},
+				Spec: v1alpha1.BackupSpec{},
 			},
 		},
 		{
 			name: "ensure schedule backup template is copied",
-			schedule: &api.MySQLBackupSchedule{
+			schedule: &v1alpha1.MySQLBackupSchedule{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "foo",
 					Name:      "bar",
 				},
-				Spec: api.BackupScheduleSpec{
-					BackupTemplate: api.BackupSpec{
-						Executor: &api.Executor{
+				Spec: v1alpha1.BackupScheduleSpec{
+					BackupTemplate: v1alpha1.BackupSpec{
+						Executor: &v1alpha1.Executor{
 							Provider:  "mysqldump",
 							Databases: []string{"db1", "db2"},
 						},
-						Storage: &api.Storage{
+						Storage: &v1alpha1.Storage{
 							Provider: "s3",
 							SecretRef: &corev1.LocalObjectReference{
 								Name: "backup-storage-creds",
@@ -426,17 +426,17 @@ func TestGetBackup(t *testing.T) {
 				},
 			},
 			testClockTime: "2017-07-25 09:15:00",
-			expectedBackup: &api.MySQLBackup{
+			expectedBackup: &v1alpha1.MySQLBackup{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "foo",
 					Name:      "bar-20170725091500",
 				},
-				Spec: api.BackupSpec{
-					Executor: &api.Executor{
+				Spec: v1alpha1.BackupSpec{
+					Executor: &v1alpha1.Executor{
 						Provider:  "mysqldump",
 						Databases: []string{"db1", "db2"},
 					},
-					Storage: &api.Storage{
+					Storage: &v1alpha1.Storage{
 						Provider: "s3",
 						SecretRef: &corev1.LocalObjectReference{
 							Name: "backup-storage-creds",

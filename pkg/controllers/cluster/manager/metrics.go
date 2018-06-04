@@ -28,6 +28,7 @@ var (
 	instanceStatusCount      = metrics.NewAgentStatusCounter("instance_status", "Total number of times the operator detects an instance with a specific innodb status")
 )
 
+// RegisterMetrics registers the cluster managemnent metrics.
 func RegisterMetrics() {
 	metrics.RegisterAgentMetric(clusterCreateCount)
 	metrics.RegisterAgentMetric(clusterCreateErrorCount)

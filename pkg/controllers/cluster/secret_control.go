@@ -19,7 +19,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/resources/secrets"
 )
 
@@ -27,7 +27,7 @@ import (
 // uses to get and create Secrets. It is implemented as an interface to enable
 // testing.
 type SecretControlInterface interface {
-	GetForCluster(cluster *api.MySQLCluster) (*v1.Secret, error)
+	GetForCluster(cluster *v1alpha1.MySQLCluster) (*v1.Secret, error)
 	CreateSecret(s *v1.Secret) error
 }
 
@@ -41,7 +41,7 @@ func NewRealSecretControl(client kubernetes.Interface) SecretControlInterface {
 	return &realSecretControl{client: client}
 }
 
-func (rsc *realSecretControl) GetForCluster(cluster *api.MySQLCluster) (*v1.Secret, error) {
+func (rsc *realSecretControl) GetForCluster(cluster *v1alpha1.MySQLCluster) (*v1.Secret, error) {
 	return rsc.client.CoreV1().
 		Secrets(cluster.Namespace).
 		Get(secrets.GetRootPasswordSecretName(cluster), metav1.GetOptions{})

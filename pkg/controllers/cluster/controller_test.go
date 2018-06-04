@@ -31,12 +31,12 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 
 	options "github.com/oracle/mysql-operator/cmd/mysql-operator/app/options"
-	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/constants"
 	"github.com/oracle/mysql-operator/pkg/controllers/util"
 	mysqlfake "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned/fake"
-	mysqlinformer_factory "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions"
-	mysqlinformer "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions/mysql/v1"
+	informerfactory "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions"
+	informersv1alpha1 "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/resources/secrets"
 	statefulsets "github.com/oracle/mysql-operator/pkg/resources/statefulsets"
 	buildversion "github.com/oracle/mysql-operator/pkg/version"
@@ -50,7 +50,7 @@ func mockOperatorConfig() options.MySQLOperatorServer {
 
 func TestMessageResourceExistsFormatString(t *testing.T) {
 	ss := statefulsets.NewForCluster(
-		&api.MySQLCluster{
+		&v1alpha1.MySQLCluster{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-cluster",
 				Namespace: "default",
@@ -124,7 +124,7 @@ func TestSyncEnsureClusterLabels(t *testing.T) {
 }
 
 func assertOperatorClusterInvariants(t *testing.T, controller *MySQLController, namespace string, name string, version string) {
-	cluster, err := controller.opClient.MysqlV1().MySQLClusters(namespace).Get(name, metav1.GetOptions{})
+	cluster, err := controller.opClient.MysqlV1alpha1().MySQLClusters(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Get client MySQLCluster err: %+v", err)
 	}
@@ -156,7 +156,7 @@ func TestSyncEnsureSecret(t *testing.T) {
 	assertOperatorSecretInvariants(t, fakeController, cluster)
 }
 
-func assertOperatorSecretInvariants(t *testing.T, controller *MySQLController, cluster *api.MySQLCluster) {
+func assertOperatorSecretInvariants(t *testing.T, controller *MySQLController, cluster *v1alpha1.MySQLCluster) {
 	secretName := secrets.GetRootPasswordSecretName(cluster)
 	secret, err := controller.kubeClient.CoreV1().Secrets(cluster.Namespace).Get(secretName, metav1.GetOptions{})
 	if err != nil {
@@ -194,7 +194,7 @@ func TestSyncEnsureService(t *testing.T) {
 	assertOperatorServiceInvariants(t, fakeController, cluster)
 }
 
-func assertOperatorServiceInvariants(t *testing.T, controller *MySQLController, cluster *api.MySQLCluster) {
+func assertOperatorServiceInvariants(t *testing.T, controller *MySQLController, cluster *v1alpha1.MySQLCluster) {
 	kubeClient := controller.kubeClient
 	service, err := kubeClient.CoreV1().Services(cluster.Namespace).Get(cluster.Name, metav1.GetOptions{})
 	if err != nil {
@@ -236,7 +236,7 @@ func TestSyncEnsureStatefulSet(t *testing.T) {
 	assertOperatorStatefulSetInvariants(t, fakeController, cluster)
 }
 
-func assertOperatorStatefulSetInvariants(t *testing.T, controller *MySQLController, cluster *api.MySQLCluster) {
+func assertOperatorStatefulSetInvariants(t *testing.T, controller *MySQLController, cluster *v1alpha1.MySQLCluster) {
 	kubeClient := controller.kubeClient
 	statefulset, err := kubeClient.AppsV1beta1().StatefulSets(cluster.Namespace).Get(cluster.Name, metav1.GetOptions{})
 	if err != nil {
@@ -334,7 +334,7 @@ func assertOperatorVersionInvariants(t *testing.T, controller *MySQLController, 
 	expectedImageVersion := mockOperatorConfig().Images.MySQLAgentImage + ":" + version
 
 	// Check MySQLCluster has the correct operator version
-	updatedCluster, err := controller.opClient.MysqlV1().MySQLClusters(namespace).Get(name, metav1.GetOptions{})
+	updatedCluster, err := controller.opClient.MysqlV1alpha1().MySQLClusters(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Get client MySQLCluster err: %+v", err)
 	}
@@ -405,13 +405,13 @@ func TestMySQLControllerSyncClusterFromScratch(t *testing.T) {
 	assertOperatorServiceInvariants(t, fakeController, cluster)
 	assertOperatorStatefulSetInvariants(t, fakeController, cluster)
 	assertOperatorVersionInvariants(t, fakeController, namespace, name, version)
-	cluster, err := fakeController.opClient.MysqlV1().MySQLClusters(namespace).Get(name, metav1.GetOptions{})
+	cluster, err := fakeController.opClient.MysqlV1alpha1().MySQLClusters(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Get client MySQLCluster err: %+v", err)
 	}
 }
 
-func hasOwnerReference(ownerReferences []metav1.OwnerReference, cluster *api.MySQLCluster) bool {
+func hasOwnerReference(ownerReferences []metav1.OwnerReference, cluster *v1alpha1.MySQLCluster) bool {
 	for _, or := range ownerReferences {
 		if or.APIVersion == cluster.APIVersion && or.Kind == cluster.Kind && or.Name == cluster.Name {
 			return true
@@ -429,20 +429,18 @@ func hasContainer(containers []v1.Container, name string) bool {
 	return false
 }
 
-// mock objects **********
-
-func mockMySQLCluster(operatorVersion string, name string, namespace string, replicas int32) *api.MySQLCluster {
-	cluster := &api.MySQLCluster{
+func mockMySQLCluster(operatorVersion string, name string, namespace string, replicas int32) *v1alpha1.MySQLCluster {
+	cluster := &v1alpha1.MySQLCluster{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "MySQLCluster",
-			APIVersion: "mysql.oracle.com/v1",
+			APIVersion: "mysql.oracle.com/v1alpha1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 			Labels:    map[string]string{constants.MySQLClusterLabel: name, constants.MySQLOperatorVersionLabel: operatorVersion},
 		},
-		Spec: api.MySQLClusterSpec{
+		Spec: v1alpha1.MySQLClusterSpec{
 			Replicas: replicas,
 		},
 	}
@@ -450,7 +448,7 @@ func mockMySQLCluster(operatorVersion string, name string, namespace string, rep
 	return cluster
 }
 
-func mockClusterStatefulSet(cluster *api.MySQLCluster) *apps.StatefulSet {
+func mockClusterStatefulSet(cluster *v1alpha1.MySQLCluster) *apps.StatefulSet {
 	return statefulsets.NewForCluster(cluster, mockOperatorConfig().Images, cluster.Name)
 }
 
@@ -495,7 +493,7 @@ func alwaysReady() bool { return true }
 // fakeMySQLControllerInformers contain references to the set of underlying informers associated
 // with a newFakeMySQLController.
 type fakeMySQLControllerInformers struct {
-	clusterInformer     mysqlinformer.MySQLClusterInformer
+	clusterInformer     informersv1alpha1.MySQLClusterInformer
 	statefulSetInformer appsinformers.StatefulSetInformer
 	podInformer         coreinformers.PodInformer
 	serviceInformer     coreinformers.ServiceInformer
@@ -503,15 +501,15 @@ type fakeMySQLControllerInformers struct {
 
 // newFakeMySQLController creates a new fake MySQLController with a fake mysqlop and kube clients and informers
 // for unit testing.
-func newFakeMySQLController(cluster *api.MySQLCluster, kuberesources ...runtime.Object) (*MySQLController, *fakeMySQLControllerInformers) {
+func newFakeMySQLController(cluster *v1alpha1.MySQLCluster, kuberesources ...runtime.Object) (*MySQLController, *fakeMySQLControllerInformers) {
 	mysqlopClient := mysqlfake.NewSimpleClientset(cluster)
 	kubeClient := fake.NewSimpleClientset(kuberesources...)
 
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, util.NoResyncPeriodFunc())
-	mysqlopInformerFactory := mysqlinformer_factory.NewSharedInformerFactory(mysqlopClient, util.NoResyncPeriodFunc())
+	mysqlopInformerFactory := informerfactory.NewSharedInformerFactory(mysqlopClient, util.NoResyncPeriodFunc())
 
 	fakeInformers := &fakeMySQLControllerInformers{
-		clusterInformer:     mysqlopInformerFactory.Mysql().V1().MySQLClusters(),
+		clusterInformer:     mysqlopInformerFactory.Mysql().V1alpha1().MySQLClusters(),
 		statefulSetInformer: kubeInformerFactory.Apps().V1beta1().StatefulSets(),
 		podInformer:         kubeInformerFactory.Core().V1().Pods(),
 		serviceInformer:     kubeInformerFactory.Core().V1().Services(),

@@ -24,6 +24,7 @@ var (
 	clustersDeletedCount = metrics.NewOperatorEventCounter("clusters_deleted", "Total number of clusters deleted")
 )
 
+// RegisterMetrics registers the cluster CRUD metrics.
 func RegisterMetrics() {
 	metrics.RegisterOperatorMetric(clustersTotalCount)
 	metrics.RegisterOperatorMetric(clustersCreatedCount)

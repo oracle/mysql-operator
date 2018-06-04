@@ -22,29 +22,29 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/util/retry"
 
-	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
-	mysqlop "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
-	listers "github.com/oracle/mysql-operator/pkg/generated/listers/mysql/v1"
+	v1alpha1 "github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
+	clientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
+	listersv1alpha1 "github.com/oracle/mysql-operator/pkg/generated/listers/mysql/v1alpha1"
 )
 
 type clusterUpdaterInterface interface {
-	UpdateClusterStatus(cluster *api.MySQLCluster, status *api.MySQLClusterStatus) error
-	UpdateClusterLabels(cluster *api.MySQLCluster, lbls labels.Set) error
+	UpdateClusterStatus(cluster *v1alpha1.MySQLCluster, status *v1alpha1.MySQLClusterStatus) error
+	UpdateClusterLabels(cluster *v1alpha1.MySQLCluster, lbls labels.Set) error
 }
 
 type clusterUpdater struct {
-	client mysqlop.Interface
-	lister listers.MySQLClusterLister
+	client clientset.Interface
+	lister listersv1alpha1.MySQLClusterLister
 }
 
-func newClusterUpdater(client mysqlop.Interface, lister listers.MySQLClusterLister) clusterUpdaterInterface {
+func newClusterUpdater(client clientset.Interface, lister listersv1alpha1.MySQLClusterLister) clusterUpdaterInterface {
 	return &clusterUpdater{client: client, lister: lister}
 }
 
-func (csu *clusterUpdater) UpdateClusterStatus(cluster *api.MySQLCluster, status *api.MySQLClusterStatus) error {
+func (csu *clusterUpdater) UpdateClusterStatus(cluster *v1alpha1.MySQLCluster, status *v1alpha1.MySQLClusterStatus) error {
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		cluster.Status = *status
-		_, updateErr := csu.client.MysqlV1().MySQLClusters(cluster.Namespace).Update(cluster)
+		_, updateErr := csu.client.MysqlV1alpha1().MySQLClusters(cluster.Namespace).Update(cluster)
 		if updateErr == nil {
 			return nil
 		}
@@ -61,10 +61,10 @@ func (csu *clusterUpdater) UpdateClusterStatus(cluster *api.MySQLCluster, status
 	})
 }
 
-func (csu *clusterUpdater) UpdateClusterLabels(cluster *api.MySQLCluster, lbls labels.Set) error {
+func (csu *clusterUpdater) UpdateClusterLabels(cluster *v1alpha1.MySQLCluster, lbls labels.Set) error {
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		cluster.Labels = labels.Merge(labels.Set(cluster.Labels), lbls)
-		_, updateErr := csu.client.MysqlV1().MySQLClusters(cluster.Namespace).Update(cluster)
+		_, updateErr := csu.client.MysqlV1alpha1().MySQLClusters(cluster.Namespace).Update(cluster)
 		if updateErr == nil {
 			return nil
 		}

@@ -23,7 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 
-	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	mysqlclientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 	"github.com/oracle/mysql-operator/test/e2e/framework"
 )
@@ -86,7 +86,7 @@ var _ = Describe("Pod crash", func() {
 
 		jig := framework.NewMySQLClusterTestJig(mcs, cs, clusterName)
 
-		cluster := jig.CreateAndAwaitMySQLClusterOrFail(ns, 3, func(cluster *v1.MySQLCluster) {
+		cluster := jig.CreateAndAwaitMySQLClusterOrFail(ns, 3, func(cluster *v1alpha1.MySQLCluster) {
 			cluster.Spec.MultiMaster = true
 		}, framework.DefaultTimeout)
 

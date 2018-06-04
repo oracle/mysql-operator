@@ -15,29 +15,29 @@
 package cluster
 
 import (
-	"k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
-	corelisters "k8s.io/client-go/listers/core/v1"
+	corelistersv1 "k8s.io/client-go/listers/core/v1"
 )
 
 // ServiceControlInterface defines the interface that the MySQLClusterController
 // uses to create Services. It is implemented as an interface to enable testing.
 type ServiceControlInterface interface {
-	CreateService(s *v1.Service) error
+	CreateService(s *corev1.Service) error
 }
 
 type realServiceControl struct {
 	client        kubernetes.Interface
-	serviceLister corelisters.ServiceLister
+	serviceLister corelistersv1.ServiceLister
 }
 
 // NewRealServiceControl creates a concrete implementation of the
 // ServiceControlInterface.
-func NewRealServiceControl(client kubernetes.Interface, serviceLister corelisters.ServiceLister) ServiceControlInterface {
+func NewRealServiceControl(client kubernetes.Interface, serviceLister corelistersv1.ServiceLister) ServiceControlInterface {
 	return &realServiceControl{client: client, serviceLister: serviceLister}
 }
 
-func (rsc *realServiceControl) CreateService(s *v1.Service) error {
+func (rsc *realServiceControl) CreateService(s *corev1.Service) error {
 	_, err := rsc.client.CoreV1().Services(s.Namespace).Create(s)
 	return err
 }

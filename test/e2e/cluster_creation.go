@@ -20,7 +20,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/test/e2e/framework"
 )
 
@@ -49,7 +49,7 @@ var _ = Describe("MySQLCluster creation", func() {
 
 		jig := framework.NewMySQLClusterTestJig(f.MySQLClientSet, f.ClientSet, clusterName)
 
-		cluster := jig.CreateAndAwaitMySQLClusterOrFail(f.Namespace.Name, replicas, func(cluster *v1.MySQLCluster) {
+		cluster := jig.CreateAndAwaitMySQLClusterOrFail(f.Namespace.Name, replicas, func(cluster *v1alpha1.MySQLCluster) {
 			cluster.Spec.MultiMaster = true
 		}, framework.DefaultTimeout)
 

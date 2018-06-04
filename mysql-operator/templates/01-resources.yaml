@@ -9,7 +9,7 @@ metadata:
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 spec:
   group: mysql.oracle.com
-  version: v1
+  version: v1alpha1
   scope: Namespaced
   names:
     kind: MySQLCluster
@@ -25,7 +25,7 @@ metadata:
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 spec:
   group: mysql.oracle.com
-  version: v1
+  version: v1alpha1
   scope: Namespaced
   names:
     kind: MySQLBackup
@@ -41,7 +41,7 @@ metadata:
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 spec:
   group: mysql.oracle.com
-  version: v1
+  version: v1alpha1
   scope: Namespaced
   names:
     kind: MySQLRestore
@@ -57,7 +57,7 @@ metadata:
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 spec:
   group: mysql.oracle.com
-  version: v1
+  version: v1alpha1
   scope: Namespaced
   names:
     kind: MySQLBackupSchedule

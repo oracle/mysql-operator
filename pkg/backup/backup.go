@@ -17,7 +17,7 @@ package backup
 import (
 	"os"
 
-	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/backup/executor"
 	"github.com/oracle/mysql-operator/pkg/backup/storage"
 	"github.com/oracle/mysql-operator/pkg/resources/statefulsets"
@@ -42,7 +42,7 @@ type runner struct {
 
 // NewConfiguredRunner creates a runner configured with the Backup/Restore target executor and
 // storage configurations.
-func NewConfiguredRunner(execConfig *v1.Executor, execCreds map[string]string, storeConfig *v1.Storage, storeCreds map[string]string) (Runner, error) {
+func NewConfiguredRunner(execConfig *v1alpha1.Executor, execCreds map[string]string, storeConfig *v1alpha1.Storage, storeCreds map[string]string) (Runner, error) {
 	exec, err := executor.New(execConfig, execCreds)
 	if err != nil {
 		return nil, err

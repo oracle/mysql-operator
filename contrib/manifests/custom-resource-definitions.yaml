@@ -5,7 +5,7 @@ metadata:
   name: mysqlclusters.mysql.oracle.com
 spec:
   group: mysql.oracle.com
-  version: v1
+  version: v1alpha1
   scope: Namespaced
   names:
     kind: MySQLCluster
@@ -18,7 +18,7 @@ metadata:
   name: mysqlbackups.mysql.oracle.com
 spec:
   group: mysql.oracle.com
-  version: v1
+  version: v1alpha1
   scope: Namespaced
   names:
     kind: MySQLBackup
@@ -31,7 +31,7 @@ metadata:
   name: mysqlrestores.mysql.oracle.com
 spec:
   group: mysql.oracle.com
-  version: v1
+  version: v1alpha1
   scope: Namespaced
   names:
     kind: MySQLRestore
@@ -44,7 +44,7 @@ metadata:
   name: mysqlbackupschedules.mysql.oracle.com
 spec:
   group: mysql.oracle.com
-  version: v1
+  version: v1alpha1
   scope: Namespaced
   names:
     kind: MySQLBackupSchedule

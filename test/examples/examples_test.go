@@ -9,9 +9,9 @@ import (
 
 	yaml "github.com/ghodss/yaml"
 
-	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
-
 	corev1 "k8s.io/api/core/v1"
+
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 )
 
 func TestRemoveInstanceFromCluster(t *testing.T) {
@@ -40,7 +40,7 @@ func validateMySQLCluster(t *testing.T, file string) {
 		t.Errorf("Failed to read file: %s, err: %v", file, err)
 		return
 	}
-	var r api.MySQLCluster
+	var r v1alpha1.MySQLCluster
 	err = yaml.Unmarshal(bytes, &r)
 	if err != nil {
 		t.Errorf("Failed to parse file: %s, err: %v", file, err)
@@ -60,7 +60,7 @@ func validateMySQLBackup(t *testing.T, file string) {
 		t.Errorf("Failed to read file: %s, err: %v", file, err)
 		return
 	}
-	var r api.MySQLBackup
+	var r v1alpha1.MySQLBackup
 	err = yaml.Unmarshal(bytes, &r)
 	if err != nil {
 		t.Errorf("Failed to parse file: %s, err: %v", file, err)
@@ -82,7 +82,7 @@ func validateMySQLRestore(t *testing.T, file string) {
 		t.Errorf("Failed to read file: %s, err: %v", file, err)
 		return
 	}
-	var r api.MySQLRestore
+	var r v1alpha1.MySQLRestore
 	err = yaml.Unmarshal(bytes, &r)
 	if err != nil {
 		t.Errorf("Failed to parse file: %s, err: %v", file, err)
@@ -102,7 +102,7 @@ func validateMySQLBackupSchedule(t *testing.T, file string) {
 		t.Errorf("Failed to read file: %s, err: %v", file, err)
 		return
 	}
-	var r api.MySQLBackupSchedule
+	var r v1alpha1.MySQLBackupSchedule
 	err = yaml.Unmarshal(bytes, &r)
 	if err != nil {
 		t.Errorf("Failed to parse file: %s, err: %v", file, err)

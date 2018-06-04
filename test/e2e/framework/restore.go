@@ -27,7 +27,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 
-	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	mysqlclientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 )
 
@@ -57,17 +57,17 @@ func NewMySQLRestoreTestJig(mysqlClient mysqlclientset.Interface, kubeClient cli
 	}
 }
 
-// newMySQLRestoreTemplate returns the default v1.MySQLRestore template for this jig, but
+// newMySQLRestoreTemplate returns the default v1alpha1.MySQLRestore template for this jig, but
 // does not actually create the MySQLRestore. The default MySQLRestore has the
 // same name as the jig.
-func (j *MySQLRestoreTestJig) newMySQLRestoreTemplate(namespace, clusterName, backupName string) *v1.MySQLRestore {
-	return &v1.MySQLRestore{
+func (j *MySQLRestoreTestJig) newMySQLRestoreTemplate(namespace, clusterName, backupName string) *v1alpha1.MySQLRestore {
+	return &v1alpha1.MySQLRestore{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: j.Name,
 			Namespace:    namespace,
 			Labels:       j.Labels,
 		},
-		Spec: v1.RestoreSpec{
+		Spec: v1alpha1.RestoreSpec{
 			ClusterRef: &corev1.LocalObjectReference{
 				Name: clusterName,
 			},
@@ -81,7 +81,7 @@ func (j *MySQLRestoreTestJig) newMySQLRestoreTemplate(namespace, clusterName, ba
 // CreateMySQLRestoreOrFail creates a new MySQLRestore based on the jig's
 // defaults. Callers can provide a function to tweak the MySQLRestore object
 // before it is created.
-func (j *MySQLRestoreTestJig) CreateMySQLRestoreOrFail(namespace, clusterName, backupName string, tweak func(restore *v1.MySQLRestore)) *v1.MySQLRestore {
+func (j *MySQLRestoreTestJig) CreateMySQLRestoreOrFail(namespace, clusterName, backupName string, tweak func(restore *v1alpha1.MySQLRestore)) *v1alpha1.MySQLRestore {
 	restore := j.newMySQLRestoreTemplate(namespace, clusterName, backupName)
 	if tweak != nil {
 		tweak(restore)
@@ -90,7 +90,7 @@ func (j *MySQLRestoreTestJig) CreateMySQLRestoreOrFail(namespace, clusterName, b
 	name := types.NamespacedName{Namespace: namespace, Name: j.Name}
 	By(fmt.Sprintf("Creating a MySQLRestore %q", name))
 
-	result, err := j.MySQLClient.MysqlV1().MySQLRestores(namespace).Create(restore)
+	result, err := j.MySQLClient.MysqlV1alpha1().MySQLRestores(namespace).Create(restore)
 	if err != nil {
 		Failf("Failed to create MySQLRestore %q: %v", name, err)
 	}
@@ -100,7 +100,7 @@ func (j *MySQLRestoreTestJig) CreateMySQLRestoreOrFail(namespace, clusterName, b
 // CreateAndAwaitMySQLRestoreOrFail creates a new MySQLRestore based on the
 // jig's defaults, waits for it to become ready. Callers can provide a function
 // to tweak the MySQLRestore object before it is created.
-func (j *MySQLRestoreTestJig) CreateAndAwaitMySQLRestoreOrFail(namespace, clusterName, backupName string, tweak func(restore *v1.MySQLRestore), timeout time.Duration) *v1.MySQLRestore {
+func (j *MySQLRestoreTestJig) CreateAndAwaitMySQLRestoreOrFail(namespace, clusterName, backupName string, tweak func(restore *v1alpha1.MySQLRestore), timeout time.Duration) *v1alpha1.MySQLRestore {
 	restore := j.CreateMySQLRestoreOrFail(namespace, clusterName, backupName, tweak)
 	restore = j.WaitForRestoreCompleteOrFail(namespace, restore.Name, timeout)
 	return restore
@@ -121,10 +121,10 @@ func (j *MySQLRestoreTestJig) CreateS3AuthSecret(namespace, name string) (*corev
 	})
 }
 
-func (j *MySQLRestoreTestJig) waitForConditionOrFail(namespace, name string, timeout time.Duration, message string, conditionFn func(*v1.MySQLRestore) bool) *v1.MySQLRestore {
-	var restore *v1.MySQLRestore
+func (j *MySQLRestoreTestJig) waitForConditionOrFail(namespace, name string, timeout time.Duration, message string, conditionFn func(*v1alpha1.MySQLRestore) bool) *v1alpha1.MySQLRestore {
+	var restore *v1alpha1.MySQLRestore
 	pollFunc := func() (bool, error) {
-		r, err := j.MySQLClient.MysqlV1().MySQLRestores(namespace).Get(name, metav1.GetOptions{})
+		r, err := j.MySQLClient.MysqlV1alpha1().MySQLRestores(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -142,15 +142,15 @@ func (j *MySQLRestoreTestJig) waitForConditionOrFail(namespace, name string, tim
 
 // WaitForRestoreCompleteOrFail waits up to a given timeout for a MySQLRestore
 // to enter the complete phase.
-func (j *MySQLRestoreTestJig) WaitForRestoreCompleteOrFail(namespace, name string, timeout time.Duration) *v1.MySQLRestore {
+func (j *MySQLRestoreTestJig) WaitForRestoreCompleteOrFail(namespace, name string, timeout time.Duration) *v1alpha1.MySQLRestore {
 	Logf("Waiting up to %v for MySQLRestore \"%s/%s\" to be complete executing", timeout, namespace, name)
-	restore := j.waitForConditionOrFail(namespace, name, timeout, "to complete executing", func(restore *v1.MySQLRestore) bool {
+	restore := j.waitForConditionOrFail(namespace, name, timeout, "to complete executing", func(restore *v1alpha1.MySQLRestore) bool {
 		phase := restore.Status.Phase
-		if phase == v1.RestorePhaseComplete {
+		if phase == v1alpha1.RestorePhaseComplete {
 			return true
 		}
 
-		if phase == v1.RestorePhaseFailed {
+		if phase == v1alpha1.RestorePhaseFailed {
 			ns := restore.Namespace
 			events, err := j.KubeClient.CoreV1().Events(ns).List(metav1.ListOptions{})
 			if err != nil {
@@ -162,7 +162,7 @@ func (j *MySQLRestoreTestJig) WaitForRestoreCompleteOrFail(namespace, name strin
 				}
 				Logf(e.String())
 			}
-			Failf("MySQLRestore entered state %q", v1.RestorePhaseFailed)
+			Failf("MySQLRestore entered state %q", v1alpha1.RestorePhaseFailed)
 		}
 		return false
 	})

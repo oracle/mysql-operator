@@ -22,6 +22,7 @@ var (
 	clusterRestoreCount = metrics.NewAgentEventCounter("cluster_restores", "Total number of times the cluster has been restored")
 )
 
+// RegisterMetrics registers the restore metrics.
 func RegisterMetrics() {
 	metrics.RegisterAgentMetric(clusterRestoreCount)
 }

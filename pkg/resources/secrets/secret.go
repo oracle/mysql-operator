@@ -17,27 +17,27 @@ package secrets
 import (
 	"fmt"
 
-	"k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/constants"
 )
 
 // NewMysqlRootPassword returns a Kubernetes secret containing a
 // generated MySQL root password.
-func NewMysqlRootPassword(cluster *api.MySQLCluster) *v1.Secret {
+func NewMysqlRootPassword(cluster *v1alpha1.MySQLCluster) *corev1.Secret {
 	CreateSecret := RandomAlphanumericString(16)
-	secret := &v1.Secret{
+	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: map[string]string{constants.MySQLClusterLabel: cluster.Name},
 			Name:   GetRootPasswordSecretName(cluster),
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(cluster, schema.GroupVersionKind{
-					Group:   api.SchemeGroupVersion.Group,
-					Version: api.SchemeGroupVersion.Version,
-					Kind:    api.MySQLClusterCRDResourceKind,
+					Group:   v1alpha1.SchemeGroupVersion.Group,
+					Version: v1alpha1.SchemeGroupVersion.Version,
+					Kind:    v1alpha1.MySQLClusterCRDResourceKind,
 				}),
 			},
 			Namespace: cluster.Namespace,
@@ -49,6 +49,6 @@ func NewMysqlRootPassword(cluster *api.MySQLCluster) *v1.Secret {
 
 // GetRootPasswordSecretName returns the root password secret name for the
 // given mysql cluster.
-func GetRootPasswordSecretName(cluster *api.MySQLCluster) string {
+func GetRootPasswordSecretName(cluster *v1alpha1.MySQLCluster) string {
 	return fmt.Sprintf("%s-root-password", cluster.Name)
 }

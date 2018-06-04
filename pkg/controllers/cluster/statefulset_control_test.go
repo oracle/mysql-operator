@@ -16,7 +16,7 @@ package cluster
 
 import (
 	"github.com/oracle/mysql-operator/pkg/controllers/util"
-	apps "k8s.io/api/apps/v1beta1"
+	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	kubernetes "k8s.io/client-go/kubernetes"
 )
 
@@ -30,7 +30,7 @@ func NewFakeStatefulSetControl(statefulSetControl StatefulSetControlInterface, c
 	return &fakeStatefulSetControl{statefulSetControl, client}
 }
 
-func (rssc *fakeStatefulSetControl) Patch(old *apps.StatefulSet, new *apps.StatefulSet) error {
+func (rssc *fakeStatefulSetControl) Patch(old *appsv1beta1.StatefulSet, new *appsv1beta1.StatefulSet) error {
 	_, err := util.UpdateStatefulSet(rssc.client, new)
 	return err
 }

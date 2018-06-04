@@ -19,7 +19,7 @@ import (
 
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
-	corelisters "k8s.io/client-go/listers/core/v1"
+	corelistersv1 "k8s.io/client-go/listers/core/v1"
 
 	"github.com/oracle/mysql-operator/pkg/constants"
 	"github.com/oracle/mysql-operator/pkg/controllers/util"
@@ -35,12 +35,12 @@ type PodControlInterface interface {
 
 type realPodControl struct {
 	client    kubernetes.Interface
-	podLister corelisters.PodLister
+	podLister corelistersv1.PodLister
 }
 
 // NewRealPodControl creates a concrete implementation of the
 // PodControlInterface.
-func NewRealPodControl(client kubernetes.Interface, podLister corelisters.PodLister) PodControlInterface {
+func NewRealPodControl(client kubernetes.Interface, podLister corelistersv1.PodLister) PodControlInterface {
 	return &realPodControl{client: client, podLister: podLister}
 }
 

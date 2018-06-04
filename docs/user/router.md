@@ -17,7 +17,7 @@ Typically the MySQL Router is deployed [alongside your application][2].
 We'll use WordPress as an example of how you might setup the MySQL Router for a a real application. The first thing we want to do is create our MySQL Cluster using the operator.
 
 ```yaml
-apiVersion: "mysql.oracle.com/v1"
+apiVersion: "mysql.oracle.com/v1alpa1"
 kind: MySQLCluster
 metadata:
   name: mysql-wordpress
