@@ -128,7 +128,7 @@ func TestSyncEnsureClusterLabels(t *testing.T) {
 }
 
 func assertOperatorClusterInvariants(t *testing.T, controller *MySQLController, namespace string, name string, version string) {
-	cluster, err := controller.opClient.MysqlV1alpha1().Clusters(namespace).Get(name, metav1.GetOptions{})
+	cluster, err := controller.opClient.MySQLV1alpha1().Clusters(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Get client Cluster err: %+v", err)
 	}
@@ -338,7 +338,7 @@ func assertOperatorVersionInvariants(t *testing.T, controller *MySQLController, 
 	expectedImageVersion := mockOperatorConfig().Images.MySQLAgentImage + ":" + version
 
 	// Check Cluster has the correct operator version
-	updatedCluster, err := controller.opClient.MysqlV1alpha1().Clusters(namespace).Get(name, metav1.GetOptions{})
+	updatedCluster, err := controller.opClient.MySQLV1alpha1().Clusters(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Get client Cluster err: %+v", err)
 	}
@@ -409,7 +409,7 @@ func TestMySQLControllerSyncClusterFromScratch(t *testing.T) {
 	assertOperatorServiceInvariants(t, fakeController, cluster)
 	assertOperatorStatefulSetInvariants(t, fakeController, cluster)
 	assertOperatorVersionInvariants(t, fakeController, namespace, name, version)
-	cluster, err := fakeController.opClient.MysqlV1alpha1().Clusters(namespace).Get(name, metav1.GetOptions{})
+	cluster, err := fakeController.opClient.MySQLV1alpha1().Clusters(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Get client Cluster err: %+v", err)
 	}
@@ -506,14 +506,21 @@ type fakeMySQLControllerInformers struct {
 // newFakeMySQLController creates a new fake MySQLController with a fake mysqlop and kube clients and informers
 // for unit testing.
 func newFakeMySQLController(cluster *v1alpha1.Cluster, kuberesources ...runtime.Object) (*MySQLController, *fakeMySQLControllerInformers) {
-	mysqlopClient := mysqlfake.NewSimpleClientset(cluster)
+	mysqlopClient := mysqlfake.NewSimpleClientset()
+	// NOTE: Must call Create rather than pass objects to NewSimpleClientset() as the
+	// fake client's UnsafeGuessKindToResource maps the kind to clusters rather than
+	// mysqlclusters.
+	_, err := mysqlopClient.MySQLV1alpha1().Clusters(cluster.Namespace).Create(cluster)
+	if err != nil {
+		panic(err)
+	}
 	kubeClient := fake.NewSimpleClientset(kuberesources...)
 
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, util.NoResyncPeriodFunc())
 	mysqlopInformerFactory := informerfactory.NewSharedInformerFactory(mysqlopClient, util.NoResyncPeriodFunc())
 
 	fakeInformers := &fakeMySQLControllerInformers{
-		clusterInformer:     mysqlopInformerFactory.Mysql().V1alpha1().Clusters(),
+		clusterInformer:     mysqlopInformerFactory.MySQL().V1alpha1().Clusters(),
 		statefulSetInformer: kubeInformerFactory.Apps().V1beta1().StatefulSets(),
 		podInformer:         kubeInformerFactory.Core().V1().Pods(),
 		serviceInformer:     kubeInformerFactory.Core().V1().Services(),

@@ -26,7 +26,7 @@ import (
 
 // FakeBackupSchedules implements BackupScheduleInterface
 type FakeBackupSchedules struct {
-	Fake *FakeMysqlV1alpha1
+	Fake *FakeMySQLV1alpha1
 	ns   string
 }
 

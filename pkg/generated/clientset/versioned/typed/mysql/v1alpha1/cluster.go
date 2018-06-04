@@ -49,7 +49,7 @@ type clusters struct {
 }
 
 // newClusters returns a Clusters
-func newClusters(c *MysqlV1alpha1Client, namespace string) *clusters {
+func newClusters(c *MySQLV1alpha1Client, namespace string) *clusters {
 	return &clusters{
 		client: c.RESTClient(),
 		ns:     namespace,

@@ -26,7 +26,7 @@ import (
 
 // FakeBackups implements BackupInterface
 type FakeBackups struct {
-	Fake *FakeMysqlV1alpha1
+	Fake *FakeMySQLV1alpha1
 	ns   string
 }
 

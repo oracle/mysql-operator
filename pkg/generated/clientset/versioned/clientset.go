@@ -24,27 +24,27 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	MysqlV1alpha1() mysqlv1alpha1.MysqlV1alpha1Interface
+	MySQLV1alpha1() mysqlv1alpha1.MySQLV1alpha1Interface
 	// Deprecated: please explicitly pick a version if possible.
-	Mysql() mysqlv1alpha1.MysqlV1alpha1Interface
+	MySQL() mysqlv1alpha1.MySQLV1alpha1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	mysqlV1alpha1 *mysqlv1alpha1.MysqlV1alpha1Client
+	mySQLV1alpha1 *mysqlv1alpha1.MySQLV1alpha1Client
 }
 
-// MysqlV1alpha1 retrieves the MysqlV1alpha1Client
-func (c *Clientset) MysqlV1alpha1() mysqlv1alpha1.MysqlV1alpha1Interface {
-	return c.mysqlV1alpha1
+// MySQLV1alpha1 retrieves the MySQLV1alpha1Client
+func (c *Clientset) MySQLV1alpha1() mysqlv1alpha1.MySQLV1alpha1Interface {
+	return c.mySQLV1alpha1
 }
 
-// Deprecated: Mysql retrieves the default version of MysqlClient.
+// Deprecated: MySQL retrieves the default version of MySQLClient.
 // Please explicitly pick a version.
-func (c *Clientset) Mysql() mysqlv1alpha1.MysqlV1alpha1Interface {
-	return c.mysqlV1alpha1
+func (c *Clientset) MySQL() mysqlv1alpha1.MySQLV1alpha1Interface {
+	return c.mySQLV1alpha1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -63,7 +63,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
-	cs.mysqlV1alpha1, err = mysqlv1alpha1.NewForConfig(&configShallowCopy)
+	cs.mySQLV1alpha1, err = mysqlv1alpha1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
-	cs.mysqlV1alpha1 = mysqlv1alpha1.NewForConfigOrDie(c)
+	cs.mySQLV1alpha1 = mysqlv1alpha1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -89,7 +89,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.mysqlV1alpha1 = mysqlv1alpha1.New(c)
+	cs.mySQLV1alpha1 = mysqlv1alpha1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

@@ -49,7 +49,7 @@ type backups struct {
 }
 
 // newBackups returns a Backups
-func newBackups(c *MysqlV1alpha1Client, namespace string) *backups {
+func newBackups(c *MySQLV1alpha1Client, namespace string) *backups {
 	return &backups{
 		client: c.RESTClient(),
 		ns:     namespace,

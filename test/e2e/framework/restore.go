@@ -90,7 +90,7 @@ func (j *RestoreTestJig) CreateRestoreOrFail(namespace, clusterName, backupName 
 	name := types.NamespacedName{Namespace: namespace, Name: j.Name}
 	By(fmt.Sprintf("Creating a Restore %q", name))
 
-	result, err := j.MySQLClient.MysqlV1alpha1().Restores(namespace).Create(restore)
+	result, err := j.MySQLClient.MySQLV1alpha1().Restores(namespace).Create(restore)
 	if err != nil {
 		Failf("Failed to create Restore %q: %v", name, err)
 	}
@@ -124,7 +124,7 @@ func (j *RestoreTestJig) CreateS3AuthSecret(namespace, name string) (*corev1.Sec
 func (j *RestoreTestJig) waitForConditionOrFail(namespace, name string, timeout time.Duration, message string, conditionFn func(*v1alpha1.Restore) bool) *v1alpha1.Restore {
 	var restore *v1alpha1.Restore
 	pollFunc := func() (bool, error) {
-		r, err := j.MySQLClient.MysqlV1alpha1().Restores(namespace).Get(name, metav1.GetOptions{})
+		r, err := j.MySQLClient.MySQLV1alpha1().Restores(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}

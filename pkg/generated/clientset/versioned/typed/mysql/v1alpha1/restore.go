@@ -49,7 +49,7 @@ type restores struct {
 }
 
 // newRestores returns a Restores
-func newRestores(c *MysqlV1alpha1Client, namespace string) *restores {
+func newRestores(c *MySQLV1alpha1Client, namespace string) *restores {
 	return &restores{
 		client: c.RESTClient(),
 		ns:     namespace,

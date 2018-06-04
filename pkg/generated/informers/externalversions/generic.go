@@ -50,13 +50,13 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	switch resource {
 	// Group=mysql.oracle.com, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("backups"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1alpha1().Backups().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.MySQL().V1alpha1().Backups().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("backupschedules"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1alpha1().BackupSchedules().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.MySQL().V1alpha1().BackupSchedules().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("clusters"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1alpha1().Clusters().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.MySQL().V1alpha1().Clusters().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("restores"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Mysql().V1alpha1().Restores().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.MySQL().V1alpha1().Restores().Informer()}, nil
 
 	}
 

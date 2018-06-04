@@ -44,7 +44,7 @@ func newClusterUpdater(client clientset.Interface, lister listersv1alpha1.Cluste
 func (csu *clusterUpdater) UpdateClusterStatus(cluster *v1alpha1.Cluster, status *v1alpha1.ClusterStatus) error {
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		cluster.Status = *status
-		_, updateErr := csu.client.MysqlV1alpha1().Clusters(cluster.Namespace).Update(cluster)
+		_, updateErr := csu.client.MySQLV1alpha1().Clusters(cluster.Namespace).Update(cluster)
 		if updateErr == nil {
 			return nil
 		}
@@ -64,7 +64,7 @@ func (csu *clusterUpdater) UpdateClusterStatus(cluster *v1alpha1.Cluster, status
 func (csu *clusterUpdater) UpdateClusterLabels(cluster *v1alpha1.Cluster, lbls labels.Set) error {
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		cluster.Labels = labels.Merge(labels.Set(cluster.Labels), lbls)
-		_, updateErr := csu.client.MysqlV1alpha1().Clusters(cluster.Namespace).Update(cluster)
+		_, updateErr := csu.client.MySQLV1alpha1().Clusters(cluster.Namespace).Update(cluster)
 		if updateErr == nil {
 			return nil
 		}

@@ -57,13 +57,13 @@ func NewFilteredBackupInformer(client versioned.Interface, namespace string, res
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MysqlV1alpha1().Backups(namespace).List(options)
+				return client.MySQLV1alpha1().Backups(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MysqlV1alpha1().Backups(namespace).Watch(options)
+				return client.MySQLV1alpha1().Backups(namespace).Watch(options)
 			},
 		},
 		&mysql_v1alpha1.Backup{},

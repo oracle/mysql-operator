@@ -93,7 +93,7 @@ func (j *ClusterTestJig) CreateClusterOrFail(namespace string, replicas int32, t
 	name := types.NamespacedName{Namespace: namespace, Name: j.Name}
 	By(fmt.Sprintf("Creating a Cluster %q with .spec.replicas=%d", name, replicas))
 
-	result, err := j.MySQLClient.MysqlV1alpha1().Clusters(namespace).Create(cluster)
+	result, err := j.MySQLClient.MySQLV1alpha1().Clusters(namespace).Create(cluster)
 	if err != nil {
 		Failf("Failed to create Cluster %q: %v", name, err)
 	}
@@ -114,7 +114,7 @@ func (j *ClusterTestJig) CreateAndAwaitClusterOrFail(namespace string, replicas 
 func (j *ClusterTestJig) waitForConditionOrFail(namespace, name string, timeout time.Duration, message string, conditionFn func(*v1.Cluster) bool) *v1.Cluster {
 	var cluster *v1.Cluster
 	pollFunc := func() (bool, error) {
-		c, err := j.MySQLClient.MysqlV1alpha1().Clusters(namespace).Get(name, metav1.GetOptions{})
+		c, err := j.MySQLClient.MySQLV1alpha1().Clusters(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}

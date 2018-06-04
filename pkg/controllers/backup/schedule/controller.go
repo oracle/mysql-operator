@@ -266,7 +266,7 @@ func (controller *Controller) processSchedule(key string) error {
 	if currentPhase != bs.Status.Phase {
 		var updatedBackupSchedule *v1alpha1.BackupSchedule
 		err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			updatedBackupSchedule, err = controller.opClient.MysqlV1alpha1().BackupSchedules(ns).Update(bs)
+			updatedBackupSchedule, err = controller.opClient.MySQLV1alpha1().BackupSchedules(ns).Update(bs)
 			if err != nil {
 				return errors.Wrapf(err, "error updating backup schedule phase to %q", bs.Status.Phase)
 			}
@@ -336,7 +336,7 @@ func (controller *Controller) submitBackupIfDue(item *v1alpha1.BackupSchedule, c
 	// trigger a Backup if it's time.
 	glog.Infof("Backup schedule %s[%s] is due, submitting Backup", item.Name, item.Spec.Schedule)
 	backup := getBackup(item, now)
-	if _, err := controller.opClient.MysqlV1alpha1().Backups(backup.Namespace).Create(backup); err != nil {
+	if _, err := controller.opClient.MySQLV1alpha1().Backups(backup.Namespace).Create(backup); err != nil {
 		return errors.Wrap(err, "error creating Backup")
 	}
 
@@ -345,7 +345,7 @@ func (controller *Controller) submitBackupIfDue(item *v1alpha1.BackupSchedule, c
 	bs.Status.LastBackup = metav1.NewTime(now)
 
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		if _, err := controller.opClient.MysqlV1alpha1().BackupSchedules(bs.Namespace).Update(bs); err != nil {
+		if _, err := controller.opClient.MySQLV1alpha1().BackupSchedules(bs.Namespace).Update(bs); err != nil {
 			return errors.Wrapf(err, "error updating backup schedule's LastBackup time to %v", bs.Status.LastBackup)
 		}
 		return nil

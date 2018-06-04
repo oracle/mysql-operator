@@ -151,7 +151,7 @@ func TestProcessSchedule(t *testing.T) {
 			c := NewController(
 				mysqlopclient,
 				kubeclient,
-				mysqlopInformerFactory.Mysql().V1alpha1().BackupSchedules(),
+				mysqlopInformerFactory.MySQL().V1alpha1().BackupSchedules(),
 				time.Duration(0),
 				metav1.NamespaceDefault,
 			)
@@ -170,7 +170,7 @@ func TestProcessSchedule(t *testing.T) {
 			c.clock = clock.NewFakeClock(testTime)
 
 			if test.schedule != nil {
-				mysqlopInformerFactory.Mysql().V1alpha1().BackupSchedules().Informer().GetStore().Add(test.schedule)
+				mysqlopInformerFactory.MySQL().V1alpha1().BackupSchedules().Informer().GetStore().Add(test.schedule)
 
 				// this is necessary so the Update() call returns the appropriate object
 				mysqlopclient.PrependReactor("update", "mysqlbackupschedules", func(action core.Action) (bool, runtime.Object, error) {

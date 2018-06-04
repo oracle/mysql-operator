@@ -91,7 +91,7 @@ func (j *BackupTestJig) CreateBackupOrFail(namespace, clusterName string, tweak 
 	name := types.NamespacedName{Namespace: namespace, Name: j.Name}
 	By(fmt.Sprintf("Creating a Backup %q", name))
 
-	result, err := j.MySQLClient.MysqlV1alpha1().Backups(namespace).Create(backup)
+	result, err := j.MySQLClient.MySQLV1alpha1().Backups(namespace).Create(backup)
 	if err != nil {
 		Failf("Failed to create Backup %q: %v", name, err)
 	}
@@ -139,7 +139,7 @@ func (j *BackupTestJig) CreateS3AuthSecret(namespace, name string) (*corev1.Secr
 func (j *BackupTestJig) waitForConditionOrFail(namespace, name string, timeout time.Duration, message string, conditionFn func(*v1alpha1.Backup) bool) *v1alpha1.Backup {
 	var backup *v1alpha1.Backup
 	pollFunc := func() (bool, error) {
-		b, err := j.MySQLClient.MysqlV1alpha1().Backups(namespace).Get(name, metav1.GetOptions{})
+		b, err := j.MySQLClient.MySQLV1alpha1().Backups(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
