@@ -19,6 +19,16 @@ import (
 	"github.com/oracle/mysql-operator/pkg/version"
 )
 
+// setOperatorVersionLabel sets the specified operator version label on the label map.
+func setOperatorVersionLabel(labelMap map[string]string, label string) {
+	labelMap[constants.MySQLOperatorVersionLabel] = label
+}
+
+// getOperatorVersionLabel get the specified operator version label on the label map.
+func getOperatorVersionLabel(labelMap map[string]string) string {
+	return labelMap[constants.MySQLOperatorVersionLabel]
+}
+
 // EnsureDefaults will ensure that if a user omits and fields in the
 // spec that are required, we set some sensible defaults.
 // For example a user can choose to omit the version
@@ -72,7 +82,7 @@ func (b Backup) EnsureDefaults() *Backup {
 		}
 		_, hasKey := b.Labels[constants.MySQLOperatorVersionLabel]
 		if !hasKey {
-			SetOperatorVersionLabel(b.Labels, buildVersion)
+			setOperatorVersionLabel(b.Labels, buildVersion)
 		}
 	}
 	return &b
@@ -92,7 +102,7 @@ func (b BackupSchedule) EnsureDefaults() *BackupSchedule {
 		}
 		_, hasKey := b.Labels[constants.MySQLOperatorVersionLabel]
 		if !hasKey {
-			SetOperatorVersionLabel(b.Labels, buildVersion)
+			setOperatorVersionLabel(b.Labels, buildVersion)
 		}
 	}
 	return &b
@@ -112,7 +122,7 @@ func (r Restore) EnsureDefaults() *Restore {
 		}
 		_, hasKey := r.Labels[constants.MySQLOperatorVersionLabel]
 		if !hasKey {
-			SetOperatorVersionLabel(r.Labels, buildVersion)
+			setOperatorVersionLabel(r.Labels, buildVersion)
 		}
 	}
 	return &r
