@@ -67,7 +67,7 @@ func validateBackup(t *testing.T, file string) {
 		return
 	}
 	r.Spec.Cluster = &corev1.LocalObjectReference{}
-	r.Spec.StorageProvider.SecretRef = &corev1.LocalObjectReference{Name: "test"}
+	r.Spec.StorageProvider.AuthSecret = &corev1.LocalObjectReference{Name: "test"}
 	resource := r.EnsureDefaults()
 	err = resource.Validate()
 	if err != nil {

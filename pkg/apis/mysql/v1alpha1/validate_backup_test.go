@@ -40,7 +40,7 @@ func TestValidateValidBackup(t *testing.T) {
 			},
 			StorageProvider: &BackupStorageProvider{
 				Name: "s3",
-				SecretRef: &corev1.LocalObjectReference{
+				AuthSecret: &corev1.LocalObjectReference{
 					Name: "backup-storage-creds",
 				},
 				Config: map[string]string{
@@ -96,7 +96,7 @@ func TestValidateBackupMissingCluster(t *testing.T) {
 			},
 			StorageProvider: &BackupStorageProvider{
 				Name: "s3",
-				SecretRef: &corev1.LocalObjectReference{
+				AuthSecret: &corev1.LocalObjectReference{
 					Name: "backup-storage-creds",
 				},
 				Config: map[string]string{
@@ -136,7 +136,7 @@ func TestValidateBackupMissingSecretRef(t *testing.T) {
 	}
 
 	err := backup.Validate()
-	if !strings.Contains(err.Error(), "storageProvider.secretRef: Required value") {
-		t.Errorf("Expected backup with missing SecretRef to show 'storageProvider.secretRef: Required value' error. Error is: %s", err)
+	if !strings.Contains(err.Error(), "storageProvider.authSecret: Required value") {
+		t.Errorf("Expected backup with missing Secret to show 'storageProvider.authSecret: Required value' error. Error is: %s", err)
 	}
 }

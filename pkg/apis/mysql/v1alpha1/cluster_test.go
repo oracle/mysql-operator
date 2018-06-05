@@ -70,19 +70,19 @@ func TestRequiresConfigMount(t *testing.T) {
 	cluster.EnsureDefaults()
 
 	if cluster.RequiresConfigMount() {
-		t.Errorf("Cluster without configRef should not require a config mount")
+		t.Errorf("Cluster without config should not require a config mount")
 	}
 
 	cluster = &Cluster{
 		Spec: ClusterSpec{
-			ConfigRef: &corev1.LocalObjectReference{
+			Config: &corev1.LocalObjectReference{
 				Name: "customconfig",
 			},
 		},
 	}
 
 	if !cluster.RequiresConfigMount() {
-		t.Errorf("Cluster with configRef should require a config mount")
+		t.Errorf("Cluster with config should require a config mount")
 	}
 }
 
@@ -90,15 +90,15 @@ func TestRequiresCustomSSLSetup(t *testing.T) {
 	cluster := &Cluster{}
 	cluster.EnsureDefaults()
 
-	assert.False(t, cluster.RequiresCustomSSLSetup(), "Cluster without SSLSecretRef should not require custom SSL setup")
+	assert.False(t, cluster.RequiresCustomSSLSetup(), "Cluster without SSLSecret should not require custom SSL setup")
 
 	cluster = &Cluster{
 		Spec: ClusterSpec{
-			SSLSecretRef: &corev1.LocalObjectReference{
+			SSLSecret: &corev1.LocalObjectReference{
 				Name: "custom-ssl-secret",
 			},
 		},
 	}
 
-	assert.True(t, cluster.RequiresCustomSSLSetup(), "Cluster with SSLSecretRef should require custom SSL setup")
+	assert.True(t, cluster.RequiresCustomSSLSetup(), "Cluster with SSLSecret should require custom SSL setup")
 }

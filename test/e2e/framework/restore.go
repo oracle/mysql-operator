@@ -68,10 +68,10 @@ func (j *RestoreTestJig) newRestoreTemplate(namespace, clusterName, backupName s
 			Labels:       j.Labels,
 		},
 		Spec: v1alpha1.RestoreSpec{
-			ClusterRef: &corev1.LocalObjectReference{
+			Cluster: &corev1.LocalObjectReference{
 				Name: clusterName,
 			},
-			BackupRef: &corev1.LocalObjectReference{
+			Backup: &corev1.LocalObjectReference{
 				Name: backupName,
 			},
 		},

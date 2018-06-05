@@ -47,20 +47,20 @@ func (c *Cluster) Validate() error {
 // RequiresConfigMount will return true if a user has specified a config map
 // for configuring the cluster else false
 func (c *Cluster) RequiresConfigMount() bool {
-	return c.Spec.ConfigRef != nil
+	return c.Spec.Config != nil
 }
 
 // RequiresSecret returns true if a secret should be generated
 // for a MySQL cluster else false
 func (c *Cluster) RequiresSecret() bool {
-	return c.Spec.SecretRef == nil
+	return c.Spec.RootPasswordSecret == nil
 }
 
 // RequiresCustomSSLSetup returns true is the user has provided a secret
 // that contains CA cert, server cert and server key for group replication
 // SSL support
 func (c *Cluster) RequiresCustomSSLSetup() bool {
-	return c.Spec.SSLSecretRef != nil
+	return c.Spec.SSLSecret != nil
 }
 
 // EnsureDefaults can be invoked to ensure the default values are present.

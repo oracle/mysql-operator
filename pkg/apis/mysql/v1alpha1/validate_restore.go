@@ -46,12 +46,12 @@ func validateRestore(restore *Restore) field.ErrorList {
 func validateRestoreSpec(s RestoreSpec, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
-	if s.ClusterRef == nil || s.ClusterRef.Name == "" {
-		allErrs = append(allErrs, field.Required(fldPath.Child("clusterRef").Child("name"), "a cluster to restore into is required"))
+	if s.Cluster == nil || s.Cluster.Name == "" {
+		allErrs = append(allErrs, field.Required(fldPath.Child("cluster").Child("name"), "a cluster to restore into is required"))
 	}
 
-	if s.BackupRef == nil || s.BackupRef.Name == "" {
-		allErrs = append(allErrs, field.Required(fldPath.Child("backupRef").Child("name"), "a backup to restore is required"))
+	if s.Backup == nil || s.Backup.Name == "" {
+		allErrs = append(allErrs, field.Required(fldPath.Child("backup").Child("name"), "a backup to restore is required"))
 	}
 
 	return allErrs

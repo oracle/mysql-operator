@@ -27,10 +27,10 @@ func TestRestoreEnsureDefaults(t *testing.T) {
 	bv1 := version.GetBuildVersion()
 	r := Restore{
 		Spec: RestoreSpec{
-			ClusterRef: &corev1.LocalObjectReference{
+			Cluster: &corev1.LocalObjectReference{
 				Name: "foo",
 			},
-			BackupRef: &corev1.LocalObjectReference{
+			Backup: &corev1.LocalObjectReference{
 				Name: "foo",
 			},
 		},
@@ -54,10 +54,10 @@ func TestRestoreValidate(t *testing.T) {
 	// Test a malformed restore returns errors.
 	r := Restore{
 		Spec: RestoreSpec{
-			ClusterRef: &corev1.LocalObjectReference{
+			Cluster: &corev1.LocalObjectReference{
 				Name: "foo",
 			},
-			BackupRef: &corev1.LocalObjectReference{
+			Backup: &corev1.LocalObjectReference{
 				Name: "foo",
 			},
 		},

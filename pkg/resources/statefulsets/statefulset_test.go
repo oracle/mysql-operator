@@ -48,7 +48,7 @@ func TestMySQLRootPasswordNoSecretRef(t *testing.T) {
 func TestMySQLRootPasswordWithSecretRef(t *testing.T) {
 	cluster := &v1alpha1.Cluster{
 		Spec: v1alpha1.ClusterSpec{
-			SecretRef: &corev1.LocalObjectReference{Name: "secret"},
+			RootPasswordSecret: &corev1.LocalObjectReference{Name: "secret"},
 		},
 	}
 
@@ -62,7 +62,7 @@ func TestMySQLRootPasswordWithSecretRef(t *testing.T) {
 func TestClusterWithoutPVCHasBackupContainerAndVolumes(t *testing.T) {
 	cluster := &v1alpha1.Cluster{
 		Spec: v1alpha1.ClusterSpec{
-			SecretRef: &corev1.LocalObjectReference{Name: "secret"},
+			RootPasswordSecret: &corev1.LocalObjectReference{Name: "secret"},
 		},
 	}
 
@@ -81,7 +81,7 @@ func TestClusterWithoutPVCHasBackupContainerAndVolumes(t *testing.T) {
 func TestClusterWithPVCHasBackupContainerAndVolumes(t *testing.T) {
 	cluster := &v1alpha1.Cluster{
 		Spec: v1alpha1.ClusterSpec{
-			SecretRef:                 &corev1.LocalObjectReference{Name: "secret"},
+			RootPasswordSecret:        &corev1.LocalObjectReference{Name: "secret"},
 			VolumeClaimTemplate:       &corev1.PersistentVolumeClaim{},
 			BackupVolumeClaimTemplate: &corev1.PersistentVolumeClaim{},
 		},
@@ -117,7 +117,7 @@ func TestClusterHasNodeSelector(t *testing.T) {
 func TestClusterCustomConfig(t *testing.T) {
 	cluster := &v1alpha1.Cluster{
 		Spec: v1alpha1.ClusterSpec{
-			ConfigRef: &corev1.LocalObjectReference{
+			Config: &corev1.LocalObjectReference{
 				Name: "mycnf",
 			},
 		},
@@ -144,7 +144,7 @@ func TestClusterCustomConfig(t *testing.T) {
 func TestClusterCustomSSLSetup(t *testing.T) {
 	cluster := &v1alpha1.Cluster{
 		Spec: v1alpha1.ClusterSpec{
-			SSLSecretRef: &corev1.LocalObjectReference{
+			SSLSecret: &corev1.LocalObjectReference{
 				Name: "my-ssl",
 			},
 		},

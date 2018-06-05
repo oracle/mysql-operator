@@ -243,7 +243,7 @@ func (controller *OperatorController) processBackup(key string) error {
 				return err
 			}
 			validationErrs = append(validationErrs,
-				field.NotFound(fldPath.Child("clusterRef").Child("name"), backup.Spec.Cluster.Name))
+				field.NotFound(fldPath.Child("cluster").Child("name"), backup.Spec.Cluster.Name))
 		}
 
 		if len(validationErrs) > 0 {

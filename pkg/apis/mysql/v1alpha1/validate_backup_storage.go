@@ -44,10 +44,10 @@ func validateStorage(storage *BackupStorageProvider, fldPath *field.Path) field.
 		}
 	}
 
-	if storage.SecretRef == nil {
-		allErrs = append(allErrs, field.Required(fldPath.Child("secretRef"), ""))
-	} else if storage.SecretRef.Name == "" {
-		allErrs = append(allErrs, field.Required(fldPath.Child("secretRef").Child("name"), ""))
+	if storage.AuthSecret == nil {
+		allErrs = append(allErrs, field.Required(fldPath.Child("authSecret"), ""))
+	} else if storage.AuthSecret.Name == "" {
+		allErrs = append(allErrs, field.Required(fldPath.Child("authSecret").Child("name"), ""))
 	}
 
 	return allErrs

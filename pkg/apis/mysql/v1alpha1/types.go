@@ -86,16 +86,16 @@ type ClusterSpec struct {
 	// If defined, we use this secret for configuring the MYSQL_ROOT_PASSWORD
 	// If it is not set we generate a secret dynamically
 	// +optional
-	SecretRef *corev1.LocalObjectReference `json:"secretRef,omitempty"`
+	RootPasswordSecret *corev1.LocalObjectReference `json:"rootPasswordSecret,omitempty"`
 
-	// ConfigRef allows a user to specify a custom configuration file for MySQL.
+	// Config allows a user to specify a custom configuration file for MySQL.
 	// +optional
-	ConfigRef *corev1.LocalObjectReference `json:"configRef,omitempty"`
+	Config *corev1.LocalObjectReference `json:"config,omitempty"`
 
-	// SSLSecretRef allows a user to specify custom CA certificate, server certificate
-	// and server key for group replication SSL
+	// SSLSecret allows a user to specify custom CA certificate, server certificate
+	// and server key for group replication SSL.
 	// +optional
-	SSLSecretRef *corev1.LocalObjectReference `json:"sslSecretRef,omitempty"`
+	SSLSecret *corev1.LocalObjectReference `json:"sslSecret,omitempty"`
 }
 
 // ClusterPhase describes the state of the cluster.
@@ -200,12 +200,12 @@ type BackupExecutor struct {
 // BackupStorageProvider defines the configuration for storing a MySQL backup to a storage service.
 // The generation of the backup is configured in the Executor configuration.
 type BackupStorageProvider struct {
-	// Name denotes the type of storage provider that will store and retrieve the backups,
-	// e.g. s3, oci-s3-compat, aws-s3, gce-s3, etc.
+	// Name denotes the type of storage provider that will store and retrieve the backups.
+	// Currently only supports "S3" denoting a S3 compatiable storage provider.
 	Name string `json:"name"`
-	// SecretRef is a reference to the Kubernetes secret containing the configuration for uploading
+	// AuthSecret is a reference to the Kubernetes secret containing the configuration for uploading
 	// the backup to authenticated storage.
-	SecretRef *corev1.LocalObjectReference `json:"secretRef,omitempty"`
+	AuthSecret *corev1.LocalObjectReference `json:"authSecret,omitempty"`
 	// Config is generic string based key-value map that defines non-secret configuration values for
 	// uploading the backup to storage w.r.t the configured storage provider.
 	Config map[string]string `json:"config,omitempty"`
@@ -346,12 +346,12 @@ type BackupScheduleList struct {
 
 // RestoreSpec defines the specification for a restore of a MySQL backup.
 type RestoreSpec struct {
-	// ClusterRef is a refeference to the Cluster to which the Restore
+	// Cluster is a refeference to the Cluster to which the Restore
 	// belongs.
-	ClusterRef *corev1.LocalObjectReference `json:"clusterRef"`
+	Cluster *corev1.LocalObjectReference `json:"cluster"`
 
-	// BackupRef is a reference to the Backup object to be restored.
-	BackupRef *corev1.LocalObjectReference `json:"backupRef"`
+	// Backup is a reference to the Backup object to be restored.
+	Backup *corev1.LocalObjectReference `json:"backup"`
 
 	// AgentScheduled is the agent hostname to run the backup on
 	AgentScheduled string `json:"agentscheduled"`

@@ -250,23 +250,23 @@ func (controller *OperatorController) processRestore(key string) error {
 		fldPath := field.NewPath("spec")
 
 		// Check the referenced Cluster exists.
-		_, err := controller.clusterLister.Clusters(ns).Get(restore.Spec.ClusterRef.Name)
+		_, err := controller.clusterLister.Clusters(ns).Get(restore.Spec.Cluster.Name)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				return err
 			}
 			validationErrs = append(validationErrs,
-				field.NotFound(fldPath.Child("clusterRef").Child("name"), restore.Spec.ClusterRef.Name))
+				field.NotFound(fldPath.Child("cluster").Child("name"), restore.Spec.Cluster.Name))
 		}
 
 		// Check the referenced Backup exists.
-		_, err = controller.backupLister.Backups(ns).Get(restore.Spec.BackupRef.Name)
+		_, err = controller.backupLister.Backups(ns).Get(restore.Spec.Backup.Name)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				return err
 			}
 			validationErrs = append(validationErrs,
-				field.NotFound(fldPath.Child("backupRef").Child("name"), restore.Spec.BackupRef.Name))
+				field.NotFound(fldPath.Child("backup").Child("name"), restore.Spec.Backup.Name))
 		}
 		if len(validationErrs) > 0 {
 			validationErr = validationErrs.ToAggregate()
@@ -309,7 +309,7 @@ func (controller *OperatorController) processRestore(key string) error {
 // scheduleRestore schedules a Restore on a specific member of a Cluster.
 func (controller *OperatorController) scheduleRestore(restore *v1alpha1.Restore) (*v1alpha1.Restore, error) {
 	var (
-		name = restore.Spec.ClusterRef.Name
+		name = restore.Spec.Cluster.Name
 		ns   = restore.Namespace
 	)
 

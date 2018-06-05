@@ -130,7 +130,7 @@ func mysqlRootPassword(cluster *v1alpha1.Cluster) v1.EnvVar {
 	if cluster.RequiresSecret() {
 		secretName = secrets.GetRootPasswordSecretName(cluster)
 	} else {
-		secretName = cluster.Spec.SecretRef.Name
+		secretName = cluster.Spec.RootPasswordSecret.Name
 	}
 
 	return v1.EnvVar{
@@ -305,7 +305,7 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 			VolumeSource: v1.VolumeSource{
 				ConfigMap: &v1.ConfigMapVolumeSource{
 					LocalObjectReference: v1.LocalObjectReference{
-						Name: cluster.Spec.ConfigRef.Name,
+						Name: cluster.Spec.Config.Name,
 					},
 				},
 			},
@@ -321,7 +321,7 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 						v1.VolumeProjection{
 							Secret: &v1.SecretProjection{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: cluster.Spec.SSLSecretRef.Name,
+									Name: cluster.Spec.SSLSecret.Name,
 								},
 								Items: []v1.KeyToPath{
 									v1.KeyToPath{

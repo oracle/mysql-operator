@@ -11,7 +11,7 @@ spec:
         - test
     storageProvider:
       name: s3
-      secretRef:
+      authSecret:
         name: s3-credentials
       config:
         endpoint: ocitenancy.compat.objectstorage.ociregion.oraclecloud.com

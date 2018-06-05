@@ -75,7 +75,7 @@ var _ = Describe("Backup/Restore", func() {
 		backup := backupJig.CreateAndAwaitMySQLDumpBackupOrFail(ns, clusterName, dbs, func(b *v1alpha1.Backup) {
 			b.Spec.StorageProvider = &v1alpha1.BackupStorageProvider{
 				Name: "s3",
-				SecretRef: &corev1.LocalObjectReference{
+				AuthSecret: &corev1.LocalObjectReference{
 					Name: secret.Name,
 				},
 				Config: map[string]string{

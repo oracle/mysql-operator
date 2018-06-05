@@ -254,16 +254,16 @@ func (controller *AgentController) processBackup(key string) error {
 				return err
 			}
 			validationErrs = append(validationErrs,
-				field.NotFound(fldPath.Child("clusterRef").Child("name"), backup.Spec.Cluster.Name))
+				field.NotFound(fldPath.Child("cluster").Child("name"), backup.Spec.Cluster.Name))
 		}
 
-		creds, err = controller.kubeClient.CoreV1().Secrets(ns).Get(backup.Spec.StorageProvider.SecretRef.Name, metav1.GetOptions{})
+		creds, err = controller.kubeClient.CoreV1().Secrets(ns).Get(backup.Spec.StorageProvider.AuthSecret.Name, metav1.GetOptions{})
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				return errors.Wrap(err, "getting backup credentials secret")
 			}
 			validationErrs = append(validationErrs,
-				field.NotFound(fldPath.Child("storage").Child("secretRef").Child("name"), backup.Spec.StorageProvider.SecretRef.Name))
+				field.NotFound(fldPath.Child("storage").Child("authSecret").Child("name"), backup.Spec.StorageProvider.AuthSecret.Name))
 		}
 		if len(validationErrs) > 0 {
 			validationErr = validationErrs.ToAggregate()

@@ -409,7 +409,7 @@ func TestGetBackup(t *testing.T) {
 						},
 						StorageProvider: &v1alpha1.BackupStorageProvider{
 							Name: "s3",
-							SecretRef: &corev1.LocalObjectReference{
+							AuthSecret: &corev1.LocalObjectReference{
 								Name: "backup-storage-creds",
 							},
 							Config: map[string]string{
@@ -438,7 +438,7 @@ func TestGetBackup(t *testing.T) {
 					},
 					StorageProvider: &v1alpha1.BackupStorageProvider{
 						Name: "s3",
-						SecretRef: &corev1.LocalObjectReference{
+						AuthSecret: &corev1.LocalObjectReference{
 							Name: "backup-storage-creds",
 						},
 						Config: map[string]string{

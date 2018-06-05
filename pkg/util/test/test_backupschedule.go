@@ -43,7 +43,7 @@ func NewTestBackupSchedule(namespace, name string) *TestBackupSchedule {
 					},
 					StorageProvider: &api.BackupStorageProvider{
 						Name: "s3",
-						SecretRef: &corev1.LocalObjectReference{
+						AuthSecret: &corev1.LocalObjectReference{
 							Name: "name",
 						},
 						Config: map[string]string{

@@ -261,32 +261,32 @@ func (controller *AgentController) processRestore(key string) error {
 		fldPath := field.NewPath("spec")
 
 		// Check the referenced Cluster exists.
-		_, err := controller.clusterLister.Clusters(ns).Get(restore.Spec.ClusterRef.Name)
+		_, err := controller.clusterLister.Clusters(ns).Get(restore.Spec.Cluster.Name)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				return err
 			}
 			validationErrs = append(validationErrs,
-				field.NotFound(fldPath.Child("clusterRef").Child("name"), restore.Spec.ClusterRef.Name))
+				field.NotFound(fldPath.Child("cluster").Child("name"), restore.Spec.Cluster.Name))
 		}
 
 		// Check the referenced Backup exists.
-		backup, err = controller.backupLister.Backups(ns).Get(restore.Spec.BackupRef.Name)
+		backup, err = controller.backupLister.Backups(ns).Get(restore.Spec.Backup.Name)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				return err
 			}
 			validationErrs = append(validationErrs,
-				field.NotFound(fldPath.Child("backupRef").Child("name"), restore.Spec.BackupRef.Name))
+				field.NotFound(fldPath.Child("backup").Child("name"), restore.Spec.Backup.Name))
 		}
 
-		creds, err = controller.kubeClient.CoreV1().Secrets(ns).Get(backup.Spec.StorageProvider.SecretRef.Name, metav1.GetOptions{})
+		creds, err = controller.kubeClient.CoreV1().Secrets(ns).Get(backup.Spec.StorageProvider.AuthSecret.Name, metav1.GetOptions{})
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				return errors.Wrap(err, "getting backup credentials secret")
 			}
 			validationErrs = append(validationErrs,
-				field.NotFound(fldPath.Child("backupRef").Child("name"), backup.Spec.StorageProvider.SecretRef.Name))
+				field.NotFound(fldPath.Child("backup").Child("name"), backup.Spec.StorageProvider.AuthSecret.Name))
 		}
 		if len(validationErrs) > 0 {
 			validationErr = validationErrs.ToAggregate()
