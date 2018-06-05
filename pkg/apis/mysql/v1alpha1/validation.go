@@ -44,7 +44,7 @@ func validateName(name string, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	if len(name) > ClusterNameMaxLen {
-		msg := fmt.Sprintf("longer than maximum supported length %d (see: https://bugs.mysql.com/bug.php?id=90601)", MaxInnoDBClusterMembers)
+		msg := fmt.Sprintf("longer than maximum supported length %d (see: https://bugs.mysql.com/bug.php?id=90601)", ClusterNameMaxLen)
 		allErrs = append(allErrs, field.Invalid(fldPath, name, msg))
 	}
 
@@ -63,7 +63,6 @@ func validateClusterSpec(s ClusterSpec, fldPath *field.Path) field.ErrorList {
 
 func validateClusterStatus(s ClusterStatus, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
-	allErrs = append(allErrs, validatePhase(s.Phase, fldPath.Child("phase"))...)
 	return allErrs
 }
 
@@ -83,16 +82,6 @@ func validateBaseServerID(baseServerID uint32, fldPath *field.Path) field.ErrorL
 		return allErrs
 	}
 	return append(allErrs, field.Invalid(fldPath, strconv.FormatUint(uint64(baseServerID), 10), "invalid baseServerId specified"))
-}
-
-func validatePhase(phase ClusterPhase, fldPath *field.Path) field.ErrorList {
-	allErrs := field.ErrorList{}
-	for _, validPhase := range ValidClusterPhases {
-		if phase == validPhase {
-			return allErrs
-		}
-	}
-	return append(allErrs, field.Invalid(fldPath, phase, "invalid phase specified"))
 }
 
 func validateReplicas(replicas int32, fldPath *field.Path) field.ErrorList {

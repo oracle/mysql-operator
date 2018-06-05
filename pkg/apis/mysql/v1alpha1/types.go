@@ -98,44 +98,24 @@ type ClusterSpec struct {
 	SSLSecret *corev1.LocalObjectReference `json:"sslSecret,omitempty"`
 }
 
-// ClusterPhase describes the state of the cluster.
-type ClusterPhase string
+// ClusterConditionType represents a valid condition of a Cluster.
+type ClusterConditionType string
 
 const (
-	// ClusterPhasePending means the cluster has been accepted by the system,
-	// but one or more of the services or statefulsets has not been started.
-	// This includes time before being bound to a node, as well as time spent
-	// pulling images onto the host.
-	ClusterPhasePending ClusterPhase = "Pending"
-
-	// ClusterPhaseRunning means the cluster has been created, all of it's
-	// required components are present, and there is at least one endpoint that
-	// mysql client can connect to.
-	ClusterPhaseRunning ClusterPhase = "Running"
-
-	// ClusterPhaseSucceeded means that all containers in the pod have
-	// voluntarily terminated with a container exit code of 0, and the system
-	// is not going to restart any of these containers.
-	ClusterPhaseSucceeded ClusterPhase = "Succeeded"
-
-	// ClusterPhaseFailed means that all containers in the pod have terminated,
-	// and at least one container has terminated in a failure (exited with a
-	// non-zero exit code or was stopped by the system).
-	ClusterPhaseFailed ClusterPhase = "Failed"
-
-	// ClusterPhaseUnknown means that for some reason the state of the cluster
-	// could not be obtained, typically due to an error in communicating with
-	// the host of the pod.
-	ClusterPhaseUnknown ClusterPhase = ""
+	// ClusterReady means the Cluster is able to service requests.
+	ClusterReady ClusterConditionType = "Ready"
 )
 
-// ValidClusterPhases denote the life-cycle states a cluster can be in.
-var ValidClusterPhases = []ClusterPhase{
-	ClusterPhasePending,
-	ClusterPhaseRunning,
-	ClusterPhaseSucceeded,
-	ClusterPhaseFailed,
-	ClusterPhaseUnknown,
+// ClusterCondition describes the observed state of a Cluster at a certain point.
+type ClusterCondition struct {
+	Type   ClusterConditionType
+	Status corev1.ConditionStatus
+	// +optional
+	LastTransitionTime metav1.Time
+	// +optional
+	Reason string
+	// +optional
+	Message string
 }
 
 // ClusterStatus defines the current status of a MySQL cluster
@@ -143,8 +123,9 @@ var ValidClusterPhases = []ClusterPhase{
 type ClusterStatus struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
-	Phase             ClusterPhase `json:"phase"`
-	Errors            []string     `json:"errors"`
+
+	// +optional
+	Conditions []ClusterCondition
 }
 
 // +genclient

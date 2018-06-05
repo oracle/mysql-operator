@@ -41,6 +41,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/pkg/errors"
 
+	clusterutil "github.com/oracle/mysql-operator/pkg/api/cluster"
 	v1alpha1 "github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	constants "github.com/oracle/mysql-operator/pkg/constants"
 	controllerutils "github.com/oracle/mysql-operator/pkg/controllers/util"
@@ -464,22 +465,20 @@ func (m *MySQLController) updateClusterStatus(cluster *v1alpha1.Cluster, ss *app
 	glog.V(4).Infof("%s/%s: ss.Spec.Replicas=%d, ss.Status.ReadyReplicas=%d, ss.Status.Replicas=%d",
 		cluster.Namespace, cluster.Name, *ss.Spec.Replicas, ss.Status.ReadyReplicas, ss.Status.Replicas)
 
-	phase := cluster.Status.Phase
-
-	if (ss.Status.ReadyReplicas < ss.Status.Replicas) || (*ss.Spec.Replicas != ss.Status.Replicas) {
-		phase = v1alpha1.ClusterPhasePending
-	} else if ss.Status.ReadyReplicas == ss.Status.Replicas {
-		phase = v1alpha1.ClusterPhaseRunning
+	status := cluster.Status.DeepCopy()
+	_, condition := clusterutil.GetClusterCondition(&cluster.Status, v1alpha1.ClusterReady)
+	if condition == nil {
+		condition = &v1alpha1.ClusterCondition{}
+	}
+	if ss.Status.ReadyReplicas == ss.Status.Replicas {
+		condition.Status = corev1.ConditionTrue
+	} else {
+		condition.Status = corev1.ConditionFalse
 	}
 
-	if phase != cluster.Status.Phase {
-		status := cluster.Status.DeepCopy()
-		status.Phase = phase
-		if err := m.clusterUpdater.UpdateClusterStatus(cluster.DeepCopy(), status); err != nil {
-			return fmt.Errorf("failed to update cluster status: %v", err)
-		}
+	if updated := clusterutil.UpdateClusterCondition(status, condition); updated {
+		return m.clusterUpdater.UpdateClusterStatus(cluster.DeepCopy(), status)
 	}
-
 	return nil
 }
 

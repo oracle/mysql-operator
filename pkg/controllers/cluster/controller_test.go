@@ -94,8 +94,7 @@ func TestSyncClusterNoLongerExistsError(t *testing.T) {
 }
 
 func TestSyncClusterValidateError(t *testing.T) {
-	cluster := mockCluster(buildversion.GetBuildVersion(), "test-cluster", "test-namespace", int32(3))
-	cluster.Status.Phase = "Bad_Phase"
+	cluster := mockCluster(buildversion.GetBuildVersion(), "test-cluster-with-a-name-greater-than-twenty-eight-chars-long", "test-namespace", int32(3))
 	fakeController, fakeInformers := newFakeMySQLController(cluster)
 	fakeInformers.clusterInformer.Informer().GetStore().Add(cluster)
 	key, _ := cache.MetaNamespaceKeyFunc(cluster)
@@ -103,7 +102,7 @@ func TestSyncClusterValidateError(t *testing.T) {
 	if err == nil {
 		t.Errorf("SyncHandler should return an error when the cluster resource is invalid.")
 	}
-	if err.Error() != `validating Cluster: status.phase: Invalid value: "Bad_Phase": invalid phase specified` {
+	if err.Error() != "validating Cluster: metadata.name: Invalid value: \"test-cluster-with-a-name-greater-than-twenty-eight-chars-long\": longer than maximum supported length 28 (see: https://bugs.mysql.com/bug.php?id=90601)" {
 		t.Errorf("SyncHandler should return the correct error when the cluster resource is invalid: %q", err)
 	}
 }
