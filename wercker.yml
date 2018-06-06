@@ -146,7 +146,7 @@ e2e-test:
       name: e2e default tests
       code: |
         export KUBECONFIG="/tmp/kubeconfig"
-        echo -n "${KUBECONFIG_VAR}" | openssl enc -base64 -d -A > "${KUBECONFIG}"
+        echo -n "${KUBECONFIG_V0_1_VAR}" | openssl enc -base64 -d -A > "${KUBECONFIG}"
         ginkgo -nodes=4 -v test/e2e -- \
           --kubeconfig="${KUBECONFIG}" \
           --operator-version="$(cat dist/version.txt)" \

@@ -1,0 +1,6 @@
+apiVersion: "mysql.oracle.com/v1"
+kind: MySQLCluster
+metadata:
+  name: mysql-cluster-5-7-22
+spec:
+  version: 5.7.22-1.1.5

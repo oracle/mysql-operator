@@ -16,7 +16,7 @@ USE_GLOBAL_NAMESPACE ?= false
 
 ifdef WERCKER
     # Insert swear words about mysql group replication and hostname length. Arghh..
-    VERSION := ${WERCKER_GIT_COMMIT}
+    VERSION ?= ${WERCKER_GIT_COMMIT}
     TENANT := "oracle"
 else
     NEW_NAMESPACE ?= e2e-${USER}
