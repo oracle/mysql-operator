@@ -299,11 +299,9 @@ const (
 
 // ScheduleStatus captures the current state of a MySQL backup schedule.
 type ScheduleStatus struct {
-	// Phase is the current phase of the MySQL backup schedule.
-	Phase BackupSchedulePhase `json:"phase"`
-
 	// LastBackup is the last time a Backup was run for this
 	// backup schedule.
+	// +optional
 	LastBackup metav1.Time `json:"lastBackup"`
 }
 

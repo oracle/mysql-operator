@@ -51,7 +51,6 @@ func TestProcessSchedule(t *testing.T) {
 		schedule                         *v1alpha1.BackupSchedule
 		fakeClockTime                    string
 		expectedErr                      bool
-		expectedSchedulePhaseUpdate      *v1alpha1.BackupSchedule
 		expectedScheduleLastBackupUpdate *v1alpha1.BackupSchedule
 		expectedBackupCreate             *v1alpha1.Backup
 		expectedEvents                   []string
@@ -69,73 +68,41 @@ func TestProcessSchedule(t *testing.T) {
 			expectedEvents: []string{},
 		},
 		{
-			name:           "schedule with phase FailedValidation does not get processed",
-			schedule:       NewTestBackupSchedule("ns", "name").WithPhase(v1alpha1.BackupSchedulePhaseFailedValidation).BackupSchedule,
+			name:           "schedule with gets validated and failed if invalid",
+			schedule:       NewTestBackupSchedule("ns", "name").BackupSchedule,
 			expectedErr:    false,
-			expectedEvents: []string{},
+			expectedEvents: []string{"Warning CronScheduleValidationError spec.schedule: Required value: must be a non-empty valid Cron expression"},
 		},
 		{
-			name:        "schedule with phase New gets validated and failed if invalid",
-			schedule:    NewTestBackupSchedule("ns", "name").WithPhase(v1alpha1.BackupSchedulePhaseNew).BackupSchedule,
-			expectedErr: false,
-			expectedSchedulePhaseUpdate: NewTestBackupSchedule("ns", "name").
-				WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
-				WithPhase(v1alpha1.BackupSchedulePhaseFailedValidation).
-				BackupSchedule,
-			expectedEvents: []string{"Warning CronScheduleValidationError Schedule must be a non-empty valid Cron expression"},
-		},
-		{
-			name:        "schedule with phase <blank> gets validated and failed if invalid",
-			schedule:    NewTestBackupSchedule("ns", "name").BackupSchedule,
-			expectedErr: false,
-			expectedSchedulePhaseUpdate: NewTestBackupSchedule("ns", "name").
-				WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
-				WithPhase(v1alpha1.BackupSchedulePhaseFailedValidation).
-				BackupSchedule,
-			expectedEvents: []string{"Warning CronScheduleValidationError Schedule must be a non-empty valid Cron expression"},
-		},
-		{
-			name:        "schedule with phase Enabled gets re-validated and failed if invalid",
-			schedule:    NewTestBackupSchedule("ns", "name").WithPhase(v1alpha1.BackupSchedulePhaseEnabled).BackupSchedule,
-			expectedErr: false,
-			expectedSchedulePhaseUpdate: NewTestBackupSchedule("ns", "name").
-				WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
-				WithPhase(v1alpha1.BackupSchedulePhaseFailedValidation).
-				BackupSchedule,
-			expectedEvents: []string{"Warning CronScheduleValidationError Schedule must be a non-empty valid Cron expression"},
-		},
-		{
-			name:          "schedule with phase New gets validated and triggers a backup",
-			schedule:      NewTestBackupSchedule("ns", "name").WithPhase(v1alpha1.BackupSchedulePhaseNew).WithCronSchedule("@every 5m").BackupSchedule,
-			fakeClockTime: "2017-01-01 12:00:00",
-			expectedErr:   false,
-			expectedSchedulePhaseUpdate: NewTestBackupSchedule("ns", "name").WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
-				WithPhase(v1alpha1.BackupSchedulePhaseEnabled).WithCronSchedule("@every 5m").BackupSchedule,
-			expectedBackupCreate: NewTestBackup().WithNamespace("ns").WithName("name-20170101120000").WithLabel("backup-schedule", "name").Backup,
-			expectedScheduleLastBackupUpdate: NewTestBackupSchedule("ns", "name").WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
-				WithPhase(v1alpha1.BackupSchedulePhaseEnabled).WithCronSchedule("@every 5m").WithLastBackupTime("2017-01-01 12:00:00").BackupSchedule,
-			expectedEvents: []string{},
-		},
-		{
-			name: "schedule with phase Enabled gets re-validated and triggers a backup if valid",
-			schedule: NewTestBackupSchedule("ns", "name").WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
-				WithPhase(v1alpha1.BackupSchedulePhaseEnabled).WithCronSchedule("@every 5m").BackupSchedule,
+			name:                 "valid schedule gets validated and triggers a backup",
+			schedule:             NewTestBackupSchedule("ns", "name").WithCronSchedule("@every 5m").BackupSchedule,
 			fakeClockTime:        "2017-01-01 12:00:00",
 			expectedErr:          false,
 			expectedBackupCreate: NewTestBackup().WithNamespace("ns").WithName("name-20170101120000").WithLabel("backup-schedule", "name").Backup,
 			expectedScheduleLastBackupUpdate: NewTestBackupSchedule("ns", "name").WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
-				WithPhase(v1alpha1.BackupSchedulePhaseEnabled).WithCronSchedule("@every 5m").WithLastBackupTime("2017-01-01 12:00:00").BackupSchedule,
+				WithCronSchedule("@every 5m").WithLastBackupTime("2017-01-01 12:00:00").BackupSchedule,
+			expectedEvents: []string{},
+		},
+		{
+			name: "schedule with gets re-validated and triggers a backup if valid",
+			schedule: NewTestBackupSchedule("ns", "name").WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
+				WithCronSchedule("@every 5m").BackupSchedule,
+			fakeClockTime:        "2017-01-01 12:00:00",
+			expectedErr:          false,
+			expectedBackupCreate: NewTestBackup().WithNamespace("ns").WithName("name-20170101120000").WithLabel("backup-schedule", "name").Backup,
+			expectedScheduleLastBackupUpdate: NewTestBackupSchedule("ns", "name").WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
+				WithCronSchedule("@every 5m").WithLastBackupTime("2017-01-01 12:00:00").BackupSchedule,
 			expectedEvents: []string{},
 		},
 		{
 			name: "schedule that's already run gets LastBackup updated",
 			schedule: NewTestBackupSchedule("ns", "name").WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
-				WithPhase(v1alpha1.BackupSchedulePhaseEnabled).WithCronSchedule("@every 5m").WithLastBackupTime("2000-01-01 00:00:00").BackupSchedule,
+				WithCronSchedule("@every 5m").WithLastBackupTime("2000-01-01 00:00:00").BackupSchedule,
 			fakeClockTime:        "2017-01-01 12:00:00",
 			expectedErr:          false,
 			expectedBackupCreate: NewTestBackup().WithNamespace("ns").WithName("name-20170101120000").WithLabel("backup-schedule", "name").Backup,
 			expectedScheduleLastBackupUpdate: NewTestBackupSchedule("ns", "name").WithLabel(constants.MySQLOperatorVersionLabel, mysqlOperatorVersion).
-				WithPhase(v1alpha1.BackupSchedulePhaseEnabled).WithCronSchedule("@every 5m").WithLastBackupTime("2017-01-01 12:00:00").BackupSchedule,
+				WithCronSchedule("@every 5m").WithLastBackupTime("2017-01-01 12:00:00").BackupSchedule,
 			expectedEvents: []string{},
 		},
 	}
@@ -191,14 +158,6 @@ func TestProcessSchedule(t *testing.T) {
 			assert.Equal(t, test.expectedErr, err != nil, "got error %v", err)
 
 			expectedActions := make([]core.Action, 0)
-
-			if upd := test.expectedSchedulePhaseUpdate; upd != nil {
-				action := core.NewUpdateAction(
-					v1alpha1.SchemeGroupVersion.WithResource("mysqlbackupschedules"),
-					upd.Namespace,
-					upd)
-				expectedActions = append(expectedActions, action)
-			}
 
 			if created := test.expectedBackupCreate; created != nil {
 				action := core.NewCreateAction(

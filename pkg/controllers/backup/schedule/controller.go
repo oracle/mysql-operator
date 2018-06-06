@@ -25,6 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/clock"
+	field "k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	scheme "k8s.io/client-go/kubernetes/scheme"
@@ -97,15 +98,6 @@ func NewController(
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
 				bs := obj.(*v1alpha1.BackupSchedule)
-
-				switch bs.Status.Phase {
-				case "", v1alpha1.BackupSchedulePhaseNew, v1alpha1.BackupSchedulePhaseEnabled:
-					// add to work queue
-				default:
-					glog.V(4).Info("Backup schedule is not new, skipping")
-					return
-				}
-
 				key, err := cache.MetaNamespaceKeyFunc(bs)
 				if err != nil {
 					glog.Errorf("Error creating queue key, item not added to queue: %v", err)
@@ -168,10 +160,6 @@ func (controller *Controller) enqueueAllEnabledSchedules() {
 	}
 
 	for _, bs := range backupSchedules {
-		if bs.Status.Phase != v1alpha1.BackupSchedulePhaseEnabled {
-			continue
-		}
-
 		key, err := cache.MetaNamespaceKeyFunc(bs)
 		if err != nil {
 			glog.Errorf("Error creating queue key, item not added to queue: %v", err)
@@ -231,13 +219,6 @@ func (controller *Controller) processSchedule(key string) error {
 		return errors.Wrap(err, "error getting BackupSchedule")
 	}
 
-	switch bs.Status.Phase {
-	case "", v1alpha1.BackupSchedulePhaseNew, v1alpha1.BackupSchedulePhaseEnabled:
-		// valid phase for processing
-	default:
-		return nil
-	}
-
 	glog.V(6).Info("Cloning backup schedule")
 	// don't modify items in the cache
 	bs = bs.DeepCopy().EnsureDefaults()
@@ -248,37 +229,11 @@ func (controller *Controller) processSchedule(key string) error {
 		return err
 	}
 
-	// validation - even if the item is Enabled, we can't trust it
-	// so re-validate
-	currentPhase := bs.Status.Phase
-
 	cronSchedule, errs := parseCronSchedule(bs)
 	if len(errs) > 0 {
-		bs.Status.Phase = v1alpha1.BackupSchedulePhaseFailedValidation
-		for _, err := range errs {
-			controller.recorder.Event(bs, corev1.EventTypeWarning, CronScheduleValidationError, err)
-		}
-	} else {
-		bs.Status.Phase = v1alpha1.BackupSchedulePhaseEnabled
-	}
-
-	// update status if it's changed
-	if currentPhase != bs.Status.Phase {
-		var updatedBackupSchedule *v1alpha1.BackupSchedule
-		err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			updatedBackupSchedule, err = controller.opClient.MySQLV1alpha1().BackupSchedules(ns).Update(bs)
-			if err != nil {
-				return errors.Wrapf(err, "error updating backup schedule phase to %q", bs.Status.Phase)
-			}
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-		bs = updatedBackupSchedule
-	}
-
-	if bs.Status.Phase != v1alpha1.BackupSchedulePhaseEnabled {
+		// NOTE(apryde): Now without phase this keeps recording validation error events every sync loop.
+		// It's only every 30s though and means that users can update their backup schedules.
+		controller.recorder.Event(bs, corev1.EventTypeWarning, CronScheduleValidationError, errs.ToAggregate().Error())
 		return nil
 	}
 
@@ -286,14 +241,16 @@ func (controller *Controller) processSchedule(key string) error {
 	return controller.submitBackupIfDue(bs, cronSchedule)
 }
 
-func parseCronSchedule(item *v1alpha1.BackupSchedule) (cron.Schedule, []string) {
-	var validationErrors []string
+func parseCronSchedule(item *v1alpha1.BackupSchedule) (cron.Schedule, field.ErrorList) {
 	var schedule cron.Schedule
 
+	errs := field.ErrorList{}
+	fldPath := field.NewPath("spec", "schedule")
+
 	// cron.Parse panics if schedule is empty
-	if len(item.Spec.Schedule) == 0 {
-		validationErrors = append(validationErrors, "Schedule must be a non-empty valid Cron expression")
-		return nil, validationErrors
+	if item.Spec.Schedule == "" {
+		errs = append(errs, field.Required(fldPath, "must be a non-empty valid Cron expression"))
+		return nil, errs
 	}
 
 	// adding a recover() around cron.Parse because it panics on empty string and is possible
@@ -302,20 +259,20 @@ func parseCronSchedule(item *v1alpha1.BackupSchedule) (cron.Schedule, []string) 
 		defer func() {
 			if r := recover(); r != nil {
 				glog.Errorf("Panic parsing schedule: %v, r: %v", item.Spec.Schedule, r)
-				validationErrors = append(validationErrors, fmt.Sprintf("invalid schedule: %v", r))
+				errs = append(errs, field.Invalid(fldPath, item.Spec.Schedule, "must be a valid Cron expression"))
 			}
 		}()
 
 		if res, err := cron.ParseStandard(item.Spec.Schedule); err != nil {
 			glog.Errorf("Error parsing schedule: %v, err: %v", item.Spec.Schedule, err)
-			validationErrors = append(validationErrors, fmt.Sprintf("invalid schedule: %v", err))
+			errs = append(errs, field.Invalid(fldPath, item.Spec.Schedule, "must be a valid Cron expression"))
 		} else {
 			schedule = res
 		}
 	}()
 
-	if len(validationErrors) > 0 {
-		return nil, validationErrors
+	if len(errs) > 0 {
+		return nil, errs
 	}
 
 	return schedule, nil

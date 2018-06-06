@@ -59,11 +59,6 @@ func NewTestBackupSchedule(namespace, name string) *TestBackupSchedule {
 	}
 }
 
-func (s *TestBackupSchedule) WithPhase(phase api.BackupSchedulePhase) *TestBackupSchedule {
-	s.Status.Phase = phase
-	return s
-}
-
 func (s *TestBackupSchedule) WithCronSchedule(cronExpression string) *TestBackupSchedule {
 	s.Spec.Schedule = cronExpression
 	return s
