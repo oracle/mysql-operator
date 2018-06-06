@@ -35,6 +35,7 @@ import (
 	record "k8s.io/client-go/tools/record"
 	workqueue "k8s.io/client-go/util/workqueue"
 
+	backuputil "github.com/oracle/mysql-operator/pkg/api/backup"
 	v1alpha1 "github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	clusterlabeler "github.com/oracle/mysql-operator/pkg/controllers/cluster/labeler"
 	controllerutils "github.com/oracle/mysql-operator/pkg/controllers/util"
@@ -77,6 +78,9 @@ type OperatorController struct {
 	// recorder is an event recorder for recording Event resources to the
 	// Kubernetes API.
 	recorder record.EventRecorder
+
+	// conditionUpdater updates the conditions of Backups.
+	conditionUpdater ConditionUpdater
 }
 
 // NewOperatorController constructs a new OperatorController.
@@ -104,6 +108,7 @@ func NewOperatorController(
 		podListerSynced:     podInformer.Informer().HasSynced,
 		queue:               workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "backup"),
 		recorder:            recorder,
+		conditionUpdater:    &conditionUpdater{client: client},
 	}
 
 	c.syncHandler = c.processBackup
@@ -113,12 +118,10 @@ func NewOperatorController(
 			AddFunc: func(obj interface{}) {
 				backup := obj.(*v1alpha1.Backup)
 
-				switch backup.Status.Phase {
-				case v1alpha1.BackupPhaseUnknown, v1alpha1.BackupPhaseNew:
-					// Only process new backups.
-				default:
-					glog.V(2).Infof("Backup %q is not new, skipping (phase=%q)",
-						kubeutil.NamespaceAndName(backup), backup.Status.Phase)
+				_, cond := backuputil.GetBackupCondition(&backup.Status, v1alpha1.BackupScheduled)
+				if cond != nil && cond.Status == corev1.ConditionTrue {
+					glog.V(4).Infof("Backup %q is already scheduled on Cluster member %q",
+						kubeutil.NamespaceAndName(backup), backup.Spec.AgentScheduled)
 					return
 				}
 
@@ -251,21 +254,18 @@ func (controller *OperatorController) processBackup(key string) error {
 		}
 	}
 
-	// If the Backup is not valid emit an event to that effect and mark
-	// it as failed.
-	// TODO(apryde): Maybe we should add an UpdateFunc to the backupInformer
-	// and support users fixing validation errors via updates (rather than
-	// recreation).
+	// TODO(apryde): Maybe we should add an UpdateFunc to the backupInformer and support users fixing
+	// validation errors via updates (rather than recreation).
 	if validationErr != nil {
-		backup.Status.Phase = v1alpha1.BackupPhaseFailed
-		backup, err = controller.client.Backups(ns).Update(backup)
-		if err != nil {
-			return errors.Wrapf(err, "failed to update (phase=%q)", v1alpha1.BackupPhaseFailed)
-		}
-
-		controller.recorder.Event(backup, corev1.EventTypeWarning, "FailedValidation", validationErr.Error())
-
-		return nil // We don't return an error as we don't want to re-queue.
+		controller.recorder.Eventf(backup, corev1.EventTypeWarning, "FailedValidation", validationErr.Error())
+		// NOTE: We only return an error here if we fail to set the condition
+		// (rather than on validation failure) as we don't want to retry.
+		return controller.conditionUpdater.Update(backup, &v1alpha1.BackupCondition{
+			Type:    v1alpha1.BackupFailed,
+			Status:  corev1.ConditionFalse,
+			Reason:  "FailedValidation",
+			Message: validationErr.Error(),
+		})
 	}
 
 	// If possible schedule backup on a secondary member otherwise a primary.
@@ -298,7 +298,10 @@ func (controller *OperatorController) scheduleBackup(backup *v1alpha1.Backup) (*
 		return backup, errors.Wrap(err, "error listing Pods to choose secondary")
 	}
 	if len(secondaries) > 0 {
-		backup.Status.Phase = v1alpha1.BackupPhaseScheduled
+		backuputil.UpdateBackupCondition(&backup.Status, &v1alpha1.BackupCondition{
+			Type:   v1alpha1.BackupScheduled,
+			Status: corev1.ConditionTrue,
+		})
 		backup.Spec.AgentScheduled = secondaries[0].Name
 		return backup, nil
 	}
@@ -309,7 +312,10 @@ func (controller *OperatorController) scheduleBackup(backup *v1alpha1.Backup) (*
 		return backup, errors.Wrap(err, "error listing Pods to choose primary")
 	}
 	if len(primaries) > 0 {
-		backup.Status.Phase = v1alpha1.BackupPhaseScheduled
+		backuputil.UpdateBackupCondition(&backup.Status, &v1alpha1.BackupCondition{
+			Type:   v1alpha1.BackupScheduled,
+			Status: corev1.ConditionTrue,
+		})
 		backup.Spec.AgentScheduled = primaries[0].Name
 		return backup, nil
 	}

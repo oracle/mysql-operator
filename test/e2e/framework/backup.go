@@ -27,6 +27,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 
+	backuputil "github.com/oracle/mysql-operator/pkg/api/backup"
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	mysqlclientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 )
@@ -160,12 +161,12 @@ func (j *BackupTestJig) waitForConditionOrFail(namespace, name string, timeout t
 func (j *BackupTestJig) WaitForbackupReadyOrFail(namespace, name string, timeout time.Duration) *v1alpha1.Backup {
 	Logf("Waiting up to %v for Backup \"%s/%s\" to be complete executing", timeout, namespace, name)
 	backup := j.waitForConditionOrFail(namespace, name, timeout, "to complete executing", func(backup *v1alpha1.Backup) bool {
-		phase := backup.Status.Phase
-		if phase == v1alpha1.BackupPhaseComplete {
+		_, cond := backuputil.GetBackupCondition(&backup.Status, v1alpha1.BackupComplete)
+		if cond != nil && cond.Status == corev1.ConditionTrue {
 			return true
 		}
-
-		if phase == v1alpha1.BackupPhaseFailed {
+		_, cond = backuputil.GetBackupCondition(&backup.Status, v1alpha1.BackupFailed)
+		if cond != nil && cond.Status == corev1.ConditionTrue {
 			ns := backup.Namespace
 			events, err := j.KubeClient.CoreV1().Events(ns).List(metav1.ListOptions{})
 			if err != nil {
@@ -177,7 +178,7 @@ func (j *BackupTestJig) WaitForbackupReadyOrFail(namespace, name string, timeout
 				}
 				Logf(e.String())
 			}
-			Failf("Backup entered state %q", v1alpha1.BackupPhaseFailed)
+			Failf("Backup condition failed (%s==%s)", cond.Type, cond.Status)
 		}
 		return false
 	})

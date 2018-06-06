@@ -150,24 +150,6 @@ type ClusterList struct {
 	Items           []Cluster `json:"items"`
 }
 
-// BackupSpec defines the specification for a MySQL backup. This includes what should be backed up,
-// what tool should perform the backup, and, where the backup should be stored.
-type BackupSpec struct {
-	// Executor is the configuration of the tool that will produce the backup, and a definition of
-	// what databases and tables to backup.
-	Executor *BackupExecutor `json:"executor"`
-
-	// StorageProvider is the configuration of where and how backups should be stored.
-	StorageProvider *BackupStorageProvider `json:"storageProvider"`
-
-	// Cluster is a reference to the Cluster to which the Backup belongs.
-	Cluster *corev1.LocalObjectReference `json:"cluster"`
-
-	// AgentScheduled is the agent hostname to run the backup on.
-	// TODO(apryde): ScheduledAgent (*corev1.LocalObjectReference)?
-	AgentScheduled string `json:"agentscheduled"`
-}
-
 // BackupExecutor represents the configuration of the tool performing the backup. This includes the tool
 // to use, and, what database and tables should be backed up.
 // The storage of the backup is configured in the relevant Storage configuration.
@@ -192,48 +174,74 @@ type BackupStorageProvider struct {
 	Config map[string]string `json:"config,omitempty"`
 }
 
-// BackupPhase represents the current life-cycle phase of a Backup.
-type BackupPhase string
+// BackupSpec defines the specification for a MySQL backup. This includes what should be backed up,
+// what tool should perform the backup, and, where the backup should be stored.
+type BackupSpec struct {
+	// Executor is the configuration of the tool that will produce the backup, and a definition of
+	// what databases and tables to backup.
+	Executor *BackupExecutor `json:"executor"`
+
+	// StorageProvider is the configuration of where and how backups should be stored.
+	StorageProvider *BackupStorageProvider `json:"storageProvider"`
+
+	// Cluster is a reference to the Cluster to which the Backup belongs.
+	Cluster *corev1.LocalObjectReference `json:"cluster"`
+
+	// AgentScheduled is the agent hostname to run the backup on.
+	// TODO(apryde): ScheduledAgent (*corev1.LocalObjectReference)?
+	AgentScheduled string `json:"agentscheduled"`
+}
+
+// BackupConditionType represents a valid condition of a Backup.
+type BackupConditionType string
 
 const (
-	// BackupPhaseUnknown means that the backup hasn't yet been processed.
-	BackupPhaseUnknown BackupPhase = ""
-
-	// BackupPhaseNew means that the Backup hasn't yet been processed.
-	BackupPhaseNew BackupPhase = "New"
-
-	// BackupPhaseScheduled means that the Backup has been scheduled on an
-	// appropriate replica.
-	BackupPhaseScheduled BackupPhase = "Scheduled"
-
-	// BackupPhaseStarted means the backup is in progress.
-	BackupPhaseStarted BackupPhase = "Started"
-
-	// BackupPhaseComplete means the backup has terminated successfully.
-	BackupPhaseComplete BackupPhase = "Complete"
-
-	// BackupPhaseFailed means the backup has terminated with an error.
-	BackupPhaseFailed BackupPhase = "Failed"
+	// BackupScheduled means the Backup has been assigned to a Cluster
+	// member for execution.
+	BackupScheduled BackupConditionType = "Scheduled"
+	// BackupRunning means the Backup is currently being executed by a
+	// Cluster member's mysql-agent side-car.
+	BackupRunning BackupConditionType = "Running"
+	// BackupComplete means the Backup has successfully executed and the
+	// resulting artifact has been stored in object storage.
+	BackupComplete BackupConditionType = "Complete"
+	// BackupFailed means the Backup has failed.
+	BackupFailed BackupConditionType = "Failed"
 )
 
-// BackupOutcome describes the location of a MySQL Backup
+// BackupCondition describes the observed state of a Backup at a certain point.
+type BackupCondition struct {
+	Type   BackupConditionType
+	Status corev1.ConditionStatus
+	// +optional
+	LastTransitionTime metav1.Time
+	// +optional
+	Reason string
+	// +optional
+	Message string
+}
+
+// BackupOutcome describes the location of a Backup
 type BackupOutcome struct {
 	// Location is the Object Storage network location of the Backup.
 	Location string `json:"location"`
 }
 
-// BackupStatus captures the current status of a MySQL backup.
+// BackupStatus captures the current status of a Backup.
 type BackupStatus struct {
-	// Phase is the current life-cycle phase of the Backup.
-	Phase BackupPhase `json:"phase"`
+	// +optional
+	Conditions []BackupCondition
 
 	// Outcome holds the results of a successful backup.
+	// +optional
 	Outcome BackupOutcome `json:"outcome"`
 
 	// TimeStarted is the time at which the backup was started.
+	// +optional
 	TimeStarted metav1.Time `json:"timeStarted"`
 
 	// TimeCompleted is the time at which the backup completed.
+	// +optional
 	TimeCompleted metav1.Time `json:"timeCompleted"`
 }
 
@@ -242,8 +250,7 @@ type BackupStatus struct {
 // +resourceName=mysqlbackups
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Backup is a MySQL Operator resource that represents a backup of a MySQL
-// cluster.
+// Backup is a backup of a Cluster.
 type Backup struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
@@ -305,8 +312,7 @@ type ScheduleStatus struct {
 // +resourceName=mysqlbackupschedules
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// BackupSchedule is a MySQL Operator resource that represents a backup
-// schedule of a MySQL cluster.
+// BackupSchedule is a backup schedule for a Cluster.
 type BackupSchedule struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
