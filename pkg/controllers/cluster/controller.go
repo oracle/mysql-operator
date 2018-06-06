@@ -468,7 +468,7 @@ func (m *MySQLController) updateClusterStatus(cluster *v1alpha1.Cluster, ss *app
 	status := cluster.Status.DeepCopy()
 	_, condition := clusterutil.GetClusterCondition(&cluster.Status, v1alpha1.ClusterReady)
 	if condition == nil {
-		condition = &v1alpha1.ClusterCondition{}
+		condition = &v1alpha1.ClusterCondition{Type: v1alpha1.ClusterReady}
 	}
 	if ss.Status.ReadyReplicas == ss.Status.Replicas {
 		condition.Status = corev1.ConditionTrue
