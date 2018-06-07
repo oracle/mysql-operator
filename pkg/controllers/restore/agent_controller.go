@@ -36,6 +36,7 @@ import (
 	record "k8s.io/client-go/tools/record"
 	workqueue "k8s.io/client-go/util/workqueue"
 
+	restoreutil "github.com/oracle/mysql-operator/pkg/api/restore"
 	v1alpha1 "github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	backuputil "github.com/oracle/mysql-operator/pkg/backup"
 	executor "github.com/oracle/mysql-operator/pkg/backup/executor"
@@ -91,6 +92,9 @@ type AgentController struct {
 	// recorder is an event recorder for recording Event resources to the
 	// Kubernetes API.
 	recorder record.EventRecorder
+
+	// conditionUpdater updates the conditions of Backups.
+	conditionUpdater ConditionUpdater
 }
 
 // NewAgentController constructs a new AgentController.
@@ -124,6 +128,7 @@ func NewAgentController(
 		podListerSynced:     podInformer.Informer().HasSynced,
 		queue:               workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "restore"),
 		recorder:            recorder,
+		conditionUpdater:    &conditionUpdater{client: client},
 	}
 
 	c.syncHandler = c.processRestore
@@ -132,7 +137,8 @@ func NewAgentController(
 		cache.ResourceEventHandlerFuncs{
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				new := newObj.(*v1alpha1.Restore)
-				if new.Status.Phase == v1alpha1.RestorePhaseScheduled && new.Spec.AgentScheduled == c.podName {
+				_, cond := restoreutil.GetRestoreCondition(&new.Status, v1alpha1.RestoreScheduled)
+				if cond != nil && cond.Status == corev1.ConditionTrue && new.Spec.AgentScheduled == c.podName {
 					key, err := cache.MetaNamespaceKeyFunc(new)
 					if err != nil {
 						glog.Errorf("Error creating queue key, item not added to queue: %v", err)
@@ -141,8 +147,7 @@ func NewAgentController(
 					c.queue.Add(key)
 					return
 				}
-				glog.V(2).Infof("Restore %q is not Scheduled, skipping (phase=%q)",
-					kubeutil.NamespaceAndName(new), new.Status.Phase)
+				glog.V(4).Infof("Restore %q is not Scheduled on this agent")
 
 			},
 		},
@@ -299,14 +304,15 @@ func (controller *AgentController) processRestore(key string) error {
 	// and support users fixing validation errors via updates (rather than
 	// recreation).
 	if validationErr != nil {
-		restore.Status.Phase = v1alpha1.RestorePhaseFailed
-		restore, err = controller.client.Restores(ns).Update(restore)
-		if err != nil {
-			return errors.Wrapf(err, "failed to update (phase=%q)", v1alpha1.RestorePhaseFailed)
-		}
 		controller.recorder.Eventf(restore, corev1.EventTypeWarning, "FailedValidation", validationErr.Error())
-
-		return nil // We don't return an error as we don't want to re-queue.
+		// NOTE: We only return an error here if we fail to set the condition
+		// (rather than on validation failure) as we don't want to retry.
+		return controller.conditionUpdater.Update(restore, &v1alpha1.RestoreCondition{
+			Type:    v1alpha1.RestoreFailed,
+			Status:  corev1.ConditionFalse,
+			Reason:  "FailedValidation",
+			Message: validationErr.Error(),
+		})
 	}
 
 	err = controller.performRestore(restore, backup, creds)
@@ -318,13 +324,12 @@ func (controller *AgentController) processRestore(key string) error {
 }
 
 func (controller *AgentController) performRestore(restore *v1alpha1.Restore, backup *v1alpha1.Backup, creds *corev1.Secret) error {
-	// Update restore phase to started.
 	started := time.Now()
-	restore.Status.Phase = v1alpha1.RestorePhaseStarted
-	restore.Status.TimeStarted = metav1.Time{Time: started}
-	restore, err := controller.client.Restores(restore.Namespace).Update(restore)
-	if err != nil {
-		return errors.Wrapf(err, "failed to mark Restore %q as started", kubeutil.NamespaceAndName(restore))
+	if err := controller.conditionUpdater.Update(restore, &v1alpha1.RestoreCondition{
+		Type:   v1alpha1.RestoreRunning,
+		Status: corev1.ConditionTrue,
+	}); err != nil {
+		return err
 	}
 
 	// TODO: Should backuputil.NewConfiguredRunner accept a map[string][]byte
@@ -336,31 +341,33 @@ func (controller *AgentController) performRestore(restore *v1alpha1.Restore, bac
 
 	runner, err := backuputil.NewConfiguredRunner(backup.Spec.Executor, executor.DefaultCreds(), backup.Spec.StorageProvider, credsMap)
 	if err != nil {
-		restore.Status.Phase = v1alpha1.RestorePhaseFailed
-		restore, updateErr := controller.client.Restores(restore.Namespace).Update(restore)
-		if updateErr != nil {
-			return errors.Wrapf(err, "failed to mark Restore %q as failed", kubeutil.NamespaceAndName(restore))
-		}
-
-		controller.recorder.Event(restore, corev1.EventTypeWarning, "FailedValidation", err.Error())
-		return nil // We return nil as the error cannot be retried.
+		controller.recorder.Event(restore, corev1.EventTypeWarning, "ExecutionFailed", err.Error())
+		return controller.conditionUpdater.Update(restore, &v1alpha1.RestoreCondition{
+			Type:    v1alpha1.RestoreFailed,
+			Status:  corev1.ConditionFalse,
+			Reason:  "ExecutionFailed",
+			Message: err.Error(),
+		})
 	}
 
 	err = runner.Restore(backup.Status.Outcome.Location)
 	if err != nil {
-		restore.Status.Phase = v1alpha1.RestorePhaseFailed
-		restore, updateErr := controller.client.Restores(restore.Namespace).Update(restore)
-		if updateErr != nil {
-			return errors.Wrapf(err, "failed to mark Restore %q as failed", kubeutil.NamespaceAndName(restore))
-		}
-
-		controller.recorder.Event(restore, corev1.EventTypeWarning, "RestoreFailed", err.Error())
-		return nil // We return nil as the error cannot be retried.
+		controller.recorder.Event(restore, corev1.EventTypeWarning, "ExecutionFailed", err.Error())
+		return controller.conditionUpdater.Update(restore, &v1alpha1.RestoreCondition{
+			Type:    v1alpha1.RestoreFailed,
+			Status:  corev1.ConditionFalse,
+			Reason:  "ExecutionFailed",
+			Message: err.Error(),
+		})
 	}
 
 	finished := time.Now()
 
-	restore.Status.Phase = v1alpha1.RestorePhaseComplete
+	restoreutil.UpdateRestoreCondition(&restore.Status, &v1alpha1.RestoreCondition{
+		Type:   v1alpha1.RestoreComplete,
+		Status: corev1.ConditionTrue,
+	})
+	restore.Status.TimeStarted = metav1.Time{Time: started}
 	restore.Status.TimeCompleted = metav1.Time{Time: finished}
 	restore, err = controller.client.Restores(restore.Namespace).Update(restore)
 	if err != nil {
@@ -369,7 +376,7 @@ func (controller *AgentController) performRestore(restore *v1alpha1.Restore, bac
 
 	metrics.IncEventCounter(clusterRestoreCount)
 	glog.Infof("Restore %q succeeded in %v", restore.Name, finished.Sub(started))
-	controller.recorder.Event(restore, corev1.EventTypeNormal, "Success", "Restore complete")
+	controller.recorder.Event(restore, corev1.EventTypeNormal, "Complete", "Restore complete")
 
 	return nil
 }

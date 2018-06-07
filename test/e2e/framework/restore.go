@@ -27,6 +27,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 
+	restoreutil "github.com/oracle/mysql-operator/pkg/api/restore"
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	mysqlclientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 )
@@ -145,12 +146,12 @@ func (j *RestoreTestJig) waitForConditionOrFail(namespace, name string, timeout 
 func (j *RestoreTestJig) WaitForRestoreCompleteOrFail(namespace, name string, timeout time.Duration) *v1alpha1.Restore {
 	Logf("Waiting up to %v for Restore \"%s/%s\" to be complete executing", timeout, namespace, name)
 	restore := j.waitForConditionOrFail(namespace, name, timeout, "to complete executing", func(restore *v1alpha1.Restore) bool {
-		phase := restore.Status.Phase
-		if phase == v1alpha1.RestorePhaseComplete {
+		_, cond := restoreutil.GetRestoreCondition(&restore.Status, v1alpha1.RestoreComplete)
+		if cond != nil && cond.Status == corev1.ConditionTrue {
 			return true
 		}
-
-		if phase == v1alpha1.RestorePhaseFailed {
+		_, cond = restoreutil.GetRestoreCondition(&restore.Status, v1alpha1.RestoreFailed)
+		if cond != nil && cond.Status == corev1.ConditionTrue {
 			ns := restore.Namespace
 			events, err := j.KubeClient.CoreV1().Events(ns).List(metav1.ListOptions{})
 			if err != nil {
@@ -162,7 +163,7 @@ func (j *RestoreTestJig) WaitForRestoreCompleteOrFail(namespace, name string, ti
 				}
 				Logf(e.String())
 			}
-			Failf("Restore entered state %q", v1alpha1.RestorePhaseFailed)
+			Failf("Restore condition failed (%s==%s)", cond.Type, cond.Status)
 		}
 		return false
 	})

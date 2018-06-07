@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package backup
+package restore
 
 import (
 	corev1 "k8s.io/api/core/v1"
@@ -21,9 +21,9 @@ import (
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 )
 
-// GetBackupCondition extracts the provided condition from the given status and returns that.
+// GetRestoreCondition extracts the provided condition from the given status and returns that.
 // Returns nil and -1 if the condition is not present, and the index of the located condition.
-func GetBackupCondition(status *v1alpha1.BackupStatus, conditionType v1alpha1.BackupConditionType) (int, *v1alpha1.BackupCondition) {
+func GetRestoreCondition(status *v1alpha1.RestoreStatus, conditionType v1alpha1.RestoreConditionType) (int, *v1alpha1.RestoreCondition) {
 	if status == nil {
 		return -1, nil
 	}
@@ -35,16 +35,16 @@ func GetBackupCondition(status *v1alpha1.BackupStatus, conditionType v1alpha1.Ba
 	return -1, nil
 }
 
-// UpdateBackupCondition updates existing Backup condition or creates a new
+// UpdateRestoreCondition updates existing Restore condition or creates a new
 // one. Sets LastTransitionTime to now if the status has changed.
-// Returns true if Backup condition has changed or has been added.
-func UpdateBackupCondition(status *v1alpha1.BackupStatus, condition *v1alpha1.BackupCondition) bool {
+// Returns true if Restore condition has changed or has been added.
+func UpdateRestoreCondition(status *v1alpha1.RestoreStatus, condition *v1alpha1.RestoreCondition) bool {
 	condition.LastTransitionTime = metav1.Now()
-	// Try to find this Backup condition.
-	conditionIndex, oldCondition := GetBackupCondition(status, condition.Type)
+	// Try to find this Restore condition.
+	conditionIndex, oldCondition := GetRestoreCondition(status, condition.Type)
 
 	if oldCondition == nil {
-		// We are adding new Backup condition.
+		// We are adding new Restore condition.
 		status.Conditions = append(status.Conditions, *condition)
 		return true
 	}
@@ -63,20 +63,20 @@ func UpdateBackupCondition(status *v1alpha1.BackupStatus, condition *v1alpha1.Ba
 	return !isEqual
 }
 
-// IsBackupComplete returns true if a Backup has successfully completed
-func IsBackupComplete(backup *v1alpha1.Backup) bool {
-	return IsBackupCompleteConditionTrue(backup.Status)
+// IsRestoreComplete returns true if a Restore has successfully completed
+func IsRestoreComplete(restore *v1alpha1.Restore) bool {
+	return IsRestoreCompleteConditionTrue(restore.Status)
 }
 
-// GetBackupCompleteCondition extracts the Backup complete condition from the given status and returns that.
+// GetRestoreCompleteCondition extracts the Restore complete condition from the given status and returns that.
 // Returns nil if the condition is not present.
-func GetBackupCompleteCondition(status v1alpha1.BackupStatus) *v1alpha1.BackupCondition {
-	_, condition := GetBackupCondition(&status, v1alpha1.BackupComplete)
+func GetRestoreCompleteCondition(status v1alpha1.RestoreStatus) *v1alpha1.RestoreCondition {
+	_, condition := GetRestoreCondition(&status, v1alpha1.RestoreComplete)
 	return condition
 }
 
-// IsBackupCompleteConditionTrue returns true if a Backup is complete; false otherwise.
-func IsBackupCompleteConditionTrue(status v1alpha1.BackupStatus) bool {
-	condition := GetBackupCompleteCondition(status)
+// IsRestoreCompleteConditionTrue returns true if a Restore is complete; false otherwise.
+func IsRestoreCompleteConditionTrue(status v1alpha1.RestoreStatus) bool {
+	condition := GetRestoreCompleteCondition(status)
 	return condition != nil && condition.Status == corev1.ConditionTrue
 }

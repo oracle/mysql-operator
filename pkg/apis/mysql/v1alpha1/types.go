@@ -279,24 +279,6 @@ type BackupScheduleSpec struct {
 	BackupTemplate BackupSpec `json:"backupTemplate"`
 }
 
-// BackupSchedulePhase is a string representation of the lifecycle phase
-// of a backup schedule.
-type BackupSchedulePhase string
-
-const (
-	// BackupSchedulePhaseNew means the backup schedule has been created but not
-	// yet processed by the backup schedule controller.
-	BackupSchedulePhaseNew BackupSchedulePhase = "New"
-
-	// BackupSchedulePhaseEnabled means the backup schedule has been validated and
-	// will now be triggering backups according to the schedule spec.
-	BackupSchedulePhaseEnabled BackupSchedulePhase = "Enabled"
-
-	// BackupSchedulePhaseFailedValidation means the backup schedule has failed
-	// the controller's validations and therefore will not trigger backups.
-	BackupSchedulePhaseFailedValidation BackupSchedulePhase = "FailedValidation"
-)
-
 // ScheduleStatus captures the current state of a MySQL backup schedule.
 type ScheduleStatus struct {
 	// LastBackup is the last time a Backup was run for this
@@ -329,6 +311,35 @@ type BackupScheduleList struct {
 	Items []BackupSchedule `json:"items"`
 }
 
+// RestoreConditionType represents a valid condition of a Restore.
+type RestoreConditionType string
+
+const (
+	// RestoreScheduled means the Restore has been assigned to a Cluster
+	// member for execution.
+	RestoreScheduled RestoreConditionType = "Scheduled"
+	// RestoreRunning means the Restore is currently being executed by a
+	// Cluster member's mysql-agent side-car.
+	RestoreRunning RestoreConditionType = "Running"
+	// RestoreComplete means the Restore has successfully executed and the
+	// resulting artifact has been stored in object storage.
+	RestoreComplete RestoreConditionType = "Complete"
+	// RestoreFailed means the Restore has failed.
+	RestoreFailed RestoreConditionType = "Failed"
+)
+
+// RestoreCondition describes the observed state of a Restore at a certain point.
+type RestoreCondition struct {
+	Type   RestoreConditionType
+	Status corev1.ConditionStatus
+	// +optional
+	LastTransitionTime metav1.Time
+	// +optional
+	Reason string
+	// +optional
+	Message string
+}
+
 // RestoreSpec defines the specification for a restore of a MySQL backup.
 type RestoreSpec struct {
 	// Cluster is a refeference to the Cluster to which the Restore
@@ -342,40 +353,18 @@ type RestoreSpec struct {
 	AgentScheduled string `json:"agentscheduled"`
 }
 
-// RestorePhase represents the current life-cycle phase of a Restore.
-type RestorePhase string
-
-const (
-	// RestorePhaseUnknown means that the restore hasn't yet been processed.
-	RestorePhaseUnknown RestorePhase = ""
-
-	// RestorePhaseNew means that the restore hasn't yet been processed.
-	RestorePhaseNew RestorePhase = "New"
-
-	// RestorePhaseScheduled means that the restore has been scheduled on an
-	// appropriate replica.
-	RestorePhaseScheduled RestorePhase = "Scheduled"
-
-	// RestorePhaseStarted means the restore is in progress.
-	RestorePhaseStarted RestorePhase = "Started"
-
-	// RestorePhaseComplete means the restore has terminated successfully.
-	RestorePhaseComplete RestorePhase = "Complete"
-
-	// RestorePhaseFailed means the Restore has terminated with an error.
-	RestorePhaseFailed RestorePhase = "Failed"
-)
-
 // RestoreStatus captures the current status of a MySQL restore.
 type RestoreStatus struct {
-	// Phase is the current life-cycle phase of the Restore.
-	Phase RestorePhase `json:"phase"`
-
 	// TimeStarted is the time at which the restore was started.
+	// +optional
 	TimeStarted metav1.Time `json:"timeStarted"`
 
 	// TimeCompleted is the time at which the restore completed.
+	// +optional
 	TimeCompleted metav1.Time `json:"timeCompleted"`
+
+	// +optional
+	Conditions []RestoreCondition
 }
 
 // +genclient

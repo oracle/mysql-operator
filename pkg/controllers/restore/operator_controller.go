@@ -35,6 +35,7 @@ import (
 	record "k8s.io/client-go/tools/record"
 	workqueue "k8s.io/client-go/util/workqueue"
 
+	restoreutil "github.com/oracle/mysql-operator/pkg/api/restore"
 	v1alpha1 "github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	clusterlabeler "github.com/oracle/mysql-operator/pkg/controllers/cluster/labeler"
 	controllerutils "github.com/oracle/mysql-operator/pkg/controllers/util"
@@ -84,6 +85,9 @@ type OperatorController struct {
 	// recorder is an event recorder for recording Event resources to the
 	// Kubernetes API.
 	recorder record.EventRecorder
+
+	// conditionUpdater updates the conditions of Backups.
+	conditionUpdater ConditionUpdater
 }
 
 // NewOperatorController constructs a new OperatorController.
@@ -114,6 +118,7 @@ func NewOperatorController(
 		podListerSynced:     podInformer.Informer().HasSynced,
 		queue:               workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "restore"),
 		recorder:            recorder,
+		conditionUpdater:    &conditionUpdater{client: client},
 	}
 
 	c.syncHandler = c.processRestore
@@ -123,12 +128,10 @@ func NewOperatorController(
 			AddFunc: func(obj interface{}) {
 				restore := obj.(*v1alpha1.Restore)
 
-				switch restore.Status.Phase {
-				case v1alpha1.RestorePhaseUnknown, v1alpha1.RestorePhaseNew:
-					// Only process new restores.
-				default:
-					glog.V(2).Infof("Restore %q is not new, skipping (phase=%q)",
-						kubeutil.NamespaceAndName(restore), restore.Status.Phase)
+				_, cond := restoreutil.GetRestoreCondition(&restore.Status, v1alpha1.RestoreScheduled)
+				if cond != nil && cond.Status == corev1.ConditionTrue {
+					glog.V(4).Infof("Restore %q is already scheduled on Cluster member %q",
+						kubeutil.NamespaceAndName(restore), restore.Spec.AgentScheduled)
 					return
 				}
 
@@ -279,14 +282,15 @@ func (controller *OperatorController) processRestore(key string) error {
 	// and support users fixing validation errors via updates (rather than
 	// recreation).
 	if validationErr != nil {
-		restore.Status.Phase = v1alpha1.RestorePhaseFailed
-		restore, err = controller.client.Restores(ns).Update(restore)
-		if err != nil {
-			return errors.Wrapf(err, "failed to update (phase=%q)", v1alpha1.RestorePhaseFailed)
-		}
 		controller.recorder.Eventf(restore, corev1.EventTypeWarning, "FailedValidation", validationErr.Error())
-
-		return nil // We don't return an error as we don't want to re-queue.
+		// NOTE: We only return an error here if we fail to set the condition
+		// (rather than on validation failure) as we don't want to retry.
+		return controller.conditionUpdater.Update(restore, &v1alpha1.RestoreCondition{
+			Type:    v1alpha1.RestoreFailed,
+			Status:  corev1.ConditionFalse,
+			Reason:  "FailedValidation",
+			Message: validationErr.Error(),
+		})
 	}
 
 	// Schedule restore on a primary.
@@ -318,7 +322,10 @@ func (controller *OperatorController) scheduleRestore(restore *v1alpha1.Restore)
 		return restore, errors.Wrap(err, "error listing Pods")
 	}
 	if len(primaries) > 0 {
-		restore.Status.Phase = v1alpha1.RestorePhaseScheduled
+		restoreutil.UpdateRestoreCondition(&restore.Status, &v1alpha1.RestoreCondition{
+			Type:   v1alpha1.RestoreScheduled,
+			Status: corev1.ConditionTrue,
+		})
 		restore.Spec.AgentScheduled = primaries[0].Name
 		return restore, nil
 	}
