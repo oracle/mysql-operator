@@ -160,18 +160,29 @@ type BackupExecutor struct {
 	Databases []string `json:"databases"`
 }
 
-// BackupStorageProvider defines the configuration for storing a MySQL backup to a storage service.
-// The generation of the backup is configured in the Executor configuration.
-type BackupStorageProvider struct {
-	// Name denotes the type of storage provider that will store and retrieve the backups.
-	// Currently only supports "S3" denoting a S3 compatiable storage provider.
-	Name string `json:"name"`
-	// AuthSecret is a reference to the Kubernetes secret containing the configuration for uploading
-	// the backup to authenticated storage.
-	AuthSecret *corev1.LocalObjectReference `json:"authSecret,omitempty"`
-	// Config is generic string based key-value map that defines non-secret configuration values for
-	// uploading the backup to storage w.r.t the configured storage provider.
-	Config map[string]string `json:"config,omitempty"`
+// S3StorageProvider represents an S3 compatible bucket for storing Backups.
+type S3StorageProvider struct {
+	// Region in which the S3 compatible bucket is located.
+	Region string `json:"region"`
+	// Endpoint (hostname only or fully qualified URI) of S3 compatible
+	// storage service.
+	Endpoint string `json:"endpoint"`
+	// Bucket in which to store the Backup.
+	Bucket string `json:"bucket"`
+	// ForcePathStyle when set to true forces the request to use path-style
+	// addressing, i.e., `http://s3.amazonaws.com/BUCKET/KEY`. By default,
+	// the S3 client will use virtual hosted bucket addressing when possible
+	// (`http://BUCKET.s3.amazonaws.com/KEY`).
+	ForcePathStyle bool `json:"forcePathStyle"`
+	// CredentialsSecret is a reference to the Secret containing the
+	// credentials authenticating with the S3 compatible storage service.
+	CredentialsSecret *corev1.LocalObjectReference `json:"credentialsSecret"`
+}
+
+// StorageProvider defines the configuration for storing a Backup in a storage
+// service.
+type StorageProvider struct {
+	S3 *S3StorageProvider `json:"s3"`
 }
 
 // BackupSpec defines the specification for a MySQL backup. This includes what should be backed up,
@@ -181,10 +192,10 @@ type BackupSpec struct {
 	// what databases and tables to backup.
 	Executor *BackupExecutor `json:"executor"`
 
-	// StorageProvider is the configuration of where and how backups should be stored.
-	StorageProvider *BackupStorageProvider `json:"storageProvider"`
+	// StorageProvider configures where and how backups should be stored.
+	StorageProvider StorageProvider `json:"storageProvider"`
 
-	// Cluster is a reference to the Cluster to which the Backup belongs.
+	// Cluster is the Cluster to backup.
 	Cluster *corev1.LocalObjectReference `json:"cluster"`
 
 	// AgentScheduled is the agent hostname to run the backup on.

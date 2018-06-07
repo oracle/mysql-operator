@@ -20,36 +20,35 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 )
 
 type TestBackupSchedule struct {
-	*api.BackupSchedule
+	*v1alpha1.BackupSchedule
 }
 
 func NewTestBackupSchedule(namespace, name string) *TestBackupSchedule {
 	return &TestBackupSchedule{
-		BackupSchedule: &api.BackupSchedule{
+		BackupSchedule: &v1alpha1.BackupSchedule{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: namespace,
 				Name:      name,
 				Labels:    make(map[string]string),
 			},
-			Spec: api.BackupScheduleSpec{
-				BackupTemplate: api.BackupSpec{
-					Executor: &api.BackupExecutor{
+			Spec: v1alpha1.BackupScheduleSpec{
+				BackupTemplate: v1alpha1.BackupSpec{
+					Executor: &v1alpha1.BackupExecutor{
 						Name:      "mysqldump",
 						Databases: []string{"test"},
 					},
-					StorageProvider: &api.BackupStorageProvider{
-						Name: "s3",
-						AuthSecret: &corev1.LocalObjectReference{
-							Name: "name",
-						},
-						Config: map[string]string{
-							"endpoint": "endpoint",
-							"region":   "region",
-							"bucket":   "bucket",
+					StorageProvider: v1alpha1.StorageProvider{
+						S3: &v1alpha1.S3StorageProvider{
+							Endpoint: "endpoint",
+							Region:   "region",
+							Bucket:   "bucket",
+							CredentialsSecret: &corev1.LocalObjectReference{
+								Name: "name",
+							},
 						},
 					},
 					Cluster: &corev1.LocalObjectReference{},

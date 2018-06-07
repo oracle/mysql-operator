@@ -38,15 +38,14 @@ func TestValidateValidBackup(t *testing.T) {
 				Name:      "mysqldump",
 				Databases: []string{"db1", "db2"},
 			},
-			StorageProvider: &BackupStorageProvider{
-				Name: "s3",
-				AuthSecret: &corev1.LocalObjectReference{
-					Name: "backup-storage-creds",
-				},
-				Config: map[string]string{
-					"endpoint": "endpoint",
-					"region":   "region",
-					"bucket":   "bucket",
+			StorageProvider: StorageProvider{
+				S3: &S3StorageProvider{
+					Endpoint: "endpoint",
+					Region:   "region",
+					Bucket:   "bucket",
+					CredentialsSecret: &corev1.LocalObjectReference{
+						Name: "backup-storage-creds",
+					},
 				},
 			},
 			Cluster: &corev1.LocalObjectReference{
@@ -94,15 +93,14 @@ func TestValidateBackupMissingCluster(t *testing.T) {
 				Name:      "mysqldump",
 				Databases: []string{"db1", "db2"},
 			},
-			StorageProvider: &BackupStorageProvider{
-				Name: "s3",
-				AuthSecret: &corev1.LocalObjectReference{
-					Name: "backup-storage-creds",
-				},
-				Config: map[string]string{
-					"endpoint": "endpoint",
-					"region":   "region",
-					"bucket":   "bucket",
+			StorageProvider: StorageProvider{
+				S3: &S3StorageProvider{
+					Endpoint: "endpoint",
+					Region:   "region",
+					Bucket:   "bucket",
+					CredentialsSecret: &corev1.LocalObjectReference{
+						Name: "backup-storage-creds",
+					},
 				},
 			},
 		},
@@ -121,12 +119,11 @@ func TestValidateBackupMissingSecretRef(t *testing.T) {
 				Name:      "mysqldump",
 				Databases: []string{"db1", "db2"},
 			},
-			StorageProvider: &BackupStorageProvider{
-				Name: "s3",
-				Config: map[string]string{
-					"endpoint": "endpoint",
-					"region":   "region",
-					"bucket":   "bucket",
+			StorageProvider: StorageProvider{
+				S3: &S3StorageProvider{
+					Endpoint: "endpoint",
+					Region:   "region",
+					Bucket:   "bucket",
 				},
 			},
 			Cluster: &corev1.LocalObjectReference{
@@ -136,8 +133,8 @@ func TestValidateBackupMissingSecretRef(t *testing.T) {
 	}
 
 	err := backup.Validate()
-	if !strings.Contains(err.Error(), "storageProvider.authSecret: Required value") {
-		t.Errorf("Expected backup with missing Secret to show 'storageProvider.authSecret: Required value' error. Error is: %s", err)
+	if !strings.Contains(err.Error(), "storageProvider.s3.credentialsSecret: Required value") {
+		t.Errorf("Expected backup with missing Secret to show 'storageProvider.s3.credentialsSecret: Required value' error. Error is: %s", err)
 	}
 }
 
@@ -158,15 +155,14 @@ func TestValidateValidBackupSchedule(t *testing.T) {
 					Name:      "mysqldump",
 					Databases: []string{"db1", "db2"},
 				},
-				StorageProvider: &BackupStorageProvider{
-					Name: "s3",
-					AuthSecret: &corev1.LocalObjectReference{
-						Name: "backup-storage-creds",
-					},
-					Config: map[string]string{
-						"endpoint": "endpoint",
-						"region":   "region",
-						"bucket":   "bucket",
+				StorageProvider: StorageProvider{
+					S3: &S3StorageProvider{
+						Endpoint: "endpoint",
+						Region:   "region",
+						Bucket:   "bucket",
+						CredentialsSecret: &corev1.LocalObjectReference{
+							Name: "backup-storage-creds",
+						},
 					},
 				},
 				Cluster: &corev1.LocalObjectReference{
@@ -217,15 +213,14 @@ func TestValidateBackupScheduleMissingCluster(t *testing.T) {
 					Name:      "mysqldump",
 					Databases: []string{"db1", "db2"},
 				},
-				StorageProvider: &BackupStorageProvider{
-					Name: "s3",
-					AuthSecret: &corev1.LocalObjectReference{
-						Name: "backup-storage-creds",
-					},
-					Config: map[string]string{
-						"endpoint": "endpoint",
-						"region":   "region",
-						"bucket":   "bucket",
+				StorageProvider: StorageProvider{
+					S3: &S3StorageProvider{
+						Endpoint: "endpoint",
+						Region:   "region",
+						Bucket:   "bucket",
+						CredentialsSecret: &corev1.LocalObjectReference{
+							Name: "backup-storage-creds",
+						},
 					},
 				},
 				AgentScheduled: "hostname-1",
@@ -248,12 +243,11 @@ func TestValidateBackupScheduleMissingSecretRef(t *testing.T) {
 					Name:      "mysqldump",
 					Databases: []string{"db1", "db2"},
 				},
-				StorageProvider: &BackupStorageProvider{
-					Name: "s3",
-					Config: map[string]string{
-						"endpoint": "endpoint",
-						"region":   "region",
-						"bucket":   "bucket",
+				StorageProvider: StorageProvider{
+					S3: &S3StorageProvider{
+						Endpoint: "endpoint",
+						Region:   "region",
+						Bucket:   "bucket",
 					},
 				},
 				Cluster: &corev1.LocalObjectReference{
@@ -265,8 +259,8 @@ func TestValidateBackupScheduleMissingSecretRef(t *testing.T) {
 	}
 
 	err := bs.Validate()
-	if !strings.Contains(err.Error(), "storageProvider.authSecret: Required value") {
-		t.Errorf("Expected backup schedule with missing authSecret to show 'storageProvider.authSecret: Required value' error. Error is: %s", err)
+	if !strings.Contains(err.Error(), "storageProvider.s3.credentialsSecret: Required value") {
+		t.Errorf("Expected backup schedule with missing authSecret to show 'storageProvider.s3.credentialsSecret: Required value' error. Error is: %s", err)
 	}
 }
 

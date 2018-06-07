@@ -36,15 +36,14 @@ func NewTestBackup() *TestBackup {
 					Name:      "mysqldump",
 					Databases: []string{"test"},
 				},
-				StorageProvider: &v1alpha1.BackupStorageProvider{
-					Name: "s3",
-					AuthSecret: &corev1.LocalObjectReference{
-						Name: "name",
-					},
-					Config: map[string]string{
-						"endpoint": "endpoint",
-						"region":   "region",
-						"bucket":   "bucket",
+				StorageProvider: v1alpha1.StorageProvider{
+					S3: &v1alpha1.S3StorageProvider{
+						Endpoint: "endpoint",
+						Region:   "region",
+						Bucket:   "bucket",
+						CredentialsSecret: &corev1.LocalObjectReference{
+							Name: "name",
+						},
 					},
 				},
 				Cluster: &corev1.LocalObjectReference{},

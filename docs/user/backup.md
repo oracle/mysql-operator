@@ -37,11 +37,11 @@ $ kubectl create secret generic s3-credentials --from-literal=accessKey=${S3_ACC
 ## On-demand backups
 
 You can request a backup at any time by submitting a Backup custom resource to the
-operator. The secretRef is the name of a secret that contains your Object
+operator. The credentialsSecret is the name of a secret that contains your Object
 Storage credentials. Note: The databases field is mandatory.
 
 ```yaml
-apiVersion: mysql.oracle.com/v1alpa1
+apiVersion: mysql.oracle.com/v1alpha1
 kind: Backup
 metadata:
   name: mysql-backup
@@ -50,15 +50,15 @@ spec:
     provider: mysqldump
     databases:
       - test
-  storage:
-    provider: s3
-    secretRef:
-      name: s3-credentials
-    config:
+  storageProvider:
+    s3:
       endpoint: ocitenancy.compat.objectstorage.ociregion.oraclecloud.com
       region:   ociregion
       bucket:   mybucket
-  clusterRef:
+      forcePathStyle: true
+      credentialsSecret:
+          name: s3-credentials
+  cluster:
     name: mysql-cluster
 ```
 
@@ -92,10 +92,10 @@ configured as follows:
 
 ```yaml
   ...
-  config:
-    endpoint: mytenancy.compat.objectstorage.us-phoenix-1.oraclecloud.com
-    region:   us-phoenix-1
-    bucket:   mybucket
+   s3:
+     endpoint: mytenancy.compat.objectstorage.us-phoenix-1.oraclecloud.com
+     region:   us-phoenix-1
+     bucket:   mybucket
   ...
 ```
 
@@ -107,7 +107,7 @@ An AWS storage endpoint can also be configured. For example:
 
 ```yaml
   ...
-  config:
+  s3:
     endpoint: s3.eu-west-2.amazonaws.com
     region:   eu-west-2
     bucket:   mybucket
@@ -118,17 +118,17 @@ Remember to also configure the valid S3 credentials secret as outlined above.
 
 #### On-demand backups - Google GCE storage configuration
 
-To use a GCE storage bucket, you need to ensure s3 compatability has been enabled:
+To use a GCE storage bucket, you need to ensure S3 compatibility has been enabled:
 
 1. Log into the GCE console and navigate to 'storage'.
-2. Enable S3 compatability in your GCE storage config.
+2. Enable S3 compatibility in your GCE storage config.
 3. Generate a new S3 'secretKey' and 'accessKey'.
 
 A GCE storage endpoints can then be configured as follows:
 
 ```yaml
   ...
-  config:
+  s3:
     endpoint: storage.googleapis.com
     region:   europe-west1
     bucket:   mybucket
@@ -141,10 +141,10 @@ Remember to also configure the S3 credentials secret as outlined above.
 
 You can request a backup to be performed on a given schedule by submitting a
 BackupSchedule custom resource to the operator. This will create Backup
-resources based on the given cron format string. The secretRef is the name of a
-secret that contains your Object Storage credentials. Note: The databases field
-is mandatory. For example, the following will create a backup of the employees
-database every 30 minutes:
+resources based on the given cron format string. The credentialsSecret is the
+name of a Secret that contains your Object Storage credentials. Note: The
+databases field is mandatory. For example, the following will create a backup of
+the employees database every 30 minutes:
 
 ```yaml
 apiVersion: mysql.oracle.com/v1alpha1
@@ -158,14 +158,13 @@ spec:
       provider: mysqldump
       databases:
         - test
-    storage:
-      provider: s3
-      secretRef:
-        name: s3-credentials
-      config:
+    storageProvider:
+      s3:
         endpoint: ocitenancy.compat.objectstorage.ociregion.oraclecloud.com
         region: ociregion
         bucket: mybucket
-    clusterRef:
+      credentialsSecret:
+        name: s3-credentials
+    cluster:
       name: mysql-cluster
 ```

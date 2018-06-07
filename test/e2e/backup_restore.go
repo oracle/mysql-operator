@@ -73,15 +73,15 @@ var _ = Describe("Backup/Restore", func() {
 
 		dbs := []string{framework.TestDBName}
 		backup := backupJig.CreateAndAwaitMySQLDumpBackupOrFail(ns, clusterName, dbs, func(b *v1alpha1.Backup) {
-			b.Spec.StorageProvider = &v1alpha1.BackupStorageProvider{
-				Name: "s3",
-				AuthSecret: &corev1.LocalObjectReference{
-					Name: secret.Name,
-				},
-				Config: map[string]string{
-					"endpoint": "bristoldev.compat.objectstorage.us-phoenix-1.oraclecloud.com",
-					"region":   "us-phoenix-1",
-					"bucket":   "trjl-test",
+			b.Spec.StorageProvider = v1alpha1.StorageProvider{
+				S3: &v1alpha1.S3StorageProvider{
+					Endpoint:       "bristoldev.compat.objectstorage.us-phoenix-1.oraclecloud.com",
+					Region:         "us-phoenix-1",
+					Bucket:         "trjl-test",
+					ForcePathStyle: true,
+					CredentialsSecret: &corev1.LocalObjectReference{
+						Name: secret.Name,
+					},
 				},
 			}
 		}, framework.DefaultTimeout)

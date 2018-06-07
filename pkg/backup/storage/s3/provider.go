@@ -17,55 +17,103 @@ package s3
 import (
 	"io"
 
+	"github.com/aws/aws-sdk-go/aws"
+	s3credentials "github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/golang/glog"
 	"github.com/pkg/errors"
+
+	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 )
 
 // Provider is storage implementation of provider.Interface.
 type Provider struct {
-	client *Client
-	config *Config
+	v1alpha1.S3StorageProvider
+
+	s3         *s3.S3
+	s3Uploader *s3manager.Uploader
 }
 
-// NewStorage creates a provider capable of storing and retreiving objects against the specified
-// 's3' storage configuration and credentials.
-func NewStorage(config *v1alpha1.BackupStorageProvider, creds map[string]string) (*Provider, error) {
-	cfg := NewConfig(config, creds)
-	if err := cfg.Validate(); err != nil {
-		return nil, err
-	}
-
-	c, err := NewClient(cfg)
+// NewProvider creates a new S3 (compatible) storage provider.
+func NewProvider(provider *v1alpha1.S3StorageProvider, credentials map[string]string) (*Provider, error) {
+	accessKey, secretKey, err := getCredentials(credentials)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
-	return &Provider{client: c, config: cfg}, nil
+
+	sess, err := session.NewSession(
+		aws.NewConfig().
+			WithCredentials(s3credentials.NewStaticCredentials(accessKey, secretKey, "")).
+			WithEndpoint(provider.Endpoint).
+			WithRegion(provider.Region).
+			WithS3ForcePathStyle(provider.ForcePathStyle),
+	)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	if _, err := sess.Config.Credentials.Get(); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &Provider{
+		S3StorageProvider: *provider,
+		s3:                s3.New(sess),
+		s3Uploader:        s3manager.NewUploader(sess),
+	}, nil
 }
 
-// Store will upload the content of the data stream to S3.
+// Store the given data at the given key.
 func (p *Provider) Store(key string, body io.ReadCloser) error {
-	glog.V(4).Infof("storing backup (provider='s3', endpoint='%s', bucket='%s', key='%s')", p.config.endpoint, p.config.bucket, key)
+	glog.V(2).Infof("Storing backup (provider=\"S3\", endpoint=%q, bucket=%q, key=%q)", p.Endpoint, p.Bucket, key)
+
 	defer body.Close()
-	rq := &s3manager.UploadInput{
-		Bucket: &p.config.bucket,
+
+	_, err := p.s3Uploader.Upload(&s3manager.UploadInput{
+		Bucket: &p.Bucket,
 		Key:    &key,
 		Body:   body,
-	}
-	_, err := p.client.s3Uploader.Upload(rq)
-	return errors.Wrapf(err, "error storing backup (provider='s3', endpoint='%s', bucket='%s', key='%s')", p.config.endpoint, p.config.bucket, key)
+	})
+	return errors.Wrapf(err, "error storing backup (provider=\"S3\", endpoint=%q, bucket=%q, key=%q)", p.Endpoint, p.Bucket, key)
 }
 
-// Retrieve will provide a data stream on the specified object from S3.
+// Retrieve the given key from S3 storage service.
 func (p *Provider) Retrieve(key string) (io.ReadCloser, error) {
-	glog.V(4).Infof("retrieving backup (provider='s3', endpoint='%s', bucket='%s', key='%s')", p.config.endpoint, p.config.bucket, key)
-	req := &s3.GetObjectInput{Bucket: &p.config.bucket, Key: &key}
-	obj, err := p.client.s3.GetObject(req)
+	glog.V(2).Infof("Retrieving backup (provider=\"s3\", endpoint=%q, bucket=%q, key=%q)", p.Endpoint, p.Bucket, key)
+
+	obj, err := p.s3.GetObject(&s3.GetObjectInput{Bucket: &p.Bucket, Key: &key})
 	if err != nil {
-		return nil, errors.Wrapf(err, "error retrieving backup (provider='s3', endpoint='%s', bucket='%s', key='%s')", p.config.endpoint, p.config.bucket, key)
+		return nil, errors.Wrapf(err, "error retrieving backup (provider='S3', endpoint='%s', bucket='%s', key='%s')", p.Endpoint, p.Bucket, key)
 	}
+
 	return obj.Body, nil
+}
+
+// getCredentials gets an accesskey and secretKey from the provided map.
+func getCredentials(credentials map[string]string) (string, string, error) {
+	allErrs := field.ErrorList{}
+	fldPath := field.NewPath("data")
+
+	if credentials == nil {
+		return "", "", errors.New("no credentials provided")
+	}
+
+	accessKey, ok := credentials["accessKey"]
+	if !ok {
+		allErrs = append(allErrs, field.Required(fldPath.Child("accessKey"), ""))
+	}
+	secretKey, ok := credentials["secretKey"]
+	if !ok {
+		allErrs = append(allErrs, field.Required(fldPath.Child("secretKey"), ""))
+	}
+
+	if len(allErrs) > 0 {
+		return "", "", allErrs.ToAggregate()
+	}
+
+	return accessKey, secretKey, nil
 }

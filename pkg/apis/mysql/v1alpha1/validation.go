@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/oracle/mysql-operator/pkg/constants"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -92,33 +91,35 @@ func validateReplicas(replicas int32, fldPath *field.Path) field.ErrorList {
 	return allErrs
 }
 
-const (
-	// ProviderNameS3 denotes S3 compatability backed storage provider.
-	ProviderNameS3 = "s3"
-)
-
-func validateStorage(storage *BackupStorageProvider, fldPath *field.Path) field.ErrorList {
+func validateS3StorageProvider(s3 *S3StorageProvider, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
-	if storage.Name == "" {
-		allErrs = append(allErrs, field.Required(fldPath.Child("name"), ""))
+	if s3.Region == "" {
+		allErrs = append(allErrs, field.Required(fldPath.Child("region"), ""))
+	}
+	if s3.Endpoint == "" {
+		allErrs = append(allErrs, field.Required(fldPath.Child("endpoint"), ""))
+	}
+	if s3.Bucket == "" {
+		allErrs = append(allErrs, field.Required(fldPath.Child("bucket"), ""))
 	}
 
-	if storage.Config == nil {
-		allErrs = append(allErrs, field.Required(fldPath.Child("config"), ""))
+	if s3.CredentialsSecret == nil {
+		allErrs = append(allErrs, field.Required(fldPath.Child("credentialsSecret"), ""))
+	} else if s3.CredentialsSecret.Name == "" {
+		allErrs = append(allErrs, field.Required(fldPath.Child("credentialsSecret").Child("name"), ""))
+	}
+
+	return allErrs
+}
+
+func validateStorageProvider(storage StorageProvider, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	if storage.S3 == nil {
+		allErrs = append(allErrs, field.Required(fldPath.Child("s3"), "S3 (compatible) is currently the only supported storage provider"))
 	} else {
-		switch strings.ToLower(storage.Name) {
-		case ProviderNameS3:
-			allErrs = append(allErrs, validateS3StorageConfig(storage.Config, field.NewPath("config"))...)
-		default:
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("name"), storage, fmt.Sprintf("invalid storage name '%s'. Permitted names: s3.", storage.Name)))
-		}
-	}
-
-	if storage.AuthSecret == nil {
-		allErrs = append(allErrs, field.Required(fldPath.Child("authSecret"), ""))
-	} else if storage.AuthSecret.Name == "" {
-		allErrs = append(allErrs, field.Required(fldPath.Child("authSecret").Child("name"), ""))
+		allErrs = append(allErrs, validateS3StorageProvider(storage.S3, fldPath.Child("s3"))...)
 	}
 
 	return allErrs
@@ -197,11 +198,7 @@ func validateBackupSpec(spec BackupSpec, fldPath *field.Path) field.ErrorList {
 		allErrs = append(allErrs, validateExecutor(spec.Executor, field.NewPath("executor"))...)
 	}
 
-	if spec.StorageProvider == nil {
-		allErrs = append(allErrs, field.Required(fldPath.Child("storageProvider"), "missing storage provider"))
-	} else {
-		allErrs = append(allErrs, validateStorage(spec.StorageProvider, field.NewPath("storageProvider"))...)
-	}
+	allErrs = append(allErrs, validateStorageProvider(spec.StorageProvider, field.NewPath("storageProvider"))...)
 
 	if spec.Cluster == nil {
 		allErrs = append(allErrs, field.Required(fldPath.Child("cluster"), "missing cluster"))

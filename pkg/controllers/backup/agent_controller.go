@@ -262,13 +262,14 @@ func (controller *AgentController) processBackup(key string) error {
 				field.NotFound(fldPath.Child("cluster").Child("name"), backup.Spec.Cluster.Name))
 		}
 
-		creds, err = controller.kubeClient.CoreV1().Secrets(ns).Get(backup.Spec.StorageProvider.AuthSecret.Name, metav1.GetOptions{})
+		// TODO(apryde) when we have more storage providers this will need to be abstracted away.
+		creds, err = controller.kubeClient.CoreV1().Secrets(ns).Get(backup.Spec.StorageProvider.S3.CredentialsSecret.Name, metav1.GetOptions{})
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				return errors.Wrap(err, "getting backup credentials secret")
 			}
 			validationErrs = append(validationErrs,
-				field.NotFound(fldPath.Child("storage").Child("authSecret").Child("name"), backup.Spec.StorageProvider.AuthSecret.Name))
+				field.NotFound(fldPath.Child("storageProvider", "s3", "credentialsSecret", "name"), backup.Spec.StorageProvider.S3.CredentialsSecret.Name))
 		}
 		if len(validationErrs) > 0 {
 			validationErr = validationErrs.ToAggregate()

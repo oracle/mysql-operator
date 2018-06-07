@@ -285,13 +285,13 @@ func (controller *AgentController) processRestore(key string) error {
 				field.NotFound(fldPath.Child("backup").Child("name"), restore.Spec.Backup.Name))
 		}
 
-		creds, err = controller.kubeClient.CoreV1().Secrets(ns).Get(backup.Spec.StorageProvider.AuthSecret.Name, metav1.GetOptions{})
+		creds, err = controller.kubeClient.CoreV1().Secrets(ns).Get(backup.Spec.StorageProvider.S3.CredentialsSecret.Name, metav1.GetOptions{})
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				return errors.Wrap(err, "getting backup credentials secret")
 			}
 			validationErrs = append(validationErrs,
-				field.NotFound(fldPath.Child("backup").Child("name"), backup.Spec.StorageProvider.AuthSecret.Name))
+				field.NotFound(fldPath.Child("backup").Child("name"), backup.Spec.StorageProvider.S3.CredentialsSecret.Name))
 		}
 		if len(validationErrs) > 0 {
 			validationErr = validationErrs.ToAggregate()
