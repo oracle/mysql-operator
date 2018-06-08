@@ -25,11 +25,11 @@ import (
 type Config struct {
 	username  string
 	password  string
-	databases []string
+	databases []v1alpha1.Database
 }
 
 // NewConfig creates an mysqldump configuration based on the input parameters.
-func NewConfig(executor *v1alpha1.BackupExecutor, creds map[string]string) *Config {
+func NewConfig(executor *v1alpha1.MySQLDumpBackupExecutor, creds map[string]string) *Config {
 	return &Config{
 		databases: executor.Databases,
 		username:  creds["username"],

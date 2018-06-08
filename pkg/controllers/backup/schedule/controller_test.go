@@ -362,9 +362,10 @@ func TestGetBackup(t *testing.T) {
 				},
 				Spec: v1alpha1.BackupScheduleSpec{
 					BackupTemplate: v1alpha1.BackupSpec{
-						Executor: &v1alpha1.BackupExecutor{
-							Name:      "mysqldump",
-							Databases: []string{"db1", "db2"},
+						Executor: v1alpha1.BackupExecutor{
+							MySQLDump: &v1alpha1.MySQLDumpBackupExecutor{
+								Databases: []v1alpha1.Database{{Name: "db1"}, {Name: "db2"}},
+							},
 						},
 						StorageProvider: v1alpha1.StorageProvider{
 							S3: &v1alpha1.S3StorageProvider{
@@ -390,9 +391,10 @@ func TestGetBackup(t *testing.T) {
 					Name:      "bar-20170725091500",
 				},
 				Spec: v1alpha1.BackupSpec{
-					Executor: &v1alpha1.BackupExecutor{
-						Name:      "mysqldump",
-						Databases: []string{"db1", "db2"},
+					Executor: v1alpha1.BackupExecutor{
+						MySQLDump: &v1alpha1.MySQLDumpBackupExecutor{
+							Databases: []v1alpha1.Database{{Name: "db1"}, {Name: "db2"}},
+						},
 					},
 					StorageProvider: v1alpha1.StorageProvider{
 						S3: &v1alpha1.S3StorageProvider{

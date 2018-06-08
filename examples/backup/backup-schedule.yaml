@@ -6,9 +6,9 @@ spec:
   schedule: '30 * * * *'
   backupTemplate:
     executor:
-      name: mysqldump
-      databases:
-        - test
+      mysqldump:
+        databases:
+          - name: test
     storageProvider:
       s3:
         endpoint: ocitenancy.compat.objectstorage.ociregion.oraclecloud.com

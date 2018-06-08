@@ -71,7 +71,7 @@ var _ = Describe("Backup/Restore", func() {
 
 		By("Backing up testdb")
 
-		dbs := []string{framework.TestDBName}
+		dbs := []v1alpha1.Database{{Name: framework.TestDBName}}
 		backup := backupJig.CreateAndAwaitMySQLDumpBackupOrFail(ns, clusterName, dbs, func(b *v1alpha1.Backup) {
 			b.Spec.StorageProvider = v1alpha1.StorageProvider{
 				S3: &v1alpha1.S3StorageProvider{

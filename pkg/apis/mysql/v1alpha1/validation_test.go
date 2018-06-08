@@ -34,9 +34,10 @@ func TestEmptyBackupIsInvalid(t *testing.T) {
 func TestValidateValidBackup(t *testing.T) {
 	backup := Backup{
 		Spec: BackupSpec{
-			Executor: &BackupExecutor{
-				Name:      "mysqldump",
-				Databases: []string{"db1", "db2"},
+			Executor: BackupExecutor{
+				MySQLDump: &MySQLDumpBackupExecutor{
+					Databases: []Database{{Name: "db1"}, {Name: "db2"}},
+				},
 			},
 			StorageProvider: StorageProvider{
 				S3: &S3StorageProvider{
@@ -89,9 +90,10 @@ func TestBackupEnsureDefaultVersionNotSetIfExists(t *testing.T) {
 func TestValidateBackupMissingCluster(t *testing.T) {
 	backup := Backup{
 		Spec: BackupSpec{
-			Executor: &BackupExecutor{
-				Name:      "mysqldump",
-				Databases: []string{"db1", "db2"},
+			Executor: BackupExecutor{
+				MySQLDump: &MySQLDumpBackupExecutor{
+					Databases: []Database{{Name: "db1"}, {Name: "db2"}},
+				},
 			},
 			StorageProvider: StorageProvider{
 				S3: &S3StorageProvider{
@@ -115,9 +117,10 @@ func TestValidateBackupMissingCluster(t *testing.T) {
 func TestValidateBackupMissingSecretRef(t *testing.T) {
 	backup := Backup{
 		Spec: BackupSpec{
-			Executor: &BackupExecutor{
-				Name:      "mysqldump",
-				Databases: []string{"db1", "db2"},
+			Executor: BackupExecutor{
+				MySQLDump: &MySQLDumpBackupExecutor{
+					Databases: []Database{{Name: "db1"}, {Name: "db2"}},
+				},
 			},
 			StorageProvider: StorageProvider{
 				S3: &S3StorageProvider{
@@ -151,9 +154,10 @@ func TestValidateValidBackupSchedule(t *testing.T) {
 		Spec: BackupScheduleSpec{
 			Schedule: "* * * * * *",
 			BackupTemplate: BackupSpec{
-				Executor: &BackupExecutor{
-					Name:      "mysqldump",
-					Databases: []string{"db1", "db2"},
+				Executor: BackupExecutor{
+					MySQLDump: &MySQLDumpBackupExecutor{
+						Databases: []Database{{Name: "db1"}, {Name: "db2"}},
+					},
 				},
 				StorageProvider: StorageProvider{
 					S3: &S3StorageProvider{
@@ -209,9 +213,10 @@ func TestValidateBackupScheduleMissingCluster(t *testing.T) {
 		Spec: BackupScheduleSpec{
 			Schedule: "* * * * * *",
 			BackupTemplate: BackupSpec{
-				Executor: &BackupExecutor{
-					Name:      "mysqldump",
-					Databases: []string{"db1", "db2"},
+				Executor: BackupExecutor{
+					MySQLDump: &MySQLDumpBackupExecutor{
+						Databases: []Database{{Name: "db1"}, {Name: "db2"}},
+					},
 				},
 				StorageProvider: StorageProvider{
 					S3: &S3StorageProvider{
@@ -239,9 +244,10 @@ func TestValidateBackupScheduleMissingSecretRef(t *testing.T) {
 		Spec: BackupScheduleSpec{
 			Schedule: "* * * * * *",
 			BackupTemplate: BackupSpec{
-				Executor: &BackupExecutor{
-					Name:      "mysqldump",
-					Databases: []string{"db1", "db2"},
+				Executor: BackupExecutor{
+					MySQLDump: &MySQLDumpBackupExecutor{
+						Databases: []Database{{Name: "db1"}, {Name: "db2"}},
+					},
 				},
 				StorageProvider: StorageProvider{
 					S3: &S3StorageProvider{

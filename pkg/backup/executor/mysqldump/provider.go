@@ -43,7 +43,7 @@ type Executor struct {
 
 // NewExecutor creates a provider capable of creating and restoring backups with the mysqldump
 // tool.
-func NewExecutor(executor *v1alpha1.BackupExecutor, creds map[string]string) (*Executor, error) {
+func NewExecutor(executor *v1alpha1.MySQLDumpBackupExecutor, creds map[string]string) (*Executor, error) {
 	cfg := NewConfig(executor, creds)
 	err := cfg.Validate()
 	if err != nil {
@@ -69,7 +69,13 @@ func (ex *Executor) Backup(backupDir string, clusterName string) (io.ReadCloser,
 		"--set-gtid-purged=OFF",
 		"--databases",
 	}
-	cmd := exec.Command(mysqldumpPath, append(args, ex.config.databases...)...)
+
+	dbNames := make([]string, len(ex.config.databases))
+	for i, database := range ex.config.databases {
+		dbNames[i] = database.Name
+	}
+
+	cmd := exec.Command(mysqldumpPath, append(args, dbNames...)...)
 
 	var mu sync.Mutex
 	mu.Lock()
@@ -130,10 +136,6 @@ func (ex *Executor) Restore(content io.ReadCloser) error {
 	cmd.SetStdin(zr)
 
 	glog.V(4).Infof("running cmd: '%v'", cmd)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		glog.V(4).Infof("err: '%v', output: '%s'", err, string(output))
-		return err
-	}
-	return nil
+	_, err = cmd.CombinedOutput()
+	return err
 }

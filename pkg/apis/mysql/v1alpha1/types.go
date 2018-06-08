@@ -50,48 +50,38 @@ var validVersions = []string{
 type ClusterSpec struct {
 	// Version defines the MySQL Docker image version.
 	Version string `json:"version"`
-
 	// Replicas defines the number of running MySQL instances in a cluster
 	Replicas int32 `json:"replicas,omitempty"`
-
 	// BaseServerID defines the base number used to create uniq server_id for MySQL instances in a cluster.
 	// The baseServerId value need to be in range from 1 to 4294967286
 	// If ommited in the manifest file, or set to 0, defaultBaseServerID value will be used.
 	BaseServerID uint32 `json:"baseServerId,omitempty"`
-
 	// MultiMaster defines the mode of the MySQL cluster. If set to true,
 	// all instances will be R/W. If false (the default), only a single instance
 	// will be R/W and the rest will be R/O.
 	MultiMaster bool `json:"multiMaster,omitempty"`
-
 	// NodeSelector is a selector which must be true for the pod to fit on a node.
 	// Selector which must match a node's labels for the pod to be scheduled on that node.
 	// More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
 	// +optional
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
-
 	// If specified, affinity will define the pod's scheduling constraints
 	// +optional
 	Affinity *corev1.Affinity `json:"affinity,omitempty"`
-
 	// VolumeClaimTemplate allows a user to specify how volumes inside a MySQL cluster
 	// +optional
 	VolumeClaimTemplate *corev1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
-
 	// BackupVolumeClaimTemplate allows a user to specify a volume to temporarily store the
 	// data for a backup prior to it being shipped to object storage.
 	// +optional
 	BackupVolumeClaimTemplate *corev1.PersistentVolumeClaim `json:"backupVolumeClaimTemplate,omitempty"`
-
 	// If defined, we use this secret for configuring the MYSQL_ROOT_PASSWORD
 	// If it is not set we generate a secret dynamically
 	// +optional
 	RootPasswordSecret *corev1.LocalObjectReference `json:"rootPasswordSecret,omitempty"`
-
 	// Config allows a user to specify a custom configuration file for MySQL.
 	// +optional
 	Config *corev1.LocalObjectReference `json:"config,omitempty"`
-
 	// SSLSecret allows a user to specify custom CA certificate, server certificate
 	// and server key for group replication SSL.
 	// +optional
@@ -137,8 +127,9 @@ type ClusterStatus struct {
 type Cluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
-	Spec              ClusterSpec   `json:"spec"`
-	Status            ClusterStatus `json:"status"`
+
+	Spec   ClusterSpec   `json:"spec"`
+	Status ClusterStatus `json:"status"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -147,17 +138,25 @@ type Cluster struct {
 type ClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
-	Items           []Cluster `json:"items"`
+
+	Items []Cluster `json:"items"`
+}
+
+// Database represents a database to backup.
+type Database struct {
+	Name string `json:"name"`
+}
+
+// MySQLDumpBackupExecutor executes backups using mysqldump.
+type MySQLDumpBackupExecutor struct {
+	Databases []Database `json:"databases"`
 }
 
 // BackupExecutor represents the configuration of the tool performing the backup. This includes the tool
 // to use, and, what database and tables should be backed up.
 // The storage of the backup is configured in the relevant Storage configuration.
 type BackupExecutor struct {
-	// Name of the tool performing the backup, e.g. mysqldump.
-	Name string `json:"name"`
-	// Databases are the databases to backup.
-	Databases []string `json:"databases"`
+	MySQLDump *MySQLDumpBackupExecutor `json:"mysqldump"`
 }
 
 // S3StorageProvider represents an S3 compatible bucket for storing Backups.
@@ -190,14 +189,11 @@ type StorageProvider struct {
 type BackupSpec struct {
 	// Executor is the configuration of the tool that will produce the backup, and a definition of
 	// what databases and tables to backup.
-	Executor *BackupExecutor `json:"executor"`
-
+	Executor BackupExecutor `json:"executor"`
 	// StorageProvider configures where and how backups should be stored.
 	StorageProvider StorageProvider `json:"storageProvider"`
-
 	// Cluster is the Cluster to backup.
 	Cluster *corev1.LocalObjectReference `json:"cluster"`
-
 	// AgentScheduled is the agent hostname to run the backup on.
 	// TODO(apryde): ScheduledAgent (*corev1.LocalObjectReference)?
 	AgentScheduled string `json:"agentscheduled"`
@@ -240,20 +236,17 @@ type BackupOutcome struct {
 
 // BackupStatus captures the current status of a Backup.
 type BackupStatus struct {
-	// +optional
-	Conditions []BackupCondition
-
 	// Outcome holds the results of a successful backup.
 	// +optional
 	Outcome BackupOutcome `json:"outcome"`
-
 	// TimeStarted is the time at which the backup was started.
 	// +optional
 	TimeStarted metav1.Time `json:"timeStarted"`
-
 	// TimeCompleted is the time at which the backup completed.
 	// +optional
 	TimeCompleted metav1.Time `json:"timeCompleted"`
+	// +optional
+	Conditions []BackupCondition
 }
 
 // +genclient
@@ -356,10 +349,8 @@ type RestoreSpec struct {
 	// Cluster is a refeference to the Cluster to which the Restore
 	// belongs.
 	Cluster *corev1.LocalObjectReference `json:"cluster"`
-
 	// Backup is a reference to the Backup object to be restored.
 	Backup *corev1.LocalObjectReference `json:"backup"`
-
 	// AgentScheduled is the agent hostname to run the backup on
 	AgentScheduled string `json:"agentscheduled"`
 }
@@ -369,11 +360,9 @@ type RestoreStatus struct {
 	// TimeStarted is the time at which the restore was started.
 	// +optional
 	TimeStarted metav1.Time `json:"timeStarted"`
-
 	// TimeCompleted is the time at which the restore completed.
 	// +optional
 	TimeCompleted metav1.Time `json:"timeCompleted"`
-
 	// +optional
 	Conditions []RestoreCondition
 }

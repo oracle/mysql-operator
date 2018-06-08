@@ -47,9 +47,9 @@ metadata:
   name: mysql-backup
 spec:
   executor:
-    provider: mysqldump
-    databases:
-      - test
+    mysqldump:
+      databases:
+        - test
   storageProvider:
     s3:
       endpoint: ocitenancy.compat.objectstorage.ociregion.oraclecloud.com

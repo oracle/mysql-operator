@@ -37,9 +37,10 @@ func NewTestBackupSchedule(namespace, name string) *TestBackupSchedule {
 			},
 			Spec: v1alpha1.BackupScheduleSpec{
 				BackupTemplate: v1alpha1.BackupSpec{
-					Executor: &v1alpha1.BackupExecutor{
-						Name:      "mysqldump",
-						Databases: []string{"test"},
+					Executor: v1alpha1.BackupExecutor{
+						MySQLDump: &v1alpha1.MySQLDumpBackupExecutor{
+							Databases: []v1alpha1.Database{{Name: "test"}},
+						},
 					},
 					StorageProvider: v1alpha1.StorageProvider{
 						S3: &v1alpha1.S3StorageProvider{

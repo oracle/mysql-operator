@@ -125,24 +125,6 @@ func validateStorageProvider(storage StorageProvider, fldPath *field.Path) field
 	return allErrs
 }
 
-func validateS3StorageConfig(config map[string]string, fldPath *field.Path) field.ErrorList {
-	allErrs := field.ErrorList{}
-
-	if config["endpoint"] == "" {
-		allErrs = append(allErrs, field.Required(fldPath.Key("endpoint"), "missing S3 storage config 'endpoint' value"))
-	}
-
-	if config["region"] == "" {
-		allErrs = append(allErrs, field.Required(fldPath.Key("region"), "missing S3 storage config 'region' value"))
-	}
-
-	if config["bucket"] == "" {
-		allErrs = append(allErrs, field.Required(fldPath.Key("bucket"), "missing S3 storage config 'bucket' value"))
-	}
-
-	return allErrs
-}
-
 // ExecutorProviders denotes the list of valid backup executor providers.
 var ExecutorProviders = []string{"mysqldump"}
 
@@ -156,17 +138,36 @@ func isValidExecutorProvider(provider string) bool {
 	return false
 }
 
-func validateExecutor(executor *BackupExecutor, fldPath *field.Path) field.ErrorList {
+func validateDatabase(database Database, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
-	if executor.Name == "" {
-		allErrs = append(allErrs, field.Required(fldPath.Child("name"), ""))
-	} else if !isValidExecutorProvider(executor.Name) {
-		allErrs = append(allErrs, field.Invalid(fldPath.Child("name"), executor, fmt.Sprintf("invalid provider name %q", executor.Name)))
+	if database.Name == "" {
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("name"), database.Name, ""))
 	}
 
+	return allErrs
+}
+
+func validateMySQLDumpExecutor(executor *MySQLDumpBackupExecutor, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
 	if executor.Databases == nil || len(executor.Databases) == 0 {
-		allErrs = append(allErrs, field.Invalid(fldPath.Child("databases"), executor, "missing databases"))
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("databases"), executor, ""))
+	}
+
+	for i, database := range executor.Databases {
+		allErrs = append(allErrs, validateDatabase(database, fldPath.Index(i))...)
+	}
+
+	return allErrs
+}
+
+func validateExecutor(executor BackupExecutor, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	if executor.MySQLDump == nil {
+		allErrs = append(allErrs, field.Required(fldPath.Child("mysqldump"), "mysqldump is currently the only supported backup mechanism"))
+	} else {
+		allErrs = append(allErrs, validateMySQLDumpExecutor(executor.MySQLDump, fldPath.Child("mysqldump"))...)
 	}
 
 	return allErrs
@@ -192,12 +193,7 @@ func validateBackupLabels(labels map[string]string, fldPath *field.Path) field.E
 func validateBackupSpec(spec BackupSpec, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
-	if spec.Executor == nil {
-		allErrs = append(allErrs, field.Required(fldPath.Child("executor"), "missing executor"))
-	} else {
-		allErrs = append(allErrs, validateExecutor(spec.Executor, field.NewPath("executor"))...)
-	}
-
+	allErrs = append(allErrs, validateExecutor(spec.Executor, field.NewPath("executor"))...)
 	allErrs = append(allErrs, validateStorageProvider(spec.StorageProvider, field.NewPath("storageProvider"))...)
 
 	if spec.Cluster == nil {

@@ -110,11 +110,12 @@ func (j *BackupTestJig) CreateAndAwaitBackupOrFail(namespace, clusterName string
 // CreateAndAwaitMySQLDumpBackupOrFail creates a new Backup based on the
 // jig's defaults, waits for it to become ready. Callers can provide a function
 // to tweak the Backup object before it is created.
-func (j *BackupTestJig) CreateAndAwaitMySQLDumpBackupOrFail(namespace, clusterName string, databases []string, tweak func(backup *v1alpha1.Backup), timeout time.Duration) *v1alpha1.Backup {
+func (j *BackupTestJig) CreateAndAwaitMySQLDumpBackupOrFail(namespace, clusterName string, databases []v1alpha1.Database, tweak func(backup *v1alpha1.Backup), timeout time.Duration) *v1alpha1.Backup {
 	backup := j.CreateBackupOrFail(namespace, clusterName, func(backup *v1alpha1.Backup) {
-		backup.Spec.Executor = &v1alpha1.BackupExecutor{
-			Name:      "mysqldump",
-			Databases: databases,
+		backup.Spec.Executor = v1alpha1.BackupExecutor{
+			MySQLDump: &v1alpha1.MySQLDumpBackupExecutor{
+				Databases: databases,
+			},
 		}
 		tweak(backup)
 	})
