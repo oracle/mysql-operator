@@ -138,7 +138,7 @@ func NewAgentController(
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				new := newObj.(*v1alpha1.Restore)
 				_, cond := restoreutil.GetRestoreCondition(&new.Status, v1alpha1.RestoreScheduled)
-				if cond != nil && cond.Status == corev1.ConditionTrue && new.Spec.AgentScheduled == c.podName {
+				if cond != nil && cond.Status == corev1.ConditionTrue && new.Spec.ScheduledMember == c.podName {
 					key, err := cache.MetaNamespaceKeyFunc(new)
 					if err != nil {
 						glog.Errorf("Error creating queue key, item not added to queue: %v", err)

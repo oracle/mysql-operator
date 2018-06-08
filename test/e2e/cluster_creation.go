@@ -45,16 +45,16 @@ var _ = Describe("Cluster creation", func() {
 
 	It("should be possible to create a multi-master cluster", func() {
 		clusterName := "multi-master"
-		replicas := int32(3)
+		members := int32(3)
 
 		jig := framework.NewClusterTestJig(f.MySQLClientSet, f.ClientSet, clusterName)
 
-		cluster := jig.CreateAndAwaitClusterOrFail(f.Namespace.Name, replicas, func(cluster *v1alpha1.Cluster) {
+		cluster := jig.CreateAndAwaitClusterOrFail(f.Namespace.Name, members, func(cluster *v1alpha1.Cluster) {
 			cluster.Spec.MultiMaster = true
 		}, framework.DefaultTimeout)
 
 		By("Checking we can write to and read from to all members")
-		for i := int32(0); i < replicas; i++ {
+		for i := int32(0); i < members; i++ {
 			member := fmt.Sprintf("%s-%d", cluster.Name, i)
 			By(fmt.Sprintf("Checking that we can write to and read from %q", member))
 

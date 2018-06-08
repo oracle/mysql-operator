@@ -68,8 +68,8 @@ func NewClusterTestJig(mysqlClient mysqlclientset.Interface, kubeClient clientse
 
 // newClusterTemplate returns the default v1.Cluster template for this jig, but
 // does not actually create the Cluster.  The default Cluster has the same name
-// as the jig and has the given number of replicas.
-func (j *ClusterTestJig) newClusterTemplate(namespace string, replicas int32) *v1alpha1.Cluster {
+// as the jig and has the given number of members.
+func (j *ClusterTestJig) newClusterTemplate(namespace string, members int32) *v1alpha1.Cluster {
 	return &v1alpha1.Cluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
@@ -77,7 +77,7 @@ func (j *ClusterTestJig) newClusterTemplate(namespace string, replicas int32) *v
 			Labels:    j.Labels,
 		},
 		Spec: v1alpha1.ClusterSpec{
-			Replicas: replicas,
+			Members: members,
 		},
 	}
 }
@@ -85,14 +85,14 @@ func (j *ClusterTestJig) newClusterTemplate(namespace string, replicas int32) *v
 // CreateClusterOrFail creates a new Cluster based on the jig's
 // defaults. Callers can provide a function to tweak the Cluster object
 // before it is created.
-func (j *ClusterTestJig) CreateClusterOrFail(namespace string, replicas int32, tweak func(cluster *v1alpha1.Cluster)) *v1alpha1.Cluster {
-	cluster := j.newClusterTemplate(namespace, replicas)
+func (j *ClusterTestJig) CreateClusterOrFail(namespace string, members int32, tweak func(cluster *v1alpha1.Cluster)) *v1alpha1.Cluster {
+	cluster := j.newClusterTemplate(namespace, members)
 	if tweak != nil {
 		tweak(cluster)
 	}
 
 	name := types.NamespacedName{Namespace: namespace, Name: j.Name}
-	By(fmt.Sprintf("Creating a Cluster %q with .spec.replicas=%d", name, replicas))
+	By(fmt.Sprintf("Creating a Cluster %q with .spec.members=%d", name, members))
 
 	result, err := j.MySQLClient.MySQLV1alpha1().Clusters(namespace).Create(cluster)
 	if err != nil {
@@ -105,8 +105,8 @@ func (j *ClusterTestJig) CreateClusterOrFail(namespace string, replicas int32, t
 // jig's defaults, waits for it to become ready, and then sanity checks it and
 // its dependant resources. Callers can provide a function to tweak the
 // Cluster object before it is created.
-func (j *ClusterTestJig) CreateAndAwaitClusterOrFail(namespace string, replicas int32, tweak func(cluster *v1alpha1.Cluster), timeout time.Duration) *v1alpha1.Cluster {
-	cluster := j.CreateClusterOrFail(namespace, replicas, tweak)
+func (j *ClusterTestJig) CreateAndAwaitClusterOrFail(namespace string, members int32, tweak func(cluster *v1alpha1.Cluster), timeout time.Duration) *v1alpha1.Cluster {
+	cluster := j.CreateClusterOrFail(namespace, members, tweak)
 	cluster = j.WaitForClusterReadyOrFail(namespace, cluster.Name, timeout)
 	j.SanityCheckCluster(cluster)
 	return cluster
@@ -150,8 +150,8 @@ func (j *ClusterTestJig) SanityCheckCluster(cluster *v1alpha1.Cluster) {
 		Failf("Failed to get StatefulSet %[1]q for Cluster %[1]q: %[2]v", name, err)
 	}
 
-	if ss.Status.ReadyReplicas != cluster.Spec.Replicas {
-		Failf("StatefulSet %q has %d ready replica(s), want %d", name, ss.Status.ReadyReplicas, cluster.Spec.Replicas)
+	if ss.Status.ReadyReplicas != cluster.Spec.Members {
+		Failf("StatefulSet %q has %d ready replica(s), want %d", name, ss.Status.ReadyReplicas, cluster.Spec.Members)
 	}
 
 	// Do we have a service?

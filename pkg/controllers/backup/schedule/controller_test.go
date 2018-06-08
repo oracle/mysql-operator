@@ -380,7 +380,7 @@ func TestGetBackup(t *testing.T) {
 						Cluster: &corev1.LocalObjectReference{
 							Name: "test-cluster",
 						},
-						AgentScheduled: "hostname-1",
+						ScheduledMember: "hostname-1",
 					},
 				},
 			},
@@ -409,7 +409,7 @@ func TestGetBackup(t *testing.T) {
 					Cluster: &corev1.LocalObjectReference{
 						Name: "test-cluster",
 					},
-					AgentScheduled: "hostname-1",
+					ScheduledMember: "hostname-1",
 				},
 			},
 		},

@@ -54,7 +54,7 @@ func validateClusterSpec(s ClusterSpec, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	allErrs = append(allErrs, validateVersion(s.Version, fldPath.Child("version"))...)
-	allErrs = append(allErrs, validateReplicas(s.Replicas, fldPath.Child("replicas"))...)
+	allErrs = append(allErrs, validateMembers(s.Members, fldPath.Child("members"))...)
 	allErrs = append(allErrs, validateBaseServerID(s.BaseServerID, fldPath.Child("baseServerId"))...)
 
 	return allErrs
@@ -83,10 +83,10 @@ func validateBaseServerID(baseServerID uint32, fldPath *field.Path) field.ErrorL
 	return append(allErrs, field.Invalid(fldPath, strconv.FormatUint(uint64(baseServerID), 10), "invalid baseServerId specified"))
 }
 
-func validateReplicas(replicas int32, fldPath *field.Path) field.ErrorList {
+func validateMembers(members int32, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
-	if replicas < 1 || replicas > MaxInnoDBClusterMembers {
-		allErrs = append(allErrs, field.Invalid(fldPath, replicas, "InnoDB clustering supports between 1-9 members"))
+	if members < 1 || members > MaxInnoDBClusterMembers {
+		allErrs = append(allErrs, field.Invalid(fldPath, members, "InnoDB clustering supports between 1-9 members"))
 	}
 	return allErrs
 }

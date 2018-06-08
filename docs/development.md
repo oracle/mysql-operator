@@ -59,9 +59,9 @@ If you did not set an envrionment variable previously, prefix this command with
 
 ## Creating an InnoDB cluster
 
-For the purpose of this document, we will create a cluster with 3 replicas with
+For the purpose of this document, we will create a cluster with 3 members with
 the example yaml.
 
 ```bash
-$ kubectl apply -n $USER -f examples/cluster/cluster-with-3-replicas.yaml
+$ kubectl apply -n $USER -f examples/cluster/cluster-with-3-members.yaml
 ```

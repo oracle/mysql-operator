@@ -131,7 +131,7 @@ func NewOperatorController(
 				_, cond := restoreutil.GetRestoreCondition(&restore.Status, v1alpha1.RestoreScheduled)
 				if cond != nil && cond.Status == corev1.ConditionTrue {
 					glog.V(4).Infof("Restore %q is already scheduled on Cluster member %q",
-						kubeutil.NamespaceAndName(restore), restore.Spec.AgentScheduled)
+						kubeutil.NamespaceAndName(restore), restore.Spec.ScheduledMember)
 					return
 				}
 
@@ -305,7 +305,7 @@ func (controller *OperatorController) processRestore(key string) error {
 		return errors.Wrap(err, "failed to update")
 	}
 
-	controller.recorder.Eventf(restore, corev1.EventTypeNormal, "SuccessScheduled", "Scheduled on Pod %q", restore.Spec.AgentScheduled)
+	controller.recorder.Eventf(restore, corev1.EventTypeNormal, "SuccessScheduled", "Scheduled on Pod %q", restore.Spec.ScheduledMember)
 
 	return nil
 }
@@ -326,7 +326,7 @@ func (controller *OperatorController) scheduleRestore(restore *v1alpha1.Restore)
 			Type:   v1alpha1.RestoreScheduled,
 			Status: corev1.ConditionTrue,
 		})
-		restore.Spec.AgentScheduled = primaries[0].Name
+		restore.Spec.ScheduledMember = primaries[0].Name
 		return restore, nil
 	}
 

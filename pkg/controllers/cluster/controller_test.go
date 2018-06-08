@@ -111,8 +111,8 @@ func TestSyncEnsureClusterLabels(t *testing.T) {
 	version := buildversion.GetBuildVersion()
 	name := "test-cluster"
 	namespace := "test-namespace"
-	replicas := int32(3)
-	cluster := mockCluster(version, name, namespace, replicas)
+	members := int32(3)
+	cluster := mockCluster(version, name, namespace, members)
 	cluster.Labels = nil
 
 	fakeController, fakeInformers := newFakeMySQLController(cluster)
@@ -145,8 +145,8 @@ func TestSyncEnsureSecret(t *testing.T) {
 	version := buildversion.GetBuildVersion()
 	name := "test-cluster"
 	namespace := "test-namespace"
-	replicas := int32(3)
-	cluster := mockCluster(version, name, namespace, replicas)
+	members := int32(3)
+	cluster := mockCluster(version, name, namespace, members)
 
 	fakeController, fakeInformers := newFakeMySQLController(cluster)
 	fakeInformers.clusterInformer.Informer().GetStore().Add(cluster)
@@ -183,8 +183,8 @@ func TestSyncEnsureService(t *testing.T) {
 	version := buildversion.GetBuildVersion()
 	name := "test-cluster"
 	namespace := "test-namespace"
-	replicas := int32(3)
-	cluster := mockCluster(version, name, namespace, replicas)
+	members := int32(3)
+	cluster := mockCluster(version, name, namespace, members)
 
 	fakeController, fakeInformers := newFakeMySQLController(cluster)
 	fakeInformers.clusterInformer.Informer().GetStore().Add(cluster)
@@ -225,8 +225,8 @@ func TestSyncEnsureStatefulSet(t *testing.T) {
 	version := buildversion.GetBuildVersion()
 	name := "test-cluster"
 	namespace := "test-namespace"
-	replicas := int32(3)
-	cluster := mockCluster(version, name, namespace, replicas)
+	members := int32(3)
+	cluster := mockCluster(version, name, namespace, members)
 
 	fakeController, fakeInformers := newFakeMySQLController(cluster)
 	fakeInformers.clusterInformer.Informer().GetStore().Add(cluster)
@@ -261,8 +261,8 @@ func assertOperatorStatefulSetInvariants(t *testing.T, controller *MySQLControll
 			t.Errorf("Expected Cluster statefulset to have an associated owner reference to the parent Cluster.")
 		}
 	}
-	if *statefulset.Spec.Replicas != cluster.Spec.Replicas {
-		t.Errorf("Expected Cluster statefulset to have Replicas '%d', got '%d'.", cluster.Spec.Replicas, *statefulset.Spec.Replicas)
+	if *statefulset.Spec.Replicas != cluster.Spec.Members {
+		t.Errorf("Expected Cluster statefulset to have Replicas '%d', got '%d'.", cluster.Spec.Members, *statefulset.Spec.Replicas)
 	}
 	if statefulset.Spec.Template.Spec.Containers == nil || len(statefulset.Spec.Template.Spec.Containers) != 2 {
 		t.Fatalf("Expected Cluster to have an associated statefulset with two pod templates.")
@@ -280,8 +280,8 @@ func TestEnsureMySQLOperatorVersionWhenNotRequired(t *testing.T) {
 	originalOperatorVersion := "test-12345"
 	name := "test-ensure-operator-version"
 	namespace := "test-namespace"
-	replicas := int32(3)
-	cluster := mockCluster(originalOperatorVersion, name, namespace, replicas)
+	members := int32(3)
+	cluster := mockCluster(originalOperatorVersion, name, namespace, members)
 	statefulSet := mockClusterStatefulSet(cluster)
 	pods := mockClusterPods(statefulSet)
 
@@ -309,8 +309,8 @@ func TestEnsureMySQLOperatorVersionWhenRequired(t *testing.T) {
 	updatedOperatorVersion := "test-67890"
 	name := "test-ensure-operator-version"
 	namespace := "test-namespace"
-	replicas := int32(3)
-	cluster := mockCluster(originalOperatorVersion, name, namespace, replicas)
+	members := int32(3)
+	cluster := mockCluster(originalOperatorVersion, name, namespace, members)
 	statefulSet := mockClusterStatefulSet(cluster)
 	pods := mockClusterPods(statefulSet)
 
@@ -393,8 +393,8 @@ func TestMySQLControllerSyncClusterFromScratch(t *testing.T) {
 	version := buildversion.GetBuildVersion()
 	name := "from-scratch"
 	namespace := "test-namespace"
-	replicas := int32(3)
-	cluster := mockCluster(version, name, namespace, replicas)
+	members := int32(3)
+	cluster := mockCluster(version, name, namespace, members)
 
 	// create mock mysqloperator controller and prepoulate infromer
 	fakeController, fakeInformers := newFakeMySQLController(cluster)
@@ -432,7 +432,7 @@ func hasContainer(containers []v1.Container, name string) bool {
 	return false
 }
 
-func mockCluster(operatorVersion string, name string, namespace string, replicas int32) *v1alpha1.Cluster {
+func mockCluster(operatorVersion string, name string, namespace string, members int32) *v1alpha1.Cluster {
 	cluster := &v1alpha1.Cluster{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Cluster",
@@ -444,7 +444,7 @@ func mockCluster(operatorVersion string, name string, namespace string, replicas
 			Labels:    map[string]string{constants.ClusterLabel: name, constants.MySQLOperatorVersionLabel: operatorVersion},
 		},
 		Spec: v1alpha1.ClusterSpec{
-			Replicas: replicas,
+			Members: members,
 		},
 	}
 	cluster.EnsureDefaults()
@@ -457,8 +457,8 @@ func mockClusterStatefulSet(cluster *v1alpha1.Cluster) *apps.StatefulSet {
 
 func mockClusterPods(ss *apps.StatefulSet) []*v1.Pod {
 	pods := []*v1.Pod{}
-	replicas := int(*ss.Spec.Replicas)
-	for i := 0; i < replicas; i++ {
+	members := int(*ss.Spec.Replicas)
+	for i := 0; i < members; i++ {
 		pod := mockClusterPod(ss, i)
 		pods = append(pods, pod)
 	}

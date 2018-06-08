@@ -19,6 +19,34 @@ import (
 	"github.com/oracle/mysql-operator/pkg/version"
 )
 
+const (
+	// The default MySQL version to use if not specified explicitly by user
+	defaultVersion      = "8.0.11"
+	defaultMembers      = 3
+	defaultBaseServerID = 1000
+	// maxBaseServerID is the maximum safe value for BaseServerID calculated
+	// as max MySQL server_id value - max Replication Group size.
+	maxBaseServerID uint32 = 4294967295 - 9
+)
+
+const (
+	// MaxInnoDBClusterMembers is the maximum number of members supported by InnoDB
+	// group replication.
+	MaxInnoDBClusterMembers = 9
+
+	// ClusterNameMaxLen is the maximum supported length of a
+	// Cluster name.
+	// See: https://bugs.mysql.com/bug.php?id=90601
+	ClusterNameMaxLen = 28
+)
+
+// TODO (owain) we need to remove this because it's not reasonable for us to maintain a list
+// of all the potential MySQL versions that can be used and in reality, it shouldn't matter
+// too much. The burden of this is not worth the benfit to a user
+var validVersions = []string{
+	defaultVersion,
+}
+
 // setOperatorVersionLabel sets the specified operator version label on the label map.
 func setOperatorVersionLabel(labelMap map[string]string, label string) {
 	labelMap[constants.MySQLOperatorVersionLabel] = label
@@ -32,10 +60,10 @@ func getOperatorVersionLabel(labelMap map[string]string) string {
 // EnsureDefaults will ensure that if a user omits and fields in the
 // spec that are required, we set some sensible defaults.
 // For example a user can choose to omit the version
-// and number of replics
+// and number of members.
 func (c *Cluster) EnsureDefaults() *Cluster {
-	if c.Spec.Replicas == 0 {
-		c.Spec.Replicas = defaultReplicas
+	if c.Spec.Members == 0 {
+		c.Spec.Members = defaultMembers
 	}
 
 	if c.Spec.BaseServerID == 0 {

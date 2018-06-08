@@ -20,7 +20,7 @@ kind: Cluster
 metadata:
   name: mysql-wordpress
 spec:
-  replicas: 1
+  members: 1
   secretRef:
     name: wordpress-mysql-root-password
   volumeClaimTemplate:

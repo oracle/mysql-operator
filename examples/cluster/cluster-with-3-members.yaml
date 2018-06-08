@@ -3,4 +3,4 @@ kind: Cluster
 metadata:
   name: mysql
 spec:
-  replicas: 3
+  members: 3

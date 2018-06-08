@@ -22,7 +22,7 @@ kind: Cluster
 metadata:
   name: mysql-wordpress
 spec:
-  replicas: 3
+  members: 3
   secretRef:
     name: wordpress-mysql-root-password
 ```

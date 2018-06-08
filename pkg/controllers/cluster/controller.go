@@ -395,12 +395,12 @@ func (m *MySQLController) syncHandler(key string) error {
 		return err
 	}
 
-	// If this number of the replicas on the Cluster does not equal the
+	// If this number of the members on the Cluster does not equal the
 	// current desired replicas on the StatefulSet, we should update the
 	// StatefulSet resource.
-	if cluster.Spec.Replicas != *ss.Spec.Replicas {
-		glog.V(4).Infof("Updating %q: clusterReplicas=%d statefulSetReplicas=%d",
-			nsName, cluster.Spec.Replicas, ss.Spec.Replicas)
+	if cluster.Spec.Members != *ss.Spec.Replicas {
+		glog.V(4).Infof("Updating %q: clusterMembers=%d statefulSetReplicas=%d",
+			nsName, cluster.Spec.Members, ss.Spec.Replicas)
 		old := ss.DeepCopy()
 		ss = statefulsets.NewForCluster(cluster, m.opConfig.Images, svc.Name)
 		if err := m.statefulSetControl.Patch(old, ss); err != nil {

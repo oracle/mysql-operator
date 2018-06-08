@@ -19,39 +19,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	// The default MySQL version to use if not specified explicitly by user
-	defaultVersion      = "8.0.11"
-	defaultReplicas     = 1
-	defaultBaseServerID = 1000
-	// Max safe value for BaseServerID calculated as max MySQL server_id value - max Replication Group size
-	maxBaseServerID uint32 = 4294967295 - 9
-)
-
-const (
-	// MaxInnoDBClusterMembers is the maximum number of members supported by InnoDB
-	// group replication.
-	MaxInnoDBClusterMembers = 9
-
-	// ClusterNameMaxLen is the maximum supported length of a
-	// Cluster name.
-	// See: https://bugs.mysql.com/bug.php?id=90601
-	ClusterNameMaxLen = 28
-)
-
-// TODO (owain) we need to remove this because it's not reasonable for us to maintain a list
-// of all the potential MySQL versions that can be used and in reality, it shouldn't matter
-// too much. The burden of this is not worth the benfit to a user
-var validVersions = []string{
-	defaultVersion,
-}
-
 // ClusterSpec defines the attributes a user can specify when creating a cluster
 type ClusterSpec struct {
 	// Version defines the MySQL Docker image version.
 	Version string `json:"version"`
-	// Replicas defines the number of running MySQL instances in a cluster
-	Replicas int32 `json:"replicas,omitempty"`
+	// Members defines the number of MySQL instances in a cluster
+	Members int32 `json:"members,omitempty"`
 	// BaseServerID defines the base number used to create uniq server_id for MySQL instances in a cluster.
 	// The baseServerId value need to be in range from 1 to 4294967286
 	// If ommited in the manifest file, or set to 0, defaultBaseServerID value will be used.
@@ -194,9 +167,9 @@ type BackupSpec struct {
 	StorageProvider StorageProvider `json:"storageProvider"`
 	// Cluster is the Cluster to backup.
 	Cluster *corev1.LocalObjectReference `json:"cluster"`
-	// AgentScheduled is the agent hostname to run the backup on.
-	// TODO(apryde): ScheduledAgent (*corev1.LocalObjectReference)?
-	AgentScheduled string `json:"agentscheduled"`
+	// ScheduledMember is the Pod name of the Cluster member on which the
+	// Backup will be executed.
+	ScheduledMember string `json:"scheduledMember"`
 }
 
 // BackupConditionType represents a valid condition of a Backup.
@@ -351,8 +324,9 @@ type RestoreSpec struct {
 	Cluster *corev1.LocalObjectReference `json:"cluster"`
 	// Backup is a reference to the Backup object to be restored.
 	Backup *corev1.LocalObjectReference `json:"backup"`
-	// AgentScheduled is the agent hostname to run the backup on
-	AgentScheduled string `json:"agentscheduled"`
+	// ScheduledMember is the Pod name of the Cluster member on which the
+	// Restore will be executed.
+	ScheduledMember string `json:"scheduledMember"`
 }
 
 // RestoreStatus captures the current status of a MySQL restore.

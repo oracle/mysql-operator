@@ -3,6 +3,6 @@ kind: Cluster
 metadata:
   name: mysql
 spec:
-  replicas: 1
+  members: 1
   configRef:
     name: mycnf

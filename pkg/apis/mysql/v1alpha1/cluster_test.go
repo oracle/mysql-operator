@@ -38,12 +38,12 @@ func TestInvalidVersion(t *testing.T) {
 	}
 }
 
-func TestDefaultReplicas(t *testing.T) {
+func TestDefaultMembers(t *testing.T) {
 	cluster := &Cluster{}
 	cluster.EnsureDefaults()
 
-	if cluster.Spec.Replicas != defaultReplicas {
-		t.Errorf("Expected default replicas to be %d but got %d", defaultReplicas, cluster.Spec.Replicas)
+	if cluster.Spec.Members != defaultMembers {
+		t.Errorf("Expected default members to be %d but got %d", defaultMembers, cluster.Spec.Members)
 	}
 }
 

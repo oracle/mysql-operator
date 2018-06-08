@@ -228,7 +228,7 @@ func TestValidateBackupScheduleMissingCluster(t *testing.T) {
 						},
 					},
 				},
-				AgentScheduled: "hostname-1",
+				ScheduledMember: "hostname-1",
 			},
 		},
 	}
@@ -259,7 +259,7 @@ func TestValidateBackupScheduleMissingSecretRef(t *testing.T) {
 				Cluster: &corev1.LocalObjectReference{
 					Name: "test-cluster",
 				},
-				AgentScheduled: "hostname-1",
+				ScheduledMember: "hostname-1",
 			},
 		},
 	}

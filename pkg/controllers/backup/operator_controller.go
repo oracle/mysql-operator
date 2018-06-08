@@ -121,7 +121,7 @@ func NewOperatorController(
 				_, cond := backuputil.GetBackupCondition(&backup.Status, v1alpha1.BackupScheduled)
 				if cond != nil && cond.Status == corev1.ConditionTrue {
 					glog.V(4).Infof("Backup %q is already scheduled on Cluster member %q",
-						kubeutil.NamespaceAndName(backup), backup.Spec.AgentScheduled)
+						kubeutil.NamespaceAndName(backup), backup.Spec.ScheduledMember)
 					return
 				}
 
@@ -280,7 +280,7 @@ func (controller *OperatorController) processBackup(key string) error {
 		return errors.Wrap(err, "failed to update")
 	}
 
-	controller.recorder.Eventf(backup, corev1.EventTypeNormal, "SuccessScheduled", "Scheduled on Pod %q", backup.Spec.AgentScheduled)
+	controller.recorder.Eventf(backup, corev1.EventTypeNormal, "SuccessScheduled", "Scheduled on Pod %q", backup.Spec.ScheduledMember)
 
 	return nil
 }
@@ -302,7 +302,7 @@ func (controller *OperatorController) scheduleBackup(backup *v1alpha1.Backup) (*
 			Type:   v1alpha1.BackupScheduled,
 			Status: corev1.ConditionTrue,
 		})
-		backup.Spec.AgentScheduled = secondaries[0].Name
+		backup.Spec.ScheduledMember = secondaries[0].Name
 		return backup, nil
 	}
 
@@ -316,7 +316,7 @@ func (controller *OperatorController) scheduleBackup(backup *v1alpha1.Backup) (*
 			Type:   v1alpha1.BackupScheduled,
 			Status: corev1.ConditionTrue,
 		})
-		backup.Spec.AgentScheduled = primaries[0].Name
+		backup.Spec.ScheduledMember = primaries[0].Name
 		return backup, nil
 	}
 

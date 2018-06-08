@@ -2,9 +2,9 @@
 
 MySQL cluster examples.
 
-### Create a cluster with 3 replicas
+### Create a cluster with 3 members
 
-The following example will create a MySQL Cluster with 3 replicas, one primary and 2 secondaries:
+The following example will create a MySQL Cluster with 3 members, one primary and 2 secondaries:
 
 ```yaml
 apiVersion: mysql.oracle.com/v1alpha1
@@ -12,12 +12,12 @@ kind: Cluster
 metadata:
   name: mysql-test-cluster
 spec:
-  replicas: 3
+  members: 3
 ```
 
-### Create a cluster with 3 replicas in multi-master mode
+### Create a cluster with 3 members in multi-master mode
 
-The following example will create a MySQL Cluster with 3 primary (read/write) replicas:
+The following example will create a MySQL Cluster with 3 primary (read/write) members:
 
 ```yaml
 apiVersion: mysql.oracle.com/v1alpha1
@@ -26,7 +26,7 @@ metadata:
   name: mysql-multimaster-cluster
 spec:
   multiMaster: true
-  replicas: 3
+  members: 3
 ```
 
 ### Create a cluster with a custom "MYSQL_ROOT_PASSWORD"
@@ -45,8 +45,8 @@ kind: Cluster
 metadata:
   name: example-mysql-cluster-custom-secret
 spec:
-  replicas: 1
-  secretRef:
+  members: 1
+  rootPasswordSecret:
     name: mysql-root-user-secret
 ```
 
@@ -77,7 +77,7 @@ kind: Cluster
 metadata:
   name: example-mysql-cluster-with-volume
 spec:
-  replicas: 1
+  members: 1
   volumeClaimTemplate:
     metadata:
       name: data
@@ -134,8 +134,8 @@ kind: Cluster
 metadata:
   name: example-mysql-cluster-with-volume
 spec:
-  replicas: 1
-  secretRef:
+  mem   : 1
+  rootPasswordSecret:
     name: mysql-root-user-secret
   volumeClaimTemplate:
     metadata:
@@ -183,8 +183,8 @@ apiVersion: mysql.oracle.com/v1alpha1
 kind: Cluster
 metadata:
   name: mysql-cluster-with-config
-  replicas: 3
-  configRef:
+  members: 3
+  config:
     name: mycnf
 ```
 
@@ -198,6 +198,6 @@ apiVersion: mysql.oracle.com/v1alpha1
 kind: Cluster
 metadata:
   name: mysql-cluster-with-custom-serverid
-  replicas: 3
+  members: 3
   baseServerId: 42
 ```

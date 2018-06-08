@@ -4,4 +4,4 @@ metadata:
   name: mysql
 spec:
   multiMaster: true
-  replicas: 3
+  members: 3
