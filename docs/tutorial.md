@@ -87,13 +87,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: mysql-agent
-  namespace: my-namespace
+  namespace: default
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: mysql-agent
-  namespace: my-namespace
+  namespace: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -101,14 +101,14 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: mysql-agent
-  namespace: my-namespace
+  namespace: default
 EOF
 ```
 
 Now let's create a new MySQL cluster. Create a cluster.yaml file with the following contents
 
 ```yaml
-apiVersion: mysql.oracle.com/v1
+apiVersion: mysql.oracle.com/v1alpha1
 kind: MySQLCluster
 metadata:
   name: myappdb
