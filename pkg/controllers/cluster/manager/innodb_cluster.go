@@ -76,7 +76,7 @@ func getReplicationGroupSeeds(seeds string, pod *cluster.Instance) ([]string, er
 		if err != nil {
 			return nil, err
 		}
-		if seedInstance.PodName() == pod.Name() {
+		if seedInstance.Name() == pod.Name() {
 			continue
 		}
 		s = append(s, seed)
