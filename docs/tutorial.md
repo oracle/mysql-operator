@@ -108,7 +108,7 @@ EOF
 Now let's create a new MySQL cluster. Create a cluster.yaml file with the following contents
 
 ```yaml
-apiVersion: mysql.oracle.com/v1
+apiVersion: mysql.oracle.com/v1alpha1
 kind: MySQLCluster
 metadata:
   name: myappdb
