@@ -235,7 +235,6 @@ func (m *ClusterManager) ensurePrimaryControllerState(ctx context.Context, statu
 	}
 }
 
-// NOTE: This should never happen in 8.0 but probably worth keeping for now.
 func (m *ClusterManager) handleInstanceMissing(ctx context.Context, primaryAddr string) bool {
 	primaryURI := fmt.Sprintf("%s:%s@%s", m.Instance.GetUser(), m.Instance.GetPassword(), primaryAddr)
 	primarySh := m.mysqlshFactory(primaryURI)
