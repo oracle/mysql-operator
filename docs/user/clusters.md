@@ -134,7 +134,7 @@ kind: Cluster
 metadata:
   name: example-mysql-cluster-with-volume
 spec:
-  mem   : 1
+  members: 1
   rootPasswordSecret:
     name: mysql-root-user-secret
   volumeClaimTemplate:
