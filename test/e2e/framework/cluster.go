@@ -112,6 +112,38 @@ func (j *ClusterTestJig) CreateAndAwaitClusterOrFail(namespace string, members i
 	return cluster
 }
 
+// UpdateCluster fetches a cluster, calls the update function on it, and
+// then attempts to send the updated cluster. It tries up to 3 times in the
+// face of timeouts and conflicts.
+func (j *ClusterTestJig) UpdateCluster(namespace, name string, update func(*v1alpha1.Cluster)) (*v1alpha1.Cluster, error) {
+	for i := 0; i < 3; i++ {
+		cluster, err := j.MySQLClient.MySQLV1alpha1().Clusters(namespace).Get(name, metav1.GetOptions{})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to get Cluster %q", name)
+		}
+		update(cluster)
+		cluster, err = j.MySQLClient.MySQLV1alpha1().Clusters(namespace).Update(cluster)
+		if err == nil {
+			return cluster, nil
+		}
+		if !apierrors.IsConflict(err) && !apierrors.IsServerTimeout(err) {
+			return nil, errors.Wrapf(err, "failed to update Cluster %q", name)
+		}
+	}
+	return nil, errors.Errorf("too many retries updating Cluster %q", name)
+}
+
+// UpdateClusterOrFail fetches a cluster, calls the update function on it, and
+// then attempts to send the updated cluster. It tries up to 3 times in the
+// face of timeouts and conflicts.
+func (j *ClusterTestJig) UpdateClusterOrFail(namespace, name string, update func(*v1alpha1.Cluster)) *v1alpha1.Cluster {
+	cluster, err := j.UpdateCluster(namespace, name, update)
+	if err != nil {
+		Failf(err.Error())
+	}
+	return cluster
+}
+
 func (j *ClusterTestJig) waitForConditionOrFail(namespace, name string, timeout time.Duration, message string, conditionFn func(*v1alpha1.Cluster) bool) *v1alpha1.Cluster {
 	var cluster *v1alpha1.Cluster
 	pollFunc := func() (bool, error) {
