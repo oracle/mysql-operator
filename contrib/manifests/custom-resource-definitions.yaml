@@ -8,7 +8,7 @@ spec:
   version: v1alpha1
   scope: Namespaced
   names:
-    kind: MySQLCluster
+    kind: Cluster
     singular: mysqlcluster
     plural: mysqlclusters
 ---
@@ -21,7 +21,7 @@ spec:
   version: v1alpha1
   scope: Namespaced
   names:
-    kind: MySQLBackup
+    kind: Backup
     singular: mysqlbackup
     plural: mysqlbackups
 ---
@@ -34,7 +34,7 @@ spec:
   version: v1alpha1
   scope: Namespaced
   names:
-    kind: MySQLRestore
+    kind: Restore
     singular: mysqlrestore
     plural: mysqlrestores
 ---
@@ -47,6 +47,6 @@ spec:
   version: v1alpha1
   scope: Namespaced
   names:
-    kind: MySQLBackupSchedule
+    kind: BackupSchedule
     singular: mysqlbackupschedule
     plural: mysqlbackupschedules

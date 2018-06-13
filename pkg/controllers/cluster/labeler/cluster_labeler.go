@@ -42,7 +42,7 @@ import (
 const controllerAgentName = "innodb-cluster-labeler"
 
 // ClusterLabelerController adds annotations about the InnoDB cluster state
-// to the MySQLCluster's Pods. This controller should only be run iff the the
+// to the Cluster's Pods. This controller should only be run iff the the
 // local MySQL instance believes that it is the primary of the MySQL cluster.
 type ClusterLabelerController struct {
 	// localInstance represents the local MySQL instance.
@@ -88,14 +88,14 @@ func NewClusterLabelerController(
 func (clc *ClusterLabelerController) updateClusterRoleLabel(pod *corev1.Pod, val string) error {
 	new := pod.DeepCopy()
 	if val == "" {
-		delete(new.Labels, constants.LabelMySQLClusterRole)
+		delete(new.Labels, constants.LabelClusterRole)
 	} else {
-		new.Labels[constants.LabelMySQLClusterRole] = val
+		new.Labels[constants.LabelClusterRole] = val
 	}
 	return clc.podControl.PatchPod(pod, new)
 }
 
-// syncHandler labels the Pods in a MySQLCluster as being either a primary or
+// syncHandler labels the Pods in a Cluster as being either a primary or
 // secondary based on the given innodb.ClusterStatus.
 func (clc *ClusterLabelerController) syncHandler(key string) error {
 	obj, exists, err := clc.store.GetByKey(key)
@@ -129,11 +129,11 @@ func (clc *ClusterLabelerController) syncHandler(key string) error {
 		var role string
 		if !inCluster(status, pod.Name, clc.localInstance.Port) {
 			glog.Infof("Removing %q label from previously labeled primary %s/%s",
-				constants.LabelMySQLClusterRole, pod.Namespace, pod.Name)
+				constants.LabelClusterRole, pod.Namespace, pod.Name)
 			role = ""
 		} else {
 			glog.Infof("Labeling previously labeled primary %s/%s as secondary", pod.Namespace, pod.Name)
-			role = constants.MySQLClusterRoleSecondary
+			role = constants.ClusterRoleSecondary
 		}
 
 		if err := clc.updateClusterRoleLabel(pod, role); err != nil {
@@ -150,7 +150,7 @@ func (clc *ClusterLabelerController) syncHandler(key string) error {
 		}
 
 		glog.Infof("Labeling %s/%s as primary", primary.Namespace, primary.Name)
-		if err := clc.updateClusterRoleLabel(primary, constants.MySQLClusterRolePrimary); err != nil {
+		if err := clc.updateClusterRoleLabel(primary, constants.ClusterRolePrimary); err != nil {
 			return errors.Wrapf(err, "labeling %s/%s as primary", primary.Namespace, primary.Name)
 		}
 	}
@@ -166,16 +166,16 @@ func (clc *ClusterLabelerController) syncHandler(key string) error {
 		if !inCluster(status, pod.Name, clc.localInstance.Port) {
 			if HasRoleSelector(clusterName).Matches(labels.Set(pod.Labels)) {
 				glog.Infof("Removing %q label from %s/%s as it's no longer in an ONLINE state",
-					constants.LabelMySQLClusterRole, pod.Namespace, pod.Name)
+					constants.LabelClusterRole, pod.Namespace, pod.Name)
 				if err := clc.updateClusterRoleLabel(pod, ""); err != nil {
-					return errors.Wrapf(err, "removing %q label from %s/%s", constants.LabelMySQLClusterRole, pod.Namespace, pod.Name)
+					return errors.Wrapf(err, "removing %q label from %s/%s", constants.LabelClusterRole, pod.Namespace, pod.Name)
 				}
 			}
 			continue
 		}
 		if pod.Name != clc.localInstance.PodName() && !SecondarySelector(clusterName).Matches(labels.Set(pod.Labels)) {
 			glog.Infof("Labeling %s/%s as secondary", pod.Namespace, pod.Name)
-			if err := clc.updateClusterRoleLabel(pod, constants.MySQLClusterRoleSecondary); err != nil {
+			if err := clc.updateClusterRoleLabel(pod, constants.ClusterRoleSecondary); err != nil {
 				return errors.Wrapf(err, "labeling %s/%s as secondary", pod.Namespace, pod.Name)
 			}
 		}

@@ -49,7 +49,7 @@ const (
 	replicationGroupPort = 13306
 )
 
-func volumeMounts(cluster *v1alpha1.MySQLCluster) []v1.VolumeMount {
+func volumeMounts(cluster *v1alpha1.Cluster) []v1.VolumeMount {
 	var mounts []v1.VolumeMount
 
 	name := mySQLVolumeName
@@ -93,7 +93,7 @@ func volumeMounts(cluster *v1alpha1.MySQLCluster) []v1.VolumeMount {
 	return mounts
 }
 
-func clusterNameEnvVar(cluster *v1alpha1.MySQLCluster) v1.EnvVar {
+func clusterNameEnvVar(cluster *v1alpha1.Cluster) v1.EnvVar {
 	return v1.EnvVar{Name: "MYSQL_CLUSTER_NAME", Value: cluster.Name}
 }
 
@@ -125,12 +125,12 @@ func multiMasterEnvVar(enabled bool) v1.EnvVar {
 // Returns the MySQL_ROOT_PASSWORD environment variable
 // If a user specifies a secret in the spec we use that
 // else we create a secret with a random password
-func mysqlRootPassword(cluster *v1alpha1.MySQLCluster) v1.EnvVar {
+func mysqlRootPassword(cluster *v1alpha1.Cluster) v1.EnvVar {
 	var secretName string
 	if cluster.RequiresSecret() {
 		secretName = secrets.GetRootPasswordSecretName(cluster)
 	} else {
-		secretName = cluster.Spec.SecretRef.Name
+		secretName = cluster.Spec.RootPasswordSecret.Name
 	}
 
 	return v1.EnvVar{
@@ -153,9 +153,9 @@ func serviceNameEnvVar(serviceName string) v1.EnvVar {
 	}
 }
 
-func getReplicationGroupSeeds(name string, replicas int) string {
+func getReplicationGroupSeeds(name string, members int) string {
 	seeds := []string{}
-	for i := 0; i < replicas; i++ {
+	for i := 0; i < members; i++ {
 		seeds = append(seeds, fmt.Sprintf("%[1]s-%[2]d.%[1]s:%[3]d", name, i, replicationGroupPort))
 	}
 	return strings.Join(seeds, ",")
@@ -164,8 +164,8 @@ func getReplicationGroupSeeds(name string, replicas int) string {
 // Builds the MySQL operator container for a cluster.
 // The 'mysqlImage' parameter is the image name of the mysql server to use with
 // no version information.. e.g. 'mysql/mysql-server'
-func mysqlServerContainer(cluster *v1alpha1.MySQLCluster, mysqlServerImage string, rootPassword v1.EnvVar, serviceName string, replicas int, baseServerID uint32) v1.Container {
-	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Namespace, replicas)
+func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, rootPassword v1.EnvVar, serviceName string, members int, baseServerID uint32) v1.Container {
+	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Namespace, members)
 
 	args := []string{
 		"--server_id=$(expr $base + $index)",
@@ -232,13 +232,13 @@ func mysqlServerContainer(cluster *v1alpha1.MySQLCluster, mysqlServerImage strin
 	}
 }
 
-func mysqlAgentContainer(cluster *v1alpha1.MySQLCluster, mysqlAgentImage string, rootPassword v1.EnvVar, serviceName string, replicas int) v1.Container {
+func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, rootPassword v1.EnvVar, serviceName string, members int) v1.Container {
 	agentVersion := version.GetBuildVersion()
 	if version := os.Getenv("MYSQL_AGENT_VERSION"); version != "" {
 		agentVersion = version
 	}
 
-	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Name, replicas)
+	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Name, members)
 
 	return v1.Container{
 		Name:         MySQLAgentName,
@@ -280,10 +280,10 @@ func mysqlAgentContainer(cluster *v1alpha1.MySQLCluster, mysqlAgentImage string,
 	}
 }
 
-// NewForCluster creates a new StatefulSet for the given MySQLCluster.
-func NewForCluster(cluster *v1alpha1.MySQLCluster, images operatoropts.Images, serviceName string) *apps.StatefulSet {
+// NewForCluster creates a new StatefulSet for the given Cluster.
+func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, serviceName string) *apps.StatefulSet {
 	rootPassword := mysqlRootPassword(cluster)
-	replicas := int(cluster.Spec.Replicas)
+	members := int(cluster.Spec.Members)
 	baseServerID := cluster.Spec.BaseServerID
 
 	// If a PV isn't specified just use a EmptyDir volume
@@ -305,7 +305,7 @@ func NewForCluster(cluster *v1alpha1.MySQLCluster, images operatoropts.Images, s
 			VolumeSource: v1.VolumeSource{
 				ConfigMap: &v1.ConfigMapVolumeSource{
 					LocalObjectReference: v1.LocalObjectReference{
-						Name: cluster.Spec.ConfigRef.Name,
+						Name: cluster.Spec.Config.Name,
 					},
 				},
 			},
@@ -321,7 +321,7 @@ func NewForCluster(cluster *v1alpha1.MySQLCluster, images operatoropts.Images, s
 						v1.VolumeProjection{
 							Secret: &v1.SecretProjection{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: cluster.Spec.SSLSecretRef.Name,
+									Name: cluster.Spec.SSLSecret.Name,
 								},
 								Items: []v1.KeyToPath{
 									v1.KeyToPath{
@@ -346,14 +346,14 @@ func NewForCluster(cluster *v1alpha1.MySQLCluster, images operatoropts.Images, s
 	}
 
 	containers := []v1.Container{
-		mysqlServerContainer(cluster, images.MySQLServerImage, rootPassword, serviceName, replicas, baseServerID),
-		mysqlAgentContainer(cluster, images.MySQLAgentImage, rootPassword, serviceName, replicas)}
+		mysqlServerContainer(cluster, images.MySQLServerImage, rootPassword, serviceName, members, baseServerID),
+		mysqlAgentContainer(cluster, images.MySQLAgentImage, rootPassword, serviceName, members)}
 
 	podLabels := map[string]string{
-		constants.MySQLClusterLabel: cluster.Name,
+		constants.ClusterLabel: cluster.Name,
 	}
 	if cluster.Spec.MultiMaster {
-		podLabels[constants.LabelMySQLClusterRole] = constants.MySQLClusterRolePrimary
+		podLabels[constants.LabelClusterRole] = constants.ClusterRolePrimary
 	}
 
 	ss := &apps.StatefulSet{
@@ -364,16 +364,16 @@ func NewForCluster(cluster *v1alpha1.MySQLCluster, images operatoropts.Images, s
 				*metav1.NewControllerRef(cluster, schema.GroupVersionKind{
 					Group:   v1alpha1.SchemeGroupVersion.Group,
 					Version: v1alpha1.SchemeGroupVersion.Version,
-					Kind:    v1alpha1.MySQLClusterCRDResourceKind,
+					Kind:    v1alpha1.ClusterCRDResourceKind,
 				}),
 			},
 			Labels: map[string]string{
-				constants.MySQLClusterLabel:         cluster.Name,
+				constants.ClusterLabel:              cluster.Name,
 				constants.MySQLOperatorVersionLabel: version.GetBuildVersion(),
 			},
 		},
 		Spec: apps.StatefulSetSpec{
-			Replicas: &cluster.Spec.Replicas,
+			Replicas: &cluster.Spec.Members,
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: podLabels,

@@ -15,17 +15,10 @@
 package storage
 
 import (
-	"fmt"
 	"io"
-	"strings"
 
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/backup/storage/s3"
-)
-
-const (
-	// ProviderS3 denotes S3 compatability backed storage provider.
-	ProviderS3 = "s3"
 )
 
 // Interface abstracts the underlying storage provider.
@@ -39,11 +32,6 @@ type Interface interface {
 
 // NewStorageProvider accepts a secret map and uses its contents to determine the
 // desired object storage provider implementation.
-func NewStorageProvider(config *v1alpha1.Storage, creds map[string]string) (Interface, error) {
-	switch strings.ToLower(config.Provider) {
-	case ProviderS3:
-		return s3.NewStorage(config, creds)
-	default:
-		return nil, fmt.Errorf("unknown backup storage provider %q", config.Provider)
-	}
+func NewStorageProvider(config v1alpha1.StorageProvider, credentials map[string]string) (Interface, error) {
+	return s3.NewProvider(config.S3, credentials)
 }

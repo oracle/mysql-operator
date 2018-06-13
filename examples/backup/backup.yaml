@@ -1,19 +1,18 @@
 apiVersion: mysql.oracle.com/v1alpha1
-kind: MySQLBackup
+kind: Backup
 metadata:
   name: mysql-backup
 spec:
   executor:
-    provider: mysqldump
-    databases:
-      - test
-  storage:
-    provider: s3
-    secretRef:
-      name: s3-credentials
-    config:
+    mysqldump:
+      databases:
+        - name: test
+  storageProvider:
+    s3:
       endpoint: ocitenancy.compat.objectstorage.ociregion.oraclecloud.com
       region:   ociregion
       bucket:   mybucket
+      credentialsSecret:
+        name: s3-credentials
   clusterRef:
     name: mysql

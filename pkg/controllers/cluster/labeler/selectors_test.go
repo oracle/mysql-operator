@@ -33,28 +33,28 @@ func TestPrimarySelector(t *testing.T) {
 		{
 			name: "primary",
 			labels: map[string]string{
-				constants.MySQLClusterLabel:     "primary",
-				constants.LabelMySQLClusterRole: constants.MySQLClusterRolePrimary,
+				constants.ClusterLabel:     "primary",
+				constants.LabelClusterRole: constants.ClusterRolePrimary,
 			},
 			matches: 1,
 		}, {
 			name: "secondary",
 			labels: map[string]string{
-				constants.MySQLClusterLabel:     "secondary",
-				constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
+				constants.ClusterLabel:     "secondary",
+				constants.LabelClusterRole: constants.ClusterRoleSecondary,
 			},
 			matches: 0,
 		}, {
 			name: "blank",
 			labels: map[string]string{
-				constants.MySQLClusterLabel:     "blank",
-				constants.LabelMySQLClusterRole: "",
+				constants.ClusterLabel:     "blank",
+				constants.LabelClusterRole: "",
 			},
 			matches: 0,
 		}, {
 			name: "missing",
 			labels: map[string]string{
-				constants.MySQLClusterLabel: "missing",
+				constants.ClusterLabel: "missing",
 			},
 			matches: 0,
 		},
@@ -85,28 +85,28 @@ func TestSecondarySelector(t *testing.T) {
 		{
 			name: "secondary",
 			labels: map[string]string{
-				constants.MySQLClusterLabel:     "secondary",
-				constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
+				constants.ClusterLabel:     "secondary",
+				constants.LabelClusterRole: constants.ClusterRoleSecondary,
 			},
 			matches: 1,
 		}, {
 			name: "primary",
 			labels: map[string]string{
-				constants.MySQLClusterLabel:     "primary",
-				constants.LabelMySQLClusterRole: constants.MySQLClusterRolePrimary,
+				constants.ClusterLabel:     "primary",
+				constants.LabelClusterRole: constants.ClusterRolePrimary,
 			},
 			matches: 0,
 		}, {
 			name: "blank",
 			labels: map[string]string{
-				constants.MySQLClusterLabel:     "blank",
-				constants.LabelMySQLClusterRole: "",
+				constants.ClusterLabel:     "blank",
+				constants.LabelClusterRole: "",
 			},
 			matches: 0,
 		}, {
 			name: "missing",
 			labels: map[string]string{
-				constants.MySQLClusterLabel: "missing",
+				constants.ClusterLabel: "missing",
 			},
 			matches: 0,
 		},
@@ -137,28 +137,28 @@ func TestNonPrimarySelector(t *testing.T) {
 		{
 			name: "secondary",
 			labels: map[string]string{
-				constants.MySQLClusterLabel:     "secondary",
-				constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
+				constants.ClusterLabel:     "secondary",
+				constants.LabelClusterRole: constants.ClusterRoleSecondary,
 			},
 			matches: 1,
 		}, {
 			name: "primary",
 			labels: map[string]string{
-				constants.MySQLClusterLabel:     "primary",
-				constants.LabelMySQLClusterRole: constants.MySQLClusterRolePrimary,
+				constants.ClusterLabel:     "primary",
+				constants.LabelClusterRole: constants.ClusterRolePrimary,
 			},
 			matches: 0,
 		}, {
 			name: "blank",
 			labels: map[string]string{
-				constants.MySQLClusterLabel:     "blank",
-				constants.LabelMySQLClusterRole: "",
+				constants.ClusterLabel:     "blank",
+				constants.LabelClusterRole: "",
 			},
 			matches: 1,
 		}, {
 			name: "missing",
 			labels: map[string]string{
-				constants.MySQLClusterLabel: "missing",
+				constants.ClusterLabel: "missing",
 			},
 			matches: 1,
 		},
@@ -189,28 +189,28 @@ func TestHasRoleSelector(t *testing.T) {
 		{
 			name: "secondary",
 			labels: map[string]string{
-				constants.MySQLClusterLabel:     "secondary",
-				constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
+				constants.ClusterLabel:     "secondary",
+				constants.LabelClusterRole: constants.ClusterRoleSecondary,
 			},
 			matches: 1,
 		}, {
 			name: "primary",
 			labels: map[string]string{
-				constants.MySQLClusterLabel:     "primary",
-				constants.LabelMySQLClusterRole: constants.MySQLClusterRolePrimary,
+				constants.ClusterLabel:     "primary",
+				constants.LabelClusterRole: constants.ClusterRolePrimary,
 			},
 			matches: 1,
 		}, {
 			name: "blank",
 			labels: map[string]string{
-				constants.MySQLClusterLabel:     "blank",
-				constants.LabelMySQLClusterRole: "",
+				constants.ClusterLabel:     "blank",
+				constants.LabelClusterRole: "",
 			},
 			matches: 1,
 		}, {
 			name: "missing",
 			labels: map[string]string{
-				constants.MySQLClusterLabel: "missing",
+				constants.ClusterLabel: "missing",
 			},
 			matches: 0,
 		},

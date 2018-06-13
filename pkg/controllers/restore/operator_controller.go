@@ -35,6 +35,7 @@ import (
 	record "k8s.io/client-go/tools/record"
 	workqueue "k8s.io/client-go/util/workqueue"
 
+	restoreutil "github.com/oracle/mysql-operator/pkg/api/restore"
 	v1alpha1 "github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	clusterlabeler "github.com/oracle/mysql-operator/pkg/controllers/cluster/labeler"
 	controllerutils "github.com/oracle/mysql-operator/pkg/controllers/util"
@@ -47,16 +48,16 @@ import (
 const controllerAgentName = "operator-restore-controller"
 
 // OperatorController handles validation, labeling, and scheduling of
-// MySQLRestores to be executed on a specific (primary) mysql-agent. It is run
+// Restores to be executed on a specific (primary) mysql-agent. It is run
 // in the operator.
 type OperatorController struct {
-	client      clientset.MySQLRestoresGetter
+	client      clientset.RestoresGetter
 	syncHandler func(key string) error
 
-	// restoreLister is able to list/get MySQLRestores from a shared informer's
+	// restoreLister is able to list/get Restores from a shared informer's
 	// store.
-	restoreLister listersv1alpha1.MySQLRestoreLister
-	// restoreListerSynced returns true if the MySQLRestore shared informer has
+	restoreLister listersv1alpha1.RestoreLister
+	// restoreListerSynced returns true if the Restore shared informer has
 	// synced at least once.
 	restoreListerSynced cache.InformerSynced
 
@@ -66,17 +67,17 @@ type OperatorController struct {
 	// least once.
 	podListerSynced cache.InformerSynced
 
-	// clusterLister is able to list/get MySQLClusters from a shared informer's
+	// clusterLister is able to list/get Clusters from a shared informer's
 	// store.
-	clusterLister listersv1alpha1.MySQLClusterLister
-	// clusterListerSynced returns true if the MySQLCluster shared informer has
+	clusterLister listersv1alpha1.ClusterLister
+	// clusterListerSynced returns true if the Cluster shared informer has
 	// synced at least once.
 	clusterListerSynced cache.InformerSynced
 
-	// backupLister is able to list/get MySQLBackups from a shared informer's
+	// backupLister is able to list/get Backups from a shared informer's
 	// store.
-	backupLister listersv1alpha1.MySQLBackupLister
-	// backupListerSynced returns true if the MySQLBackup shared informer has
+	backupLister listersv1alpha1.BackupLister
+	// backupListerSynced returns true if the Backup shared informer has
 	// synced at least once.
 	backupListerSynced cache.InformerSynced
 
@@ -84,15 +85,18 @@ type OperatorController struct {
 	// recorder is an event recorder for recording Event resources to the
 	// Kubernetes API.
 	recorder record.EventRecorder
+
+	// conditionUpdater updates the conditions of Backups.
+	conditionUpdater ConditionUpdater
 }
 
 // NewOperatorController constructs a new OperatorController.
 func NewOperatorController(
 	kubeClient kubernetes.Interface,
-	client clientset.MySQLRestoresGetter,
-	restoreInformer informersv1alpha1.MySQLRestoreInformer,
-	clusterInformer informersv1alpha1.MySQLClusterInformer,
-	backupInformer informersv1alpha1.MySQLBackupInformer,
+	client clientset.RestoresGetter,
+	restoreInformer informersv1alpha1.RestoreInformer,
+	clusterInformer informersv1alpha1.ClusterInformer,
+	backupInformer informersv1alpha1.BackupInformer,
 	podInformer corev1informers.PodInformer,
 ) *OperatorController {
 	// Create event broadcaster.
@@ -114,6 +118,7 @@ func NewOperatorController(
 		podListerSynced:     podInformer.Informer().HasSynced,
 		queue:               workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "restore"),
 		recorder:            recorder,
+		conditionUpdater:    &conditionUpdater{client: client},
 	}
 
 	c.syncHandler = c.processRestore
@@ -121,14 +126,12 @@ func NewOperatorController(
 	restoreInformer.Informer().AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
-				restore := obj.(*v1alpha1.MySQLRestore)
+				restore := obj.(*v1alpha1.Restore)
 
-				switch restore.Status.Phase {
-				case v1alpha1.RestorePhaseUnknown, v1alpha1.RestorePhaseNew:
-					// Only process new restores.
-				default:
-					glog.V(2).Infof("MySQLRestore %q is not new, skipping (phase=%q)",
-						kubeutil.NamespaceAndName(restore), restore.Status.Phase)
+				_, cond := restoreutil.GetRestoreCondition(&restore.Status, v1alpha1.RestoreScheduled)
+				if cond != nil && cond.Status == corev1.ConditionTrue {
+					glog.V(4).Infof("Restore %q is already scheduled on Cluster member %q",
+						kubeutil.NamespaceAndName(restore), restore.Spec.ScheduledMember)
 					return
 				}
 
@@ -232,9 +235,9 @@ func (controller *OperatorController) processRestore(key string) error {
 	}
 
 	// Get resource from store.
-	restore, err := controller.restoreLister.MySQLRestores(ns).Get(name)
+	restore, err := controller.restoreLister.Restores(ns).Get(name)
 	if err != nil {
-		return errors.Wrap(err, "error getting MySQLRestore")
+		return errors.Wrap(err, "error getting Restore")
 	}
 
 	// Don't modify items in the cache.
@@ -249,44 +252,45 @@ func (controller *OperatorController) processRestore(key string) error {
 		validationErrs := field.ErrorList{}
 		fldPath := field.NewPath("spec")
 
-		// Check the referenced MySQLCluster exists.
-		_, err := controller.clusterLister.MySQLClusters(ns).Get(restore.Spec.ClusterRef.Name)
+		// Check the referenced Cluster exists.
+		_, err := controller.clusterLister.Clusters(ns).Get(restore.Spec.Cluster.Name)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				return err
 			}
 			validationErrs = append(validationErrs,
-				field.NotFound(fldPath.Child("clusterRef").Child("name"), restore.Spec.ClusterRef.Name))
+				field.NotFound(fldPath.Child("cluster").Child("name"), restore.Spec.Cluster.Name))
 		}
 
-		// Check the referenced MySQLBackup exists.
-		_, err = controller.backupLister.MySQLBackups(ns).Get(restore.Spec.BackupRef.Name)
+		// Check the referenced Backup exists.
+		_, err = controller.backupLister.Backups(ns).Get(restore.Spec.Backup.Name)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				return err
 			}
 			validationErrs = append(validationErrs,
-				field.NotFound(fldPath.Child("backupRef").Child("name"), restore.Spec.BackupRef.Name))
+				field.NotFound(fldPath.Child("backup").Child("name"), restore.Spec.Backup.Name))
 		}
 		if len(validationErrs) > 0 {
 			validationErr = validationErrs.ToAggregate()
 		}
 	}
 
-	// If the MySQLRestore is not valid emit an event to that effect and mark
+	// If the Restore is not valid emit an event to that effect and mark
 	// it as failed.
 	// TODO(apryde): Maybe we should add an UpdateFunc to the restoreInformer
 	// and support users fixing validation errors via updates (rather than
 	// recreation).
 	if validationErr != nil {
-		restore.Status.Phase = v1alpha1.RestorePhaseFailed
-		restore, err = controller.client.MySQLRestores(ns).Update(restore)
-		if err != nil {
-			return errors.Wrapf(err, "failed to update (phase=%q)", v1alpha1.RestorePhaseFailed)
-		}
 		controller.recorder.Eventf(restore, corev1.EventTypeWarning, "FailedValidation", validationErr.Error())
-
-		return nil // We don't return an error as we don't want to re-queue.
+		// NOTE: We only return an error here if we fail to set the condition
+		// (rather than on validation failure) as we don't want to retry.
+		return controller.conditionUpdater.Update(restore, &v1alpha1.RestoreCondition{
+			Type:    v1alpha1.RestoreFailed,
+			Status:  corev1.ConditionFalse,
+			Reason:  "FailedValidation",
+			Message: validationErr.Error(),
+		})
 	}
 
 	// Schedule restore on a primary.
@@ -296,20 +300,20 @@ func (controller *OperatorController) processRestore(key string) error {
 	}
 
 	// Update resource.
-	restore, err = controller.client.MySQLRestores(ns).Update(restore)
+	restore, err = controller.client.Restores(ns).Update(restore)
 	if err != nil {
 		return errors.Wrap(err, "failed to update")
 	}
 
-	controller.recorder.Eventf(restore, corev1.EventTypeNormal, "SuccessScheduled", "Scheduled on Pod %q", restore.Spec.AgentScheduled)
+	controller.recorder.Eventf(restore, corev1.EventTypeNormal, "SuccessScheduled", "Scheduled on Pod %q", restore.Spec.ScheduledMember)
 
 	return nil
 }
 
-// scheduleRestore schedules a MySQLRestore on a specific member of a MySQLCluster.
-func (controller *OperatorController) scheduleRestore(restore *v1alpha1.MySQLRestore) (*v1alpha1.MySQLRestore, error) {
+// scheduleRestore schedules a Restore on a specific member of a Cluster.
+func (controller *OperatorController) scheduleRestore(restore *v1alpha1.Restore) (*v1alpha1.Restore, error) {
 	var (
-		name = restore.Spec.ClusterRef.Name
+		name = restore.Spec.Cluster.Name
 		ns   = restore.Namespace
 	)
 
@@ -318,8 +322,11 @@ func (controller *OperatorController) scheduleRestore(restore *v1alpha1.MySQLRes
 		return restore, errors.Wrap(err, "error listing Pods")
 	}
 	if len(primaries) > 0 {
-		restore.Status.Phase = v1alpha1.RestorePhaseScheduled
-		restore.Spec.AgentScheduled = primaries[0].Name
+		restoreutil.UpdateRestoreCondition(&restore.Status, &v1alpha1.RestoreCondition{
+			Type:   v1alpha1.RestoreScheduled,
+			Status: corev1.ConditionTrue,
+		})
+		restore.Spec.ScheduledMember = primaries[0].Name
 		return restore, nil
 	}
 

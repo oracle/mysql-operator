@@ -15,10 +15,8 @@
 package executor
 
 import (
-	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/backup/executor/mysqldump"
@@ -43,13 +41,8 @@ type Interface interface {
 }
 
 // New builds a new backup executor.
-func New(executor *v1alpha1.Executor, creds map[string]string) (Interface, error) {
-	switch strings.ToLower(executor.Provider) {
-	case MySQLDumpProvider:
-		return mysqldump.NewExecutor(executor, creds)
-	default:
-		return nil, fmt.Errorf("unknown backup executor provider %q", executor.Provider)
-	}
+func New(executor v1alpha1.BackupExecutor, creds map[string]string) (Interface, error) {
+	return mysqldump.NewExecutor(executor.MySQLDump, creds)
 }
 
 // DefaultCreds return the default MySQL credentials for the local instance.

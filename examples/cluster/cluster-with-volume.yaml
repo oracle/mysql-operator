@@ -16,11 +16,11 @@ spec:
   storageClassName: manual
 ---
 apiVersion: mysql.oracle.com/v1alpha1
-kind: MySQLCluster
+kind: Cluster
 metadata:
   name: mysql
 spec:
-  replicas: 1
+  members: 1
   secretRef:
     name: mysql-root-user-secret
   volumeClaimTemplate:

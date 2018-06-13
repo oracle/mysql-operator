@@ -20,62 +20,57 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	api "github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 )
 
-type TestMySQLBackupSchedule struct {
-	*api.MySQLBackupSchedule
+type TestBackupSchedule struct {
+	*v1alpha1.BackupSchedule
 }
 
-func NewTestMySQLBackupSchedule(namespace, name string) *TestMySQLBackupSchedule {
-	return &TestMySQLBackupSchedule{
-		MySQLBackupSchedule: &api.MySQLBackupSchedule{
+func NewTestBackupSchedule(namespace, name string) *TestBackupSchedule {
+	return &TestBackupSchedule{
+		BackupSchedule: &v1alpha1.BackupSchedule{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: namespace,
 				Name:      name,
 				Labels:    make(map[string]string),
 			},
-			Spec: api.BackupScheduleSpec{
-				BackupTemplate: api.BackupSpec{
-					Executor: &api.Executor{
-						Provider:  "mysqldump",
-						Databases: []string{"test"},
-					},
-					Storage: &api.Storage{
-						Provider: "s3",
-						SecretRef: &corev1.LocalObjectReference{
-							Name: "name",
-						},
-						Config: map[string]string{
-							"endpoint": "endpoint",
-							"region":   "region",
-							"bucket":   "bucket",
+			Spec: v1alpha1.BackupScheduleSpec{
+				BackupTemplate: v1alpha1.BackupSpec{
+					Executor: v1alpha1.BackupExecutor{
+						MySQLDump: &v1alpha1.MySQLDumpBackupExecutor{
+							Databases: []v1alpha1.Database{{Name: "test"}},
 						},
 					},
-					ClusterRef: &corev1.LocalObjectReference{},
+					StorageProvider: v1alpha1.StorageProvider{
+						S3: &v1alpha1.S3StorageProvider{
+							Endpoint: "endpoint",
+							Region:   "region",
+							Bucket:   "bucket",
+							CredentialsSecret: &corev1.LocalObjectReference{
+								Name: "name",
+							},
+						},
+					},
+					Cluster: &corev1.LocalObjectReference{},
 				},
 			},
 		},
 	}
 }
 
-func (s *TestMySQLBackupSchedule) WithPhase(phase api.BackupSchedulePhase) *TestMySQLBackupSchedule {
-	s.Status.Phase = phase
-	return s
-}
-
-func (s *TestMySQLBackupSchedule) WithCronSchedule(cronExpression string) *TestMySQLBackupSchedule {
+func (s *TestBackupSchedule) WithCronSchedule(cronExpression string) *TestBackupSchedule {
 	s.Spec.Schedule = cronExpression
 	return s
 }
 
-func (s *TestMySQLBackupSchedule) WithLastBackupTime(timeString string) *TestMySQLBackupSchedule {
+func (s *TestBackupSchedule) WithLastBackupTime(timeString string) *TestBackupSchedule {
 	t, _ := time.Parse("2006-01-02 15:04:05", timeString)
 	s.Status.LastBackup = metav1.Time{Time: t}
 	return s
 }
 
-func (s *TestMySQLBackupSchedule) WithLabel(key, value string) *TestMySQLBackupSchedule {
+func (s *TestBackupSchedule) WithLabel(key, value string) *TestBackupSchedule {
 	s.Labels[key] = value
 	return s
 }

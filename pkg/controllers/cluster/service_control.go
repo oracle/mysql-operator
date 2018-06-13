@@ -20,7 +20,7 @@ import (
 	corelistersv1 "k8s.io/client-go/listers/core/v1"
 )
 
-// ServiceControlInterface defines the interface that the MySQLClusterController
+// ServiceControlInterface defines the interface that the ClusterController
 // uses to create Services. It is implemented as an interface to enable testing.
 type ServiceControlInterface interface {
 	CreateService(s *corev1.Service) error

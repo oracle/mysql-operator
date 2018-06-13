@@ -44,13 +44,13 @@ var _ = Describe("Backup/Restore", func() {
 		clusterName := "backup-restore"
 		ns := f.Namespace.Name
 
-		clusterJig := framework.NewMySQLClusterTestJig(mcs, cs, clusterName)
-		backupJig := framework.NewMySQLBackupTestJig(mcs, cs, clusterName)
-		restoreJig := framework.NewMySQLRestoreTestJig(mcs, cs, clusterName)
+		clusterJig := framework.NewClusterTestJig(mcs, cs, clusterName)
+		backupJig := framework.NewBackupTestJig(mcs, cs, clusterName)
+		restoreJig := framework.NewRestoreTestJig(mcs, cs, clusterName)
 
 		By("Creating a cluster to backup")
 
-		cluster := clusterJig.CreateAndAwaitMySQLClusterOrFail(ns, 3, nil, framework.DefaultTimeout)
+		cluster := clusterJig.CreateAndAwaitClusterOrFail(ns, 3, nil, framework.DefaultTimeout)
 
 		By("Creating testdb in the cluster to be backed up")
 
@@ -71,17 +71,17 @@ var _ = Describe("Backup/Restore", func() {
 
 		By("Backing up testdb")
 
-		dbs := []string{framework.TestDBName}
-		backup := backupJig.CreateAndAwaitMySQLDumpBackupOrFail(ns, clusterName, dbs, func(b *v1alpha1.MySQLBackup) {
-			b.Spec.Storage = &v1alpha1.Storage{
-				Provider: "s3",
-				SecretRef: &corev1.LocalObjectReference{
-					Name: secret.Name,
-				},
-				Config: map[string]string{
-					"endpoint": "bristoldev.compat.objectstorage.us-phoenix-1.oraclecloud.com",
-					"region":   "us-phoenix-1",
-					"bucket":   "trjl-test",
+		dbs := []v1alpha1.Database{{Name: framework.TestDBName}}
+		backup := backupJig.CreateAndAwaitMySQLDumpBackupOrFail(ns, clusterName, dbs, func(b *v1alpha1.Backup) {
+			b.Spec.StorageProvider = v1alpha1.StorageProvider{
+				S3: &v1alpha1.S3StorageProvider{
+					Endpoint:       "bristoldev.compat.objectstorage.us-phoenix-1.oraclecloud.com",
+					Region:         "us-phoenix-1",
+					Bucket:         "trjl-test",
+					ForcePathStyle: true,
+					CredentialsSecret: &corev1.LocalObjectReference{
+						Name: secret.Name,
+					},
 				},
 			}
 		}, framework.DefaultTimeout)
@@ -101,7 +101,7 @@ var _ = Describe("Backup/Restore", func() {
 
 		By("Restoring the backup")
 
-		restore := restoreJig.CreateAndAwaitMySQLRestoreOrFail(ns, clusterName, backup.Name, nil, framework.DefaultTimeout)
+		restore := restoreJig.CreateAndAwaitRestoreOrFail(ns, clusterName, backup.Name, nil, framework.DefaultTimeout)
 		Expect(restore.Status.TimeCompleted).ToNot(BeZero())
 
 		By("Checking testdb is present and contains the correct uuid")

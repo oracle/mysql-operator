@@ -21,49 +21,49 @@ import (
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 )
 
-type TestMySQLBackup struct {
-	*v1alpha1.MySQLBackup
+type TestBackup struct {
+	*v1alpha1.Backup
 }
 
-func NewTestMySQLBackup() *TestMySQLBackup {
-	return &TestMySQLBackup{
-		MySQLBackup: &v1alpha1.MySQLBackup{
+func NewTestBackup() *TestBackup {
+	return &TestBackup{
+		Backup: &v1alpha1.Backup{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: metav1.NamespaceDefault,
 			},
 			Spec: v1alpha1.BackupSpec{
-				Executor: &v1alpha1.Executor{
-					Provider:  "mysqldump",
-					Databases: []string{"test"},
-				},
-				Storage: &v1alpha1.Storage{
-					Provider: "s3",
-					SecretRef: &corev1.LocalObjectReference{
-						Name: "name",
-					},
-					Config: map[string]string{
-						"endpoint": "endpoint",
-						"region":   "region",
-						"bucket":   "bucket",
+				Executor: v1alpha1.BackupExecutor{
+					MySQLDump: &v1alpha1.MySQLDumpBackupExecutor{
+						Databases: []v1alpha1.Database{{Name: "test"}},
 					},
 				},
-				ClusterRef: &corev1.LocalObjectReference{},
+				StorageProvider: v1alpha1.StorageProvider{
+					S3: &v1alpha1.S3StorageProvider{
+						Endpoint: "endpoint",
+						Region:   "region",
+						Bucket:   "bucket",
+						CredentialsSecret: &corev1.LocalObjectReference{
+							Name: "name",
+						},
+					},
+				},
+				Cluster: &corev1.LocalObjectReference{},
 			},
 		},
 	}
 }
 
-func (b *TestMySQLBackup) WithNamespace(namespace string) *TestMySQLBackup {
+func (b *TestBackup) WithNamespace(namespace string) *TestBackup {
 	b.Namespace = namespace
 	return b
 }
 
-func (b *TestMySQLBackup) WithName(name string) *TestMySQLBackup {
+func (b *TestBackup) WithName(name string) *TestBackup {
 	b.Name = name
 	return b
 }
 
-func (b *TestMySQLBackup) WithLabel(key, value string) *TestMySQLBackup {
+func (b *TestBackup) WithLabel(key, value string) *TestBackup {
 	if b.Labels == nil {
 		b.Labels = make(map[string]string)
 	}

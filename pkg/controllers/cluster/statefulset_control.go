@@ -27,7 +27,7 @@ import (
 )
 
 // StatefulSetControlInterface defines the interface that the
-// MySQLClusterController uses to create and update StatefulSets. It
+// ClusterController uses to create and update StatefulSets. It
 // is implemented as an interface to enable testing.
 type StatefulSetControlInterface interface {
 	CreateStatefulSet(ss *apps.StatefulSet) error

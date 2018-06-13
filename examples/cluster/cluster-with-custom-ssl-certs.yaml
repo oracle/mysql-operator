@@ -1,8 +1,8 @@
 apiVersion: mysql.oracle.com/v1alpha1
-kind: MySQLCluster
+kind: Cluster
 metadata:
   name: mysql
 spec:
-  replicas: 3
+  members: 3
   sslSecretRef:
     name: mysql-ssl-secret

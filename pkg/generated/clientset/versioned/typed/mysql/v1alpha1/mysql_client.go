@@ -21,37 +21,37 @@ import (
 	rest "k8s.io/client-go/rest"
 )
 
-type MysqlV1alpha1Interface interface {
+type MySQLV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	MySQLBackupsGetter
-	MySQLBackupSchedulesGetter
-	MySQLClustersGetter
-	MySQLRestoresGetter
+	BackupsGetter
+	BackupSchedulesGetter
+	ClustersGetter
+	RestoresGetter
 }
 
-// MysqlV1alpha1Client is used to interact with features provided by the mysql.oracle.com group.
-type MysqlV1alpha1Client struct {
+// MySQLV1alpha1Client is used to interact with features provided by the mysql.oracle.com group.
+type MySQLV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *MysqlV1alpha1Client) MySQLBackups(namespace string) MySQLBackupInterface {
-	return newMySQLBackups(c, namespace)
+func (c *MySQLV1alpha1Client) Backups(namespace string) BackupInterface {
+	return newBackups(c, namespace)
 }
 
-func (c *MysqlV1alpha1Client) MySQLBackupSchedules(namespace string) MySQLBackupScheduleInterface {
-	return newMySQLBackupSchedules(c, namespace)
+func (c *MySQLV1alpha1Client) BackupSchedules(namespace string) BackupScheduleInterface {
+	return newBackupSchedules(c, namespace)
 }
 
-func (c *MysqlV1alpha1Client) MySQLClusters(namespace string) MySQLClusterInterface {
-	return newMySQLClusters(c, namespace)
+func (c *MySQLV1alpha1Client) Clusters(namespace string) ClusterInterface {
+	return newClusters(c, namespace)
 }
 
-func (c *MysqlV1alpha1Client) MySQLRestores(namespace string) MySQLRestoreInterface {
-	return newMySQLRestores(c, namespace)
+func (c *MySQLV1alpha1Client) Restores(namespace string) RestoreInterface {
+	return newRestores(c, namespace)
 }
 
-// NewForConfig creates a new MysqlV1alpha1Client for the given config.
-func NewForConfig(c *rest.Config) (*MysqlV1alpha1Client, error) {
+// NewForConfig creates a new MySQLV1alpha1Client for the given config.
+func NewForConfig(c *rest.Config) (*MySQLV1alpha1Client, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -60,12 +60,12 @@ func NewForConfig(c *rest.Config) (*MysqlV1alpha1Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &MysqlV1alpha1Client{client}, nil
+	return &MySQLV1alpha1Client{client}, nil
 }
 
-// NewForConfigOrDie creates a new MysqlV1alpha1Client for the given config and
+// NewForConfigOrDie creates a new MySQLV1alpha1Client for the given config and
 // panics if there is an error in the config.
-func NewForConfigOrDie(c *rest.Config) *MysqlV1alpha1Client {
+func NewForConfigOrDie(c *rest.Config) *MySQLV1alpha1Client {
 	client, err := NewForConfig(c)
 	if err != nil {
 		panic(err)
@@ -73,9 +73,9 @@ func NewForConfigOrDie(c *rest.Config) *MysqlV1alpha1Client {
 	return client
 }
 
-// New creates a new MysqlV1alpha1Client for the given RESTClient.
-func New(c rest.Interface) *MysqlV1alpha1Client {
-	return &MysqlV1alpha1Client{c}
+// New creates a new MySQLV1alpha1Client for the given RESTClient.
+func New(c rest.Interface) *MySQLV1alpha1Client {
+	return &MySQLV1alpha1Client{c}
 }
 
 func setConfigDefaults(config *rest.Config) error {
@@ -93,7 +93,7 @@ func setConfigDefaults(config *rest.Config) error {
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *MysqlV1alpha1Client) RESTClient() rest.Interface {
+func (c *MySQLV1alpha1Client) RESTClient() rest.Interface {
 	if c == nil {
 		return nil
 	}

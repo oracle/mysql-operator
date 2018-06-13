@@ -127,12 +127,6 @@
   revision = "4bd1920723d7b7c925de087aa32e2187708897f7"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/google/btree"
-  packages = ["."]
-  revision = "316fb6d3f031ae8f4d457c6c5186b9e3ded70435"
-
-[[projects]]
   name = "github.com/google/gofuzz"
   packages = ["."]
   revision = "44d81051d367757e1c7c6a5a86423ece9afcf63c"
@@ -145,15 +139,6 @@
     "extensions"
   ]
   revision = "68f4ded48ba9414dab2ae69b3f0d69971da73aa5"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/gregjones/httpcache"
-  packages = [
-    ".",
-    "diskcache"
-  ]
-  revision = "316c5e0ff04e0ce21cfae9fbbb2ab39c7fc74e71"
 
 [[projects]]
   name = "github.com/hashicorp/golang-lru"
@@ -190,12 +175,6 @@
   packages = ["."]
   revision = "6ed27152e0428abfde127acb33b08b03a1e67cac"
   version = "1.0.2"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/juju/ratelimit"
-  packages = ["."]
-  revision = "5b9ff866471762aa2ab2dced63c9fb6f53921342"
 
 [[projects]]
   name = "github.com/mailru/easyjson"
@@ -261,18 +240,6 @@
   packages = ["."]
   revision = "e790cca94e6cc75c7064b1332e63811d4aae1a53"
   version = "v1.1"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/petar/GoLLRB"
-  packages = ["llrb"]
-  revision = "53be0d36a84c2a886ca057d34b6aa4468df9ccb4"
-
-[[projects]]
-  name = "github.com/peterbourgon/diskv"
-  packages = ["."]
-  revision = "5f041e8faa004a95c88a202771f4cc3e991971e6"
-  version = "v2.0.1"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -395,6 +362,12 @@
 
 [[projects]]
   branch = "master"
+  name = "golang.org/x/time"
+  packages = ["rate"]
+  revision = "fbb02b2291d28baffd63558aa44b4b56f178d650"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/tools"
   packages = [
     "go/ast/astutil",
@@ -414,7 +387,6 @@
   revision = "7f97868eec74b32b0982dd158a51a446d1da7eb5"
 
 [[projects]]
-  branch = "release-1.9"
   name = "k8s.io/api"
   packages = [
     "admissionregistration/v1alpha1",
@@ -446,7 +418,8 @@
     "storage/v1alpha1",
     "storage/v1beta1"
   ]
-  revision = "006a217681ae70cbacdd66a5e2fca1a61a8ff28e"
+  revision = "73d903622b7391f3312dcbac6483fed484e185f8"
+  version = "kubernetes-1.10.0"
 
 [[projects]]
   branch = "release-1.9"
@@ -455,8 +428,6 @@
     "pkg/api/errors",
     "pkg/api/meta",
     "pkg/api/resource",
-    "pkg/apimachinery",
-    "pkg/apimachinery/registered",
     "pkg/apis/meta/internalversion",
     "pkg/apis/meta/v1",
     "pkg/apis/meta/v1/unstructured",
@@ -500,13 +471,13 @@
   revision = "68f9c3a1feb3140df59c67ced62d3a5df8e6c9c2"
 
 [[projects]]
-  branch = "release-1.9"
   name = "k8s.io/apiserver"
   packages = [
     "pkg/util/flag",
     "pkg/util/logs"
   ]
-  revision = "d0762227e2dd234c2db8efc3946c33ad2453c9e8"
+  revision = "5ae41ac86efd753e2ba012f097b83a914b268236"
+  version = "kubernetes-1.10.0"
 
 [[projects]]
   name = "k8s.io/client-go"
@@ -636,7 +607,10 @@
     "listers/storage/v1",
     "listers/storage/v1alpha1",
     "listers/storage/v1beta1",
+    "pkg/apis/clientauthentication",
+    "pkg/apis/clientauthentication/v1alpha1",
     "pkg/version",
+    "plugin/pkg/client/auth/exec",
     "rest",
     "rest/watch",
     "testing",
@@ -659,11 +633,10 @@
     "util/retry",
     "util/workqueue"
   ]
-  revision = "78700dec6369ba22221b72770783300f143df150"
-  version = "v6.0.0"
+  revision = "23781f4d6632d88e869066eaebb743857aa1ef9b"
+  version = "v7.0.0"
 
 [[projects]]
-  branch = "release-1.9"
   name = "k8s.io/code-generator"
   packages = [
     "cmd/client-gen",
@@ -674,17 +647,25 @@
     "cmd/client-gen/generators/util",
     "cmd/client-gen/path",
     "cmd/client-gen/types",
+    "cmd/conversion-gen",
+    "cmd/conversion-gen/args",
+    "cmd/conversion-gen/generators",
     "cmd/deepcopy-gen",
+    "cmd/deepcopy-gen/args",
     "cmd/defaulter-gen",
+    "cmd/defaulter-gen/args",
     "cmd/informer-gen",
+    "cmd/informer-gen/args",
     "cmd/informer-gen/generators",
     "cmd/lister-gen",
-    "cmd/lister-gen/generators"
+    "cmd/lister-gen/args",
+    "cmd/lister-gen/generators",
+    "pkg/util"
   ]
-  revision = "91d3f6a57905178524105a085085901bb73bd3dc"
+  revision = "7ead8f38b01cf8653249f5af80ce7b2c8aba12e2"
+  version = "kubernetes-1.10.0"
 
 [[projects]]
-  branch = "master"
   name = "k8s.io/gengo"
   packages = [
     "args",
@@ -696,7 +677,7 @@
     "parser",
     "types"
   ]
-  revision = "1ef560bbde5195c01629039ad3b337ce63e7b321"
+  revision = "b6c426f7730e6d66e6e476a85d1c3eb7633880e0"
 
 [[projects]]
   branch = "master"
@@ -719,6 +700,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d86dd12b8d707a70abdab55f5864ba1663633ed54a33f45f9a4c7ce4a8ab3040"
+  inputs-digest = "7a642b60a4d338452115f73c55b32f3ac1a7916cd5e9999001f03a2e0698e9be"
   solver-name = "gps-cdcl"
   solver-version = 1

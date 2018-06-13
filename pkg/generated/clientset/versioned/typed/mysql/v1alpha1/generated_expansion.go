@@ -14,10 +14,10 @@
 
 package v1alpha1
 
-type MySQLBackupExpansion interface{}
+type BackupExpansion interface{}
 
-type MySQLBackupScheduleExpansion interface{}
+type BackupScheduleExpansion interface{}
 
-type MySQLClusterExpansion interface{}
+type ClusterExpansion interface{}
 
-type MySQLRestoreExpansion interface{}
+type RestoreExpansion interface{}

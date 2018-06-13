@@ -30,7 +30,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	"github.com/pkg/errors"
 
-	v1 "github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
+	clusterutil "github.com/oracle/mysql-operator/pkg/api/cluster"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/controllers/cluster/labeler"
 	mysqlclientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 	"github.com/oracle/mysql-operator/pkg/resources/secrets"
@@ -39,8 +40,8 @@ import (
 // TestDBName is the name of database to use when executing test SQL queries.
 const TestDBName = "testdb"
 
-// MySQLClusterTestJig is a jig to help MySQLCluster testing.
-type MySQLClusterTestJig struct {
+// ClusterTestJig is a jig to help Cluster testing.
+type ClusterTestJig struct {
 	ID     string
 	Name   string
 	Labels map[string]string
@@ -49,10 +50,10 @@ type MySQLClusterTestJig struct {
 	KubeClient  clientset.Interface
 }
 
-// NewMySQLClusterTestJig allocates and inits a new MySQLClusterTestJig.
-func NewMySQLClusterTestJig(mysqlClient mysqlclientset.Interface, kubeClient clientset.Interface, name string) *MySQLClusterTestJig {
+// NewClusterTestJig allocates and inits a new ClusterTestJig.
+func NewClusterTestJig(mysqlClient mysqlclientset.Interface, kubeClient clientset.Interface, name string) *ClusterTestJig {
 	id := string(uuid.NewUUID())
-	return &MySQLClusterTestJig{
+	return &ClusterTestJig{
 		ID:   id,
 		Name: name,
 		Labels: map[string]string{
@@ -65,56 +66,56 @@ func NewMySQLClusterTestJig(mysqlClient mysqlclientset.Interface, kubeClient cli
 	}
 }
 
-// newMySQLClusterTemplate returns the default v1.MySQLCluster template for this jig, but
-// does not actually create the MySQLCluster.  The default MySQLCluster has the same name
-// as the jig and has the given number of replicas.
-func (j *MySQLClusterTestJig) newMySQLClusterTemplate(namespace string, replicas int32) *v1.MySQLCluster {
-	return &v1.MySQLCluster{
+// newClusterTemplate returns the default v1.Cluster template for this jig, but
+// does not actually create the Cluster.  The default Cluster has the same name
+// as the jig and has the given number of members.
+func (j *ClusterTestJig) newClusterTemplate(namespace string, members int32) *v1alpha1.Cluster {
+	return &v1alpha1.Cluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
 			Name:      j.Name,
 			Labels:    j.Labels,
 		},
-		Spec: v1.MySQLClusterSpec{
-			Replicas: replicas,
+		Spec: v1alpha1.ClusterSpec{
+			Members: members,
 		},
 	}
 }
 
-// CreateMySQLClusterOrFail creates a new MySQLCluster based on the jig's
-// defaults. Callers can provide a function to tweak the MySQLCluster object
+// CreateClusterOrFail creates a new Cluster based on the jig's
+// defaults. Callers can provide a function to tweak the Cluster object
 // before it is created.
-func (j *MySQLClusterTestJig) CreateMySQLClusterOrFail(namespace string, replicas int32, tweak func(cluster *v1.MySQLCluster)) *v1.MySQLCluster {
-	cluster := j.newMySQLClusterTemplate(namespace, replicas)
+func (j *ClusterTestJig) CreateClusterOrFail(namespace string, members int32, tweak func(cluster *v1alpha1.Cluster)) *v1alpha1.Cluster {
+	cluster := j.newClusterTemplate(namespace, members)
 	if tweak != nil {
 		tweak(cluster)
 	}
 
 	name := types.NamespacedName{Namespace: namespace, Name: j.Name}
-	By(fmt.Sprintf("Creating a MySQLCluster %q with .spec.replicas=%d", name, replicas))
+	By(fmt.Sprintf("Creating a Cluster %q with .spec.members=%d", name, members))
 
-	result, err := j.MySQLClient.MysqlV1alpha1().MySQLClusters(namespace).Create(cluster)
+	result, err := j.MySQLClient.MySQLV1alpha1().Clusters(namespace).Create(cluster)
 	if err != nil {
-		Failf("Failed to create MySQLCluster %q: %v", name, err)
+		Failf("Failed to create Cluster %q: %v", name, err)
 	}
 	return result
 }
 
-// CreateAndAwaitMySQLClusterOrFail creates a new MySQLCluster based on the
+// CreateAndAwaitClusterOrFail creates a new Cluster based on the
 // jig's defaults, waits for it to become ready, and then sanity checks it and
 // its dependant resources. Callers can provide a function to tweak the
-// MySQLCluster object before it is created.
-func (j *MySQLClusterTestJig) CreateAndAwaitMySQLClusterOrFail(namespace string, replicas int32, tweak func(cluster *v1.MySQLCluster), timeout time.Duration) *v1.MySQLCluster {
-	cluster := j.CreateMySQLClusterOrFail(namespace, replicas, tweak)
+// Cluster object before it is created.
+func (j *ClusterTestJig) CreateAndAwaitClusterOrFail(namespace string, members int32, tweak func(cluster *v1alpha1.Cluster), timeout time.Duration) *v1alpha1.Cluster {
+	cluster := j.CreateClusterOrFail(namespace, members, tweak)
 	cluster = j.WaitForClusterReadyOrFail(namespace, cluster.Name, timeout)
-	j.SanityCheckMySQLCluster(cluster)
+	j.SanityCheckCluster(cluster)
 	return cluster
 }
 
-func (j *MySQLClusterTestJig) waitForConditionOrFail(namespace, name string, timeout time.Duration, message string, conditionFn func(*v1.MySQLCluster) bool) *v1.MySQLCluster {
-	var cluster *v1.MySQLCluster
+func (j *ClusterTestJig) waitForConditionOrFail(namespace, name string, timeout time.Duration, message string, conditionFn func(*v1alpha1.Cluster) bool) *v1alpha1.Cluster {
+	var cluster *v1alpha1.Cluster
 	pollFunc := func() (bool, error) {
-		c, err := j.MySQLClient.MysqlV1alpha1().MySQLClusters(namespace).Get(name, metav1.GetOptions{})
+		c, err := j.MySQLClient.MySQLV1alpha1().Clusters(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -125,41 +126,38 @@ func (j *MySQLClusterTestJig) waitForConditionOrFail(namespace, name string, tim
 		return false, nil
 	}
 	if err := wait.PollImmediate(Poll, timeout, pollFunc); err != nil {
-		Failf("Timed out waiting for MySQLCluster %q to %s", name, message)
+		Failf("Timed out waiting for Cluster %q to %s", name, message)
 	}
 	return cluster
 }
 
 // WaitForClusterReadyOrFail waits up to a given timeout for a cluster to be in
 // the running phase.
-func (j *MySQLClusterTestJig) WaitForClusterReadyOrFail(namespace, name string, timeout time.Duration) *v1.MySQLCluster {
-	Logf("Waiting up to %v for MySQLCluster \"%s/%s\" to be ready", timeout, namespace, name)
-	cluster := j.waitForConditionOrFail(namespace, name, timeout, "have all nodes ready", func(cluster *v1.MySQLCluster) bool {
-		if cluster.Status.Phase == v1.MySQLClusterRunning {
-			return true
-		}
-		return false
+func (j *ClusterTestJig) WaitForClusterReadyOrFail(namespace, name string, timeout time.Duration) *v1alpha1.Cluster {
+	Logf("Waiting up to %v for Cluster \"%s/%s\" to be ready", timeout, namespace, name)
+	cluster := j.waitForConditionOrFail(namespace, name, timeout, "have all nodes ready", func(cluster *v1alpha1.Cluster) bool {
+		return clusterutil.IsClusterReady(cluster)
 	})
 	return cluster
 }
 
-// SanityCheckMySQLCluster checks basic properties of a given MySQLCluster match
+// SanityCheckCluster checks basic properties of a given Cluster match
 // our expectations.
-func (j *MySQLClusterTestJig) SanityCheckMySQLCluster(cluster *v1.MySQLCluster) {
+func (j *ClusterTestJig) SanityCheckCluster(cluster *v1alpha1.Cluster) {
 	name := types.NamespacedName{Namespace: cluster.Namespace, Name: cluster.Name}
 	ss, err := j.KubeClient.AppsV1beta1().StatefulSets(cluster.Namespace).Get(cluster.Name, metav1.GetOptions{})
 	if err != nil {
-		Failf("Failed to get StatefulSet %[1]q for MySQLCluster %[1]q: %[2]v", name, err)
+		Failf("Failed to get StatefulSet %[1]q for Cluster %[1]q: %[2]v", name, err)
 	}
 
-	if ss.Status.ReadyReplicas != cluster.Spec.Replicas {
-		Failf("StatefulSet %q has %d ready replica(s), want %d", name, ss.Status.ReadyReplicas, cluster.Spec.Replicas)
+	if ss.Status.ReadyReplicas != cluster.Spec.Members {
+		Failf("StatefulSet %q has %d ready replica(s), want %d", name, ss.Status.ReadyReplicas, cluster.Spec.Members)
 	}
 
 	// Do we have a service?
 	_, err = j.KubeClient.CoreV1().Services(cluster.Namespace).Get(cluster.Name, metav1.GetOptions{})
 	if err != nil {
-		Failf("Failed to get Servce %[1]q for MySQLCluster %[1]q: %v", name, err)
+		Failf("Failed to get Servce %[1]q for Cluster %[1]q: %v", name, err)
 	}
 
 	// Do we have a root password secret?
@@ -170,9 +168,9 @@ func (j *MySQLClusterTestJig) SanityCheckMySQLCluster(cluster *v1.MySQLCluster) 
 	}
 }
 
-// ExecuteSQLOrDie executes the given SQL statement(s) on a specified MySQLCluster
-// member via kubectl exec.
-func ExecuteSQL(cluster *v1.MySQLCluster, member, sql string) (string, error) {
+// ExecuteSQL executes the given SQL statement(s) on a specified Cluster member
+// via kubectl exec.
+func ExecuteSQL(cluster *v1alpha1.Cluster, member, sql string) (string, error) {
 	cmd := fmt.Sprintf("mysql -h %s.%s -u root -p$MYSQL_ROOT_PASSWORD -e '%s'", member, cluster.Name, sql)
 	return RunKubectl(fmt.Sprintf("--namespace=%v", cluster.Namespace), "exec", member,
 		"-c", "mysql",
@@ -185,7 +183,7 @@ func lastLine(out string) string {
 }
 
 // ReadSQLTest SELECTs v from testdb.foo where k=foo.
-func ReadSQLTest(cluster *v1.MySQLCluster, member string) (string, error) {
+func ReadSQLTest(cluster *v1alpha1.Cluster, member string) (string, error) {
 	By("SELECT v FROM foo WHERE k=\"foo\"")
 	output, err := ExecuteSQL(cluster, member, strings.Join([]string{
 		fmt.Sprintf("use %s;", TestDBName),
@@ -200,7 +198,7 @@ func ReadSQLTest(cluster *v1.MySQLCluster, member string) (string, error) {
 
 // WriteSQLTest creates a test table, inserts a row, and writes a uuid into it.
 // It returns the generated UUID.
-func WriteSQLTest(cluster *v1.MySQLCluster, member string) (string, error) {
+func WriteSQLTest(cluster *v1alpha1.Cluster, member string) (string, error) {
 	By("Creating a database and table, writing to that table, and writing a uuid")
 	id := uuid.NewUUID()
 	if _, err := ExecuteSQL(cluster, member, strings.Join([]string{

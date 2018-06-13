@@ -18,11 +18,11 @@ We'll use WordPress as an example of how you might setup the MySQL Router for a 
 
 ```yaml
 apiVersion: "mysql.oracle.com/v1alpa1"
-kind: MySQLCluster
+kind: Cluster
 metadata:
   name: mysql-wordpress
 spec:
-  replicas: 3
+  members: 3
   secretRef:
     name: wordpress-mysql-root-password
 ```

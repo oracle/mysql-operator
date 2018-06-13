@@ -39,7 +39,15 @@ func NewSimpleClientset(objects ...runtime.Object) *Clientset {
 
 	fakePtr := testing.Fake{}
 	fakePtr.AddReactor("*", "*", testing.ObjectReaction(o))
-	fakePtr.AddWatchReactor("*", testing.DefaultWatchReactor(watch.NewFake(), nil))
+	fakePtr.AddWatchReactor("*", func(action testing.Action) (handled bool, ret watch.Interface, err error) {
+		gvr := action.GetResource()
+		ns := action.GetNamespace()
+		watch, err := o.Watch(gvr, ns)
+		if err != nil {
+			return false, nil, err
+		}
+		return true, watch, nil
+	})
 
 	return &Clientset{fakePtr, &fakediscovery.FakeDiscovery{Fake: &fakePtr}}
 }
@@ -58,12 +66,12 @@ func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 
 var _ clientset.Interface = &Clientset{}
 
-// MysqlV1alpha1 retrieves the MysqlV1alpha1Client
-func (c *Clientset) MysqlV1alpha1() mysqlv1alpha1.MysqlV1alpha1Interface {
-	return &fakemysqlv1alpha1.FakeMysqlV1alpha1{Fake: &c.Fake}
+// MySQLV1alpha1 retrieves the MySQLV1alpha1Client
+func (c *Clientset) MySQLV1alpha1() mysqlv1alpha1.MySQLV1alpha1Interface {
+	return &fakemysqlv1alpha1.FakeMySQLV1alpha1{Fake: &c.Fake}
 }
 
-// Mysql retrieves the MysqlV1alpha1Client
-func (c *Clientset) Mysql() mysqlv1alpha1.MysqlV1alpha1Interface {
-	return &fakemysqlv1alpha1.FakeMysqlV1alpha1{Fake: &c.Fake}
+// MySQL retrieves the MySQLV1alpha1Client
+func (c *Clientset) MySQL() mysqlv1alpha1.MySQLV1alpha1Interface {
+	return &fakemysqlv1alpha1.FakeMySQLV1alpha1{Fake: &c.Fake}
 }

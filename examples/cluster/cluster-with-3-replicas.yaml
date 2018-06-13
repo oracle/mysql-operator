@@ -1,6 +1,0 @@
-apiVersion: mysql.oracle.com/alpha1
-kind: MySQLCluster
-metadata:
-  name: mysql
-spec:
-  replicas: 3

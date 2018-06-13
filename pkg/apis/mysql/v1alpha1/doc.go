@@ -13,7 +13,8 @@
 // limitations under the License.
 
 // +k8s:deepcopy-gen=package
-
-// Package v1 defines the types for the MySQL Operator v1 API.
 // +groupName=mysql.oracle.com
+// +groupGoName=MySQL
+
+// Package v1alpha1 defines the types for the MySQL Operator v1alpha1 API.
 package v1alpha1

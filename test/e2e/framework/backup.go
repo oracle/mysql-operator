@@ -27,12 +27,13 @@ import (
 
 	. "github.com/onsi/ginkgo"
 
+	backuputil "github.com/oracle/mysql-operator/pkg/api/backup"
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	mysqlclientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 )
 
-// MySQLBackupTestJig is a jig to help MySQLBackup testing.
-type MySQLBackupTestJig struct {
+// BackupTestJig is a jig to help Backup testing.
+type BackupTestJig struct {
 	ID     string
 	Name   string
 	Labels map[string]string
@@ -41,10 +42,10 @@ type MySQLBackupTestJig struct {
 	KubeClient  clientset.Interface
 }
 
-// NewMySQLBackupTestJig allocates and inits a new MySQLBackupTestJig.
-func NewMySQLBackupTestJig(mysqlClient mysqlclientset.Interface, kubeClient clientset.Interface, name string) *MySQLBackupTestJig {
+// NewBackupTestJig allocates and inits a new BackupTestJig.
+func NewBackupTestJig(mysqlClient mysqlclientset.Interface, kubeClient clientset.Interface, name string) *BackupTestJig {
 	id := string(uuid.NewUUID())
-	return &MySQLBackupTestJig{
+	return &BackupTestJig{
 		ID:   id,
 		Name: name,
 		Labels: map[string]string{
@@ -57,13 +58,13 @@ func NewMySQLBackupTestJig(mysqlClient mysqlclientset.Interface, kubeClient clie
 	}
 }
 
-// newMySQLBackupTemplate returns the default v1alpha1.MySQLBackup template for
-// this jig, but does not actually create the MySQLBackup. The default
-// MySQLBackup has the same name as the jig.
-func (j *MySQLBackupTestJig) newMySQLBackupTemplate(namespace, clusterName string) *v1alpha1.MySQLBackup {
-	return &v1alpha1.MySQLBackup{
+// newBackupTemplate returns the default v1alpha1.Backup template for
+// this jig, but does not actually create the Backup. The default
+// Backup has the same name as the jig.
+func (j *BackupTestJig) newBackupTemplate(namespace, clusterName string) *v1alpha1.Backup {
+	return &v1alpha1.Backup{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       v1alpha1.MySQLBackupCRDResourceKind,
+			Kind:       v1alpha1.BackupCRDResourceKind,
 			APIVersion: v1alpha1.SchemeGroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
@@ -72,48 +73,49 @@ func (j *MySQLBackupTestJig) newMySQLBackupTemplate(namespace, clusterName strin
 			Labels:       j.Labels,
 		},
 		Spec: v1alpha1.BackupSpec{
-			ClusterRef: &corev1.LocalObjectReference{
+			Cluster: &corev1.LocalObjectReference{
 				Name: clusterName,
 			},
 		},
 	}
 }
 
-// CreateMySQLBackupOrFail creates a new MySQLBackup based on the jig's
-// defaults. Callers can provide a function to tweak the MySQLBackup object
+// CreateBackupOrFail creates a new Backup based on the jig's
+// defaults. Callers can provide a function to tweak the Backup object
 // before it is created.
-func (j *MySQLBackupTestJig) CreateMySQLBackupOrFail(namespace, clusterName string, tweak func(backup *v1alpha1.MySQLBackup)) *v1alpha1.MySQLBackup {
-	backup := j.newMySQLBackupTemplate(namespace, clusterName)
+func (j *BackupTestJig) CreateBackupOrFail(namespace, clusterName string, tweak func(backup *v1alpha1.Backup)) *v1alpha1.Backup {
+	backup := j.newBackupTemplate(namespace, clusterName)
 	if tweak != nil {
 		tweak(backup)
 	}
 
 	name := types.NamespacedName{Namespace: namespace, Name: j.Name}
-	By(fmt.Sprintf("Creating a MySQLBackup %q", name))
+	By(fmt.Sprintf("Creating a Backup %q", name))
 
-	result, err := j.MySQLClient.MysqlV1alpha1().MySQLBackups(namespace).Create(backup)
+	result, err := j.MySQLClient.MySQLV1alpha1().Backups(namespace).Create(backup)
 	if err != nil {
-		Failf("Failed to create MySQLBackup %q: %v", name, err)
+		Failf("Failed to create Backup %q: %v", name, err)
 	}
 	return result
 }
 
-// CreateAndAwaitMySQLBackupOrFail creates a new MySQLBackup based on the
+// CreateAndAwaitBackupOrFail creates a new Backup based on the
 // jig's defaults, waits for it to become ready. Callers can provide a function
-// to tweak the MySQLBackup object before it is created.
-func (j *MySQLBackupTestJig) CreateAndAwaitMySQLBackupOrFail(namespace, clusterName string, tweak func(backup *v1alpha1.MySQLBackup), timeout time.Duration) *v1alpha1.MySQLBackup {
-	backup := j.CreateMySQLBackupOrFail(namespace, clusterName, tweak)
+// to tweak the Backup object before it is created.
+func (j *BackupTestJig) CreateAndAwaitBackupOrFail(namespace, clusterName string, tweak func(backup *v1alpha1.Backup), timeout time.Duration) *v1alpha1.Backup {
+	backup := j.CreateBackupOrFail(namespace, clusterName, tweak)
 	return j.WaitForbackupReadyOrFail(namespace, backup.Name, timeout)
 }
 
-// CreateAndAwaitMySQLDumpBackupOrFail creates a new MySQLBackup based on the
+// CreateAndAwaitMySQLDumpBackupOrFail creates a new Backup based on the
 // jig's defaults, waits for it to become ready. Callers can provide a function
-// to tweak the MySQLBackup object before it is created.
-func (j *MySQLBackupTestJig) CreateAndAwaitMySQLDumpBackupOrFail(namespace, clusterName string, databases []string, tweak func(backup *v1alpha1.MySQLBackup), timeout time.Duration) *v1alpha1.MySQLBackup {
-	backup := j.CreateMySQLBackupOrFail(namespace, clusterName, func(backup *v1alpha1.MySQLBackup) {
-		backup.Spec.Executor = &v1alpha1.Executor{
-			Provider:  "mysqldump",
-			Databases: databases,
+// to tweak the Backup object before it is created.
+func (j *BackupTestJig) CreateAndAwaitMySQLDumpBackupOrFail(namespace, clusterName string, databases []v1alpha1.Database, tweak func(backup *v1alpha1.Backup), timeout time.Duration) *v1alpha1.Backup {
+	backup := j.CreateBackupOrFail(namespace, clusterName, func(backup *v1alpha1.Backup) {
+		backup.Spec.Executor = v1alpha1.BackupExecutor{
+			MySQLDump: &v1alpha1.MySQLDumpBackupExecutor{
+				Databases: databases,
+			},
 		}
 		tweak(backup)
 	})
@@ -123,7 +125,7 @@ func (j *MySQLBackupTestJig) CreateAndAwaitMySQLDumpBackupOrFail(namespace, clus
 
 // CreateS3AuthSecret creates a secret containing the S3 (compat.) credentials
 // for storing backups.
-func (j *MySQLBackupTestJig) CreateS3AuthSecret(namespace, name string) (*corev1.Secret, error) {
+func (j *BackupTestJig) CreateS3AuthSecret(namespace, name string) (*corev1.Secret, error) {
 	return j.KubeClient.CoreV1().Secrets(namespace).Create(&corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -136,10 +138,10 @@ func (j *MySQLBackupTestJig) CreateS3AuthSecret(namespace, name string) (*corev1
 	})
 }
 
-func (j *MySQLBackupTestJig) waitForConditionOrFail(namespace, name string, timeout time.Duration, message string, conditionFn func(*v1alpha1.MySQLBackup) bool) *v1alpha1.MySQLBackup {
-	var backup *v1alpha1.MySQLBackup
+func (j *BackupTestJig) waitForConditionOrFail(namespace, name string, timeout time.Duration, message string, conditionFn func(*v1alpha1.Backup) bool) *v1alpha1.Backup {
+	var backup *v1alpha1.Backup
 	pollFunc := func() (bool, error) {
-		b, err := j.MySQLClient.MysqlV1alpha1().MySQLBackups(namespace).Get(name, metav1.GetOptions{})
+		b, err := j.MySQLClient.MySQLV1alpha1().Backups(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -150,22 +152,22 @@ func (j *MySQLBackupTestJig) waitForConditionOrFail(namespace, name string, time
 		return false, nil
 	}
 	if err := wait.PollImmediate(Poll, timeout, pollFunc); err != nil {
-		Failf("Timed out waiting for MySQLBackup %q to %s", name, message)
+		Failf("Timed out waiting for Backup %q to %s", name, message)
 	}
 	return backup
 }
 
 // WaitForbackupReadyOrFail waits up to a given timeout for a backup to be in
 // the running phase.
-func (j *MySQLBackupTestJig) WaitForbackupReadyOrFail(namespace, name string, timeout time.Duration) *v1alpha1.MySQLBackup {
-	Logf("Waiting up to %v for MySQLBackup \"%s/%s\" to be complete executing", timeout, namespace, name)
-	backup := j.waitForConditionOrFail(namespace, name, timeout, "to complete executing", func(backup *v1alpha1.MySQLBackup) bool {
-		phase := backup.Status.Phase
-		if phase == v1alpha1.BackupPhaseComplete {
+func (j *BackupTestJig) WaitForbackupReadyOrFail(namespace, name string, timeout time.Duration) *v1alpha1.Backup {
+	Logf("Waiting up to %v for Backup \"%s/%s\" to be complete executing", timeout, namespace, name)
+	backup := j.waitForConditionOrFail(namespace, name, timeout, "to complete executing", func(backup *v1alpha1.Backup) bool {
+		_, cond := backuputil.GetBackupCondition(&backup.Status, v1alpha1.BackupComplete)
+		if cond != nil && cond.Status == corev1.ConditionTrue {
 			return true
 		}
-
-		if phase == v1alpha1.BackupPhaseFailed {
+		_, cond = backuputil.GetBackupCondition(&backup.Status, v1alpha1.BackupFailed)
+		if cond != nil && cond.Status == corev1.ConditionTrue {
 			ns := backup.Namespace
 			events, err := j.KubeClient.CoreV1().Events(ns).List(metav1.ListOptions{})
 			if err != nil {
@@ -177,7 +179,7 @@ func (j *MySQLBackupTestJig) WaitForbackupReadyOrFail(namespace, name string, ti
 				}
 				Logf(e.String())
 			}
-			Failf("MySQLBackup entered state %q", v1alpha1.BackupPhaseFailed)
+			Failf("Backup condition failed (%s==%s)", cond.Type, cond.Status)
 		}
 		return false
 	})

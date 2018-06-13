@@ -43,11 +43,11 @@ type MySQLAgentOpts struct {
 	Address string
 
 	// Namespace is the namespace in which the backup controller (and is
-	// associated MySQLCluster) are running.
+	// associated Cluster) are running.
 	Namespace string
-	// MySQLClusterName is the name of the MySQLCluster the backup controller
+	// ClusterName is the name of the Cluster the backup controller
 	// is responsible for.
-	MySQLClusterName string
+	ClusterName string
 	// Hostname of the pod the backup operator is running in.
 	Hostname string
 
@@ -66,12 +66,12 @@ func NewMySQLAgentOpts() *MySQLAgentOpts {
 	namespace := os.Getenv("POD_NAMESPACE")
 	clusterName := os.Getenv("MYSQL_CLUSTER_NAME")
 	return &MySQLAgentOpts{
-		HealthcheckPort:  DefaultMySQLAgentHeathcheckPort,
-		Address:          "0.0.0.0",
-		Namespace:        namespace,
-		MySQLClusterName: clusterName,
-		Hostname:         hostname,
-		MinResyncPeriod:  metav1.Duration{Duration: 12 * time.Hour},
+		HealthcheckPort: DefaultMySQLAgentHeathcheckPort,
+		Address:         "0.0.0.0",
+		Namespace:       namespace,
+		ClusterName:     clusterName,
+		Hostname:        hostname,
+		MinResyncPeriod: metav1.Duration{Duration: 12 * time.Hour},
 	}
 }
 
@@ -81,7 +81,7 @@ func (s *MySQLAgentOpts) AddFlags(fs *pflag.FlagSet) *pflag.FlagSet {
 	fs.StringVar(&s.Address, "address", s.Address, "The IP address to serve the mysql-agent's http service on (set to 0.0.0.0 for all interfaces).")
 
 	fs.StringVar(&s.Namespace, "namespace", s.Namespace, "The namespace to run in. Must be the same namespace as the associated MySQL cluster.")
-	fs.StringVar(&s.MySQLClusterName, "mysql-cluster-name", s.MySQLClusterName, "The name of the MySQL cluster the mysql-agent is responsible for.")
+	fs.StringVar(&s.ClusterName, "cluster-name", s.ClusterName, "The name of the MySQL cluster the mysql-agent is responsible for.")
 	fs.StringVar(&s.Hostname, "hostname", s.Hostname, "The hostname of the pod the mysql-agent is running in.")
 	fs.DurationVar(&s.MinResyncPeriod.Duration, "min-resync-period", s.MinResyncPeriod.Duration, "The resync period in reflectors will be random between MinResyncPeriod and 2*MinResyncPeriod.")
 
@@ -93,10 +93,10 @@ func (s *MySQLAgentOpts) Validate() error {
 	if len(s.Namespace) == 0 {
 		return fmt.Errorf("must set --namespace or $POD_NAMESPACE")
 	}
-	if len(s.MySQLClusterName) == 0 {
-		return fmt.Errorf("must set --mysql-cluster-name or $MYSQL_CLUSTER_NAME")
+	if len(s.ClusterName) == 0 {
+		return fmt.Errorf("must set --cluster-name or $MYSQL_CLUSTER_NAME")
 	}
-	if len(s.MySQLClusterName) == 0 {
+	if len(s.ClusterName) == 0 {
 		return fmt.Errorf("failed to detect hostname. Set --hostname")
 	}
 	return nil

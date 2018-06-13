@@ -1,7 +1,7 @@
 apiVersion: mysql.oracle.com/v1alpha1
-kind: MySQLCluster
+kind: Cluster
 metadata:
   name: mysql
 spec:
   multiMaster: true
-  replicas: 3
+  members: 3

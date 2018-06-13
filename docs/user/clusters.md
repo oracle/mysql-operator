@@ -2,31 +2,31 @@
 
 MySQL cluster examples.
 
-### Create a cluster with 3 replicas
+### Create a cluster with 3 members
 
-The following example will create a MySQL Cluster with 3 replicas, one primary and 2 secondaries:
+The following example will create a MySQL Cluster with 3 members, one primary and 2 secondaries:
 
 ```yaml
 apiVersion: mysql.oracle.com/v1alpha1
-kind: MySQLCluster
+kind: Cluster
 metadata:
   name: mysql-test-cluster
 spec:
-  replicas: 3
+  members: 3
 ```
 
-### Create a cluster with 3 replicas in multi-master mode
+### Create a cluster with 3 members in multi-master mode
 
-The following example will create a MySQL Cluster with 3 primary (read/write) replicas:
+The following example will create a MySQL Cluster with 3 primary (read/write) members:
 
 ```yaml
 apiVersion: mysql.oracle.com/v1alpha1
-kind: MySQLCluster
+kind: Cluster
 metadata:
   name: mysql-multimaster-cluster
 spec:
   multiMaster: true
-  replicas: 3
+  members: 3
 ```
 
 ### Create a cluster with a custom "MYSQL_ROOT_PASSWORD"
@@ -41,12 +41,12 @@ Create your cluster and reference it
 
 ```yaml
 apiVersion: mysql.oracle.com/v1alpha1
-kind: MySQLCluster
+kind: Cluster
 metadata:
   name: example-mysql-cluster-custom-secret
 spec:
-  replicas: 1
-  secretRef:
+  members: 1
+  rootPasswordSecret:
     name: mysql-root-user-secret
 ```
 
@@ -73,11 +73,11 @@ spec:
   storageClassName: manual
 ---
 apiVersion: mysql.oracle.com/v1alpha1
-kind: MySQLCluster
+kind: Cluster
 metadata:
   name: example-mysql-cluster-with-volume
 spec:
-  replicas: 1
+  members: 1
   volumeClaimTemplate:
     metadata:
       name: data
@@ -130,12 +130,12 @@ spec:
   storageClassName: manual
 ---
 apiVersion: mysql.oracle.com/v1alpha1
-kind: MySQLCluster
+kind: Cluster
 metadata:
   name: example-mysql-cluster-with-volume
 spec:
-  replicas: 1
-  secretRef:
+  members: 1
+  rootPasswordSecret:
     name: mysql-root-user-secret
   volumeClaimTemplate:
     metadata:
@@ -180,24 +180,24 @@ Now we can reference our config map in our cluster spec definition. For example:
 
 ```yaml
 apiVersion: mysql.oracle.com/v1alpha1
-kind: MySQLCluster
+kind: Cluster
 metadata:
   name: mysql-cluster-with-config
-  replicas: 3
-  configRef:
+  members: 3
+  config:
     name: mycnf
 ```
 
 ### Create a cluster with custom server_id values
 
-By default, the MySQL Operator starts a cluster with `--server_id` set to `1000` and increments it by one for each new cluster member. You can change this behavior by setting the `baseServerId` field on your MySQLCluster. `baseServerId` value can be set to anything in the range from `1` to `4294967286`. `0` is also accepted, but then the default value of `1000` will be used.
+By default, the MySQL Operator starts a cluster with `--server_id` set to `1000` and increments it by one for each new cluster member. You can change this behavior by setting the `baseServerId` field on your Cluster. `baseServerId` value can be set to anything in the range from `1` to `4294967286`. `0` is also accepted, but then the default value of `1000` will be used.
 
 The following example will create a MySQL Cluster with following `server_id`'s: 42,43,44
 ```yaml
 apiVersion: mysql.oracle.com/v1alpha1
-kind: MySQLCluster
+kind: Cluster
 metadata:
   name: mysql-cluster-with-custom-serverid
-  replicas: 3
+  members: 3
   baseServerId: 42
 ```

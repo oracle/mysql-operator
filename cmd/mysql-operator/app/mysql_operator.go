@@ -83,7 +83,7 @@ func Run(s *options.MySQLOperatorServer) error {
 		*s,
 		mysqlopClient,
 		kubeClient,
-		operatorInformerFactory.Mysql().V1alpha1().MySQLClusters(),
+		operatorInformerFactory.MySQL().V1alpha1().Clusters(),
 		kubeInformerFactory.Apps().V1beta1().StatefulSets(),
 		kubeInformerFactory.Core().V1().Pods(),
 		kubeInformerFactory.Core().V1().Services(),
@@ -98,9 +98,9 @@ func Run(s *options.MySQLOperatorServer) error {
 
 	backupController := backupcontroller.NewOperatorController(
 		kubeClient,
-		mysqlopClient.MysqlV1alpha1(),
-		operatorInformerFactory.Mysql().V1alpha1().MySQLBackups(),
-		operatorInformerFactory.Mysql().V1alpha1().MySQLClusters(),
+		mysqlopClient.MySQLV1alpha1(),
+		operatorInformerFactory.MySQL().V1alpha1().Backups(),
+		operatorInformerFactory.MySQL().V1alpha1().Clusters(),
 		kubeInformerFactory.Core().V1().Pods(),
 	)
 	wg.Add(1)
@@ -111,10 +111,10 @@ func Run(s *options.MySQLOperatorServer) error {
 
 	restoreController := restorecontroller.NewOperatorController(
 		kubeClient,
-		mysqlopClient.MysqlV1alpha1(),
-		operatorInformerFactory.Mysql().V1alpha1().MySQLRestores(),
-		operatorInformerFactory.Mysql().V1alpha1().MySQLClusters(),
-		operatorInformerFactory.Mysql().V1alpha1().MySQLBackups(),
+		mysqlopClient.MySQLV1alpha1(),
+		operatorInformerFactory.MySQL().V1alpha1().Restores(),
+		operatorInformerFactory.MySQL().V1alpha1().Clusters(),
+		operatorInformerFactory.MySQL().V1alpha1().Backups(),
 		kubeInformerFactory.Core().V1().Pods(),
 	)
 	wg.Add(1)
@@ -126,7 +126,7 @@ func Run(s *options.MySQLOperatorServer) error {
 	backupScheduleController := backupschedule.NewController(
 		mysqlopClient,
 		kubeClient,
-		operatorInformerFactory.Mysql().V1alpha1().MySQLBackupSchedules(),
+		operatorInformerFactory.MySQL().V1alpha1().BackupSchedules(),
 		30*time.Second,
 		s.Namespace,
 	)

@@ -70,7 +70,7 @@ func TestClusterLabelerLabelsPrimaryAndSecondaries(t *testing.T) {
 				Name:      "test-cluster-0",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel: "test-cluster",
+					constants.ClusterLabel: "test-cluster",
 				},
 			},
 		},
@@ -83,7 +83,7 @@ func TestClusterLabelerLabelsPrimaryAndSecondaries(t *testing.T) {
 				Name:      "test-cluster-1",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel: "test-cluster",
+					constants.ClusterLabel: "test-cluster",
 				},
 			},
 		},
@@ -96,13 +96,13 @@ func TestClusterLabelerLabelsPrimaryAndSecondaries(t *testing.T) {
 				Name:      "test-cluster-2",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel: "test-cluster",
+					constants.ClusterLabel: "test-cluster",
 				},
 			},
 		},
 	}
 	status := innodb.ClusterStatus{
-		ClusterName: "MySQLCluster",
+		ClusterName: "Cluster",
 		DefaultReplicaSet: innodb.ReplicaSet{
 			Name:       "default",
 			Primary:    "test-cluster-0.test-cluster:3306",
@@ -146,8 +146,8 @@ func TestClusterLabelerLabelsPrimaryAndSecondaries(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	role, ok := pod.Labels[constants.LabelMySQLClusterRole]
-	if !ok || role != constants.MySQLClusterRolePrimary {
+	role, ok := pod.Labels[constants.LabelClusterRole]
+	if !ok || role != constants.ClusterRolePrimary {
 		t.Errorf("test-cluster-0 not labeled as primary labels=%+v", pod.Labels)
 	}
 
@@ -156,8 +156,8 @@ func TestClusterLabelerLabelsPrimaryAndSecondaries(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	role, ok = pod.Labels[constants.LabelMySQLClusterRole]
-	if !ok || role != constants.MySQLClusterRoleSecondary {
+	role, ok = pod.Labels[constants.LabelClusterRole]
+	if !ok || role != constants.ClusterRoleSecondary {
 		t.Errorf("test-cluster-1 not labeled as secondary labels=%+v", pod.Labels)
 	}
 
@@ -166,8 +166,8 @@ func TestClusterLabelerLabelsPrimaryAndSecondaries(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	role, ok = pod.Labels[constants.LabelMySQLClusterRole]
-	if !ok || role != constants.MySQLClusterRoleSecondary {
+	role, ok = pod.Labels[constants.LabelClusterRole]
+	if !ok || role != constants.ClusterRoleSecondary {
 		t.Errorf("test-cluster-1 not labeled as secondary labels=%+v", pod.Labels)
 	}
 }
@@ -183,8 +183,8 @@ func TestClusterLabelerRelabelsOldPrimary(t *testing.T) {
 				Name:      "test-cluster-0",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel:     "test-cluster",
-					constants.LabelMySQLClusterRole: constants.MySQLClusterRolePrimary,
+					constants.ClusterLabel:     "test-cluster",
+					constants.LabelClusterRole: constants.ClusterRolePrimary,
 				},
 			},
 		},
@@ -197,8 +197,8 @@ func TestClusterLabelerRelabelsOldPrimary(t *testing.T) {
 				Name:      "test-cluster-1",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel:     "test-cluster",
-					constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
+					constants.ClusterLabel:     "test-cluster",
+					constants.LabelClusterRole: constants.ClusterRoleSecondary,
 				},
 			},
 		},
@@ -211,14 +211,14 @@ func TestClusterLabelerRelabelsOldPrimary(t *testing.T) {
 				Name:      "test-cluster-2",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel:     "test-cluster",
-					constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
+					constants.ClusterLabel:     "test-cluster",
+					constants.LabelClusterRole: constants.ClusterRoleSecondary,
 				},
 			},
 		},
 	}
 	status := innodb.ClusterStatus{
-		ClusterName: "MySQLCluster",
+		ClusterName: "Cluster",
 		DefaultReplicaSet: innodb.ReplicaSet{
 			Name:       "default",
 			Primary:    "test-cluster-1.test-cluster:3306",
@@ -262,8 +262,8 @@ func TestClusterLabelerRelabelsOldPrimary(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	role, ok := pod.Labels[constants.LabelMySQLClusterRole]
-	if !ok || role != constants.MySQLClusterRoleSecondary {
+	role, ok := pod.Labels[constants.LabelClusterRole]
+	if !ok || role != constants.ClusterRoleSecondary {
 		t.Errorf("test-cluster-0 not labeled as secondary labels=%+v", pod.Labels)
 	}
 
@@ -272,8 +272,8 @@ func TestClusterLabelerRelabelsOldPrimary(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	role, ok = pod.Labels[constants.LabelMySQLClusterRole]
-	if !ok || role != constants.MySQLClusterRolePrimary {
+	role, ok = pod.Labels[constants.LabelClusterRole]
+	if !ok || role != constants.ClusterRolePrimary {
 		t.Errorf("test-cluster-1 not labeled as primary labels=%+v", pod.Labels)
 	}
 }
@@ -289,8 +289,8 @@ func TestClusterLabelerDoesntRelabelCorrectlyLabeledPods(t *testing.T) {
 				Name:      "test-cluster-0",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel:     "test-cluster",
-					constants.LabelMySQLClusterRole: constants.MySQLClusterRolePrimary,
+					constants.ClusterLabel:     "test-cluster",
+					constants.LabelClusterRole: constants.ClusterRolePrimary,
 				},
 			},
 		},
@@ -303,8 +303,8 @@ func TestClusterLabelerDoesntRelabelCorrectlyLabeledPods(t *testing.T) {
 				Name:      "test-cluster-1",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel:     "test-cluster",
-					constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
+					constants.ClusterLabel:     "test-cluster",
+					constants.LabelClusterRole: constants.ClusterRoleSecondary,
 				},
 			},
 		},
@@ -317,14 +317,14 @@ func TestClusterLabelerDoesntRelabelCorrectlyLabeledPods(t *testing.T) {
 				Name:      "test-cluster-2",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel:     "test-cluster",
-					constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
+					constants.ClusterLabel:     "test-cluster",
+					constants.LabelClusterRole: constants.ClusterRoleSecondary,
 				},
 			},
 		},
 	}
 	status := innodb.ClusterStatus{
-		ClusterName: "MySQLCluster",
+		ClusterName: "Cluster",
 		DefaultReplicaSet: innodb.ReplicaSet{
 			Name:       "default",
 			Primary:    "test-cluster-0.test-cluster:3306",
@@ -375,8 +375,8 @@ func TestClusterLabelerRemovesLabelFromInstanceInMissingState(t *testing.T) {
 				Name:      "test-cluster-0",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel:     "test-cluster",
-					constants.LabelMySQLClusterRole: constants.MySQLClusterRolePrimary,
+					constants.ClusterLabel:     "test-cluster",
+					constants.LabelClusterRole: constants.ClusterRolePrimary,
 				},
 			},
 		},
@@ -389,8 +389,8 @@ func TestClusterLabelerRemovesLabelFromInstanceInMissingState(t *testing.T) {
 				Name:      "test-cluster-1",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel:     "test-cluster",
-					constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
+					constants.ClusterLabel:     "test-cluster",
+					constants.LabelClusterRole: constants.ClusterRoleSecondary,
 				},
 			},
 		},
@@ -403,14 +403,14 @@ func TestClusterLabelerRemovesLabelFromInstanceInMissingState(t *testing.T) {
 				Name:      "test-cluster-2",
 				Namespace: metav1.NamespaceDefault,
 				Labels: map[string]string{
-					constants.MySQLClusterLabel:     "test-cluster",
-					constants.LabelMySQLClusterRole: constants.MySQLClusterRoleSecondary,
+					constants.ClusterLabel:     "test-cluster",
+					constants.LabelClusterRole: constants.ClusterRoleSecondary,
 				},
 			},
 		},
 	}
 	status := innodb.ClusterStatus{
-		ClusterName: "MySQLCluster",
+		ClusterName: "Cluster",
 		DefaultReplicaSet: innodb.ReplicaSet{
 			Name:       "default",
 			Primary:    "test-cluster-0.test-cluster:3306",
@@ -454,7 +454,7 @@ func TestClusterLabelerRemovesLabelFromInstanceInMissingState(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	role, _ := pod.Labels[constants.LabelMySQLClusterRole]
+	role, _ := pod.Labels[constants.LabelClusterRole]
 	if role != "" {
 		t.Errorf("label not removed from test-cluster-2 labels=%+v", pod.Labels)
 	}

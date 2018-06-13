@@ -578,7 +578,7 @@ func splitLines(str string) []string {
 }
 
 func tcFuncNameToName(in string) types.Name {
-	name := strings.TrimPrefix(in, "func ")
+	name := strings.TrimLeft(in, "func ")
 	nameParts := strings.Split(name, "(")
 	return tcNameToName(nameParts[0])
 }

@@ -38,14 +38,14 @@ const GroupName = "mysql.oracle.com"
 var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: "v1alpha1"}
 
 const (
-	// MySQLClusterCRDResourceKind is the Kind of a MySQLCluster.
-	MySQLClusterCRDResourceKind = "MySQLCluster"
-	// MySQLBackupCRDResourceKind is the Kind of a MySQLBackup.
-	MySQLBackupCRDResourceKind = "MySQLBackup"
-	// MySQLRestoreCRDResourceKind is the Kind of a MySQLRestore.
-	MySQLRestoreCRDResourceKind = "MySQLRestore"
-	// MySQLBackupScheduleCRDResourceKind is the Kind of a MySQLBackupSchedule.
-	MySQLBackupScheduleCRDResourceKind = "MySQLBackupSchedule"
+	// ClusterCRDResourceKind is the Kind of a Cluster.
+	ClusterCRDResourceKind = "Cluster"
+	// BackupCRDResourceKind is the Kind of a Backup.
+	BackupCRDResourceKind = "Backup"
+	// RestoreCRDResourceKind is the Kind of a Restore.
+	RestoreCRDResourceKind = "Restore"
+	// BackupScheduleCRDResourceKind is the Kind of a BackupSchedule.
+	BackupScheduleCRDResourceKind = "BackupSchedule"
 )
 
 // Resource gets a MySQL Operator GroupResource for a specified resource.
@@ -57,14 +57,14 @@ func Resource(resource string) schema.GroupResource {
 // scheme.
 func addKnownTypes(s *runtime.Scheme) error {
 	s.AddKnownTypes(SchemeGroupVersion,
-		&MySQLCluster{},
-		&MySQLClusterList{},
-		&MySQLBackup{},
-		&MySQLBackupList{},
-		&MySQLRestore{},
-		&MySQLRestoreList{},
-		&MySQLBackupSchedule{},
-		&MySQLBackupScheduleList{})
+		&Cluster{},
+		&ClusterList{},
+		&Backup{},
+		&BackupList{},
+		&Restore{},
+		&RestoreList{},
+		&BackupSchedule{},
+		&BackupScheduleList{})
 	metav1.AddToGroupVersion(s, SchemeGroupVersion)
 	return nil
 }
