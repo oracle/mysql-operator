@@ -24,7 +24,7 @@ spec:
       containers:
       - name: mysql-operator-controller
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        image: iad.ocir.io/oracle/mysql-operator:{{ .Values.image.tag }}
+        image: {{ .Values.image.registry }}/mysql-operator:{{ .Values.image.tag }}
         ports:
         - containerPort: 10254
         args:
@@ -32,3 +32,4 @@ spec:
 {{- if not .Values.operator.global }}
           - --namespace={{- .Values.operator.namespace }}
 {{- end }}
+          - --mysql-agent-image={{- .Values.image.registry }}/mysql-agent:{{ .Values.image.tag }}
