@@ -52,6 +52,21 @@ func isDatabaseRunning(ctx context.Context) bool {
 	return err == nil
 }
 
+// shutdownDatabase tries to shut down the MySQL database running in the
+// pod instance in which this function is called.
+func shutdownDatabase(ctx context.Context) bool {
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+	err := utilexec.New().CommandContext(ctx,
+		"mysqladmin",
+		"--protocol", "tcp",
+		"-u", "root",
+		os.ExpandEnv("-p$MYSQL_ROOT_PASSWORD"),
+		"shutdown",
+	).Run()
+	return err == nil
+}
+
 func podExists(kubeclient kubernetes.Interface, instance *cluster.Instance) bool {
 	err := wait.ExponentialBackoff(retry.DefaultRetry, func() (bool, error) {
 		_, err := kubeclient.CoreV1().Pods(instance.Namespace).Get(instance.PodName(), metav1.GetOptions{})

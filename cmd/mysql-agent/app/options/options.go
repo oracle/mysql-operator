@@ -54,6 +54,9 @@ type MySQLAgentOpts struct {
 	// minResyncPeriod is the resync period in reflectors; will be random
 	// between minResyncPeriod and 2*minResyncPeriod.
 	MinResyncPeriod metav1.Duration
+
+	// Force database shutdown on NO_QUORUM
+	ForceNoQuorumShutdown bool
 }
 
 // NewMySQLAgentOpts instantiates a new default
@@ -66,12 +69,13 @@ func NewMySQLAgentOpts() *MySQLAgentOpts {
 	namespace := os.Getenv("POD_NAMESPACE")
 	clusterName := os.Getenv("MYSQL_CLUSTER_NAME")
 	return &MySQLAgentOpts{
-		HealthcheckPort: DefaultMySQLAgentHeathcheckPort,
-		Address:         "0.0.0.0",
-		Namespace:       namespace,
-		ClusterName:     clusterName,
-		Hostname:        hostname,
-		MinResyncPeriod: metav1.Duration{Duration: 12 * time.Hour},
+		HealthcheckPort:       DefaultMySQLAgentHeathcheckPort,
+		Address:               "0.0.0.0",
+		Namespace:             namespace,
+		ClusterName:           clusterName,
+		Hostname:              hostname,
+		MinResyncPeriod:       metav1.Duration{Duration: 12 * time.Hour},
+		ForceNoQuorumShutdown: false,
 	}
 }
 
@@ -84,6 +88,7 @@ func (s *MySQLAgentOpts) AddFlags(fs *pflag.FlagSet) *pflag.FlagSet {
 	fs.StringVar(&s.ClusterName, "cluster-name", s.ClusterName, "The name of the MySQL cluster the mysql-agent is responsible for.")
 	fs.StringVar(&s.Hostname, "hostname", s.Hostname, "The hostname of the pod the mysql-agent is running in.")
 	fs.DurationVar(&s.MinResyncPeriod.Duration, "min-resync-period", s.MinResyncPeriod.Duration, "The resync period in reflectors will be random between MinResyncPeriod and 2*MinResyncPeriod.")
+	fs.BoolVar(&s.ForceNoQuorumShutdown, "force-no-quorum-shutdown", s.ForceNoQuorumShutdown, "Force database shutdown of cluster members who see a NO_QUORUM state, in an attempt to automatically recover the cluster.")
 
 	return fs
 }
