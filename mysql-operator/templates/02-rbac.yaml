@@ -13,7 +13,7 @@ metadata:
   namespace: {{ if .Values.operator.global }}default{{ else }}{{ .Values.operator.namespace}}{{ end }}
 
 ---
-{{- if .Values.rbac.enabled }}
+{{- if .Values.rbac.enabled -}}
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: {{ if .Values.operator.global }}Cluster{{ end }}Role
 metadata:
