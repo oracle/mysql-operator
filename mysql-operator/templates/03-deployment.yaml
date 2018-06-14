@@ -32,4 +32,4 @@ spec:
 {{- if not .Values.operator.global }}
           - --namespace={{- .Values.operator.namespace }}
 {{- end }}
-          - --mysql-agent-image={{- .Values.image.registry }}/mysql-agent:{{ .Values.image.tag }}
+          - --mysql-agent-image={{- .Values.image.registry }}/mysql-agent
