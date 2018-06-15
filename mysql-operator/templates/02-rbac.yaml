@@ -42,9 +42,9 @@ rules:
     - ""
     resources:
     - services
-    {{ if hasPrefix "0.1" .Values.image.tag }}
+    {{- if hasPrefix "0.1" .Values.image.tag }}
     - configmaps
-    {{ end }}
+    {{- end }}
     verbs:
     - create
     - get
