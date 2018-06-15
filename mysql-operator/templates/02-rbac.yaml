@@ -42,7 +42,7 @@ rules:
     - ""
     resources:
     - services
-    {{- if semverCompare "0.1.*" .Values.image.tag }}
+    {{- if hasPrefix "0.1" .Values.image.tag }}
     - configmaps
     {{ end -}}
     verbs:
