@@ -260,6 +260,14 @@ func (m *ClusterManager) handleInstanceMissing(ctx context.Context, primaryAddr 
 			glog.Errorf("Failed to rejoin cluster: %v", err)
 			return false
 		}
+
+		if !m.Instance.MultiMaster {
+			err = m.localMySh.SetSinglePrimaryAutoIncrementParams(ctx)
+			if err != nil {
+				glog.Errorf("Failed setting auto increment parameters: %v", err)
+				return false
+			}
+		}
 	} else {
 		glog.V(4).Infof("Removing instance from cluster")
 		if err := primarySh.RemoveInstanceFromCluster(ctx, m.Instance.GetShellURI(), mysqlsh.Options{"force": "True"}); err != nil {
@@ -289,6 +297,15 @@ func (m *ClusterManager) handleInstanceNotFound(ctx context.Context, primaryAddr
 		glog.Errorf("Failed to add to cluster: %v", err)
 		return false
 	}
+
+	if !m.Instance.MultiMaster {
+		err = m.localMySh.SetSinglePrimaryAutoIncrementParams(ctx)
+		if err != nil {
+			glog.Errorf("Failed setting auto increment parameters: %v", err)
+			return false
+		}
+	}
+
 	return true
 }
 
@@ -326,6 +343,14 @@ func (m *ClusterManager) createCluster(ctx context.Context) (*innodb.ClusterStat
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create new cluster")
 	}
+
+	if !m.Instance.MultiMaster {
+		err = m.localMySh.SetSinglePrimaryAutoIncrementParams(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed setting auto increment parameters")
+		}
+	}
+
 	return status, nil
 }
 
@@ -341,6 +366,14 @@ func (m *ClusterManager) rebootFromOutage(ctx context.Context) (*innodb.ClusterS
 	if err != nil {
 		return nil, errors.Wrap(err, "getting cluster status")
 	}
+
+	if !m.Instance.MultiMaster {
+		err = m.localMySh.SetSinglePrimaryAutoIncrementParams(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed setting auto increment parameters")
+		}
+	}
+
 	return status, nil
 }
 
