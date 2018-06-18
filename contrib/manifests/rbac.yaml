@@ -16,10 +16,8 @@ kind: Role
 metadata:
   name: mysql-operator
 rules:
-  - apiGroups:
-    - ""
-    resources:
-    - pods
+  - apiGroups: [""]
+    resources: ["pods"]
     verbs:
     - get
     - list
@@ -27,27 +25,27 @@ rules:
     - update
     - watch
 
-  - apiGroups:
-    - ""
-    resources:
-    - secrets
-    verbs:
-    - create
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create"]
 
-  - apiGroups:
-    - ""
-    resources:
-    - services
+  - apiGroups: [""]
+    resources: ["services"]
     verbs:
     - create
     - get
     - list
     - watch
 
-  - apiGroups:
-    - apps
-    resources:
-    - statefulsets
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs:
+    - create
+    - update
+    - patch
+
+  - apiGroups: ["apps"]
+    resources: ["statefulsets"]
     verbs:
     - create
     - get
@@ -56,8 +54,7 @@ rules:
     - update
     - watch
 
-  - apiGroups:
-    - mysql.oracle.com
+  - apiGroups: ["mysql.oracle.com"]
     resources:
     - mysqlbackups
     - mysqlbackupschedules
@@ -70,12 +67,9 @@ rules:
     - update
     - watch
 
-  - apiGroups:
-    - mysql.oracle.com
-    resources:
-    - mysqlbackups
-    verbs:
-    - create
+  - apiGroups: ["mysql.oracle.com"]
+    resources: ["mysqlbackups"]
+    verbs: ["create"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -83,10 +77,8 @@ kind: ClusterRole
 metadata:
   name: mysql-agent
 rules:
-  - apiGroups:
-    - ""
-    resources:
-    - pods
+  - apiGroups: [""]
+    resources: ["pods"]
     verbs:
     - get
     - list
@@ -94,15 +86,18 @@ rules:
     - update
     - watch
 
-  - apiGroups:
-    - ""
-    resources:
-    - secrets
-    verbs:
-    - get
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
 
-  - apiGroups:
-    - mysql.oracle.com
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs:
+    - create
+    - update
+    - patch
+
+  - apiGroups: ["mysql.oracle.com"]
     resources:
     - mysqlbackups
     - mysqlbackupschedules

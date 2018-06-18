@@ -20,10 +20,8 @@ metadata:
   name: mysql-operator{{ if .Values.operator.global }}{{ else}}
   namespace: {{ .Values.operator.namespace}}{{ end }}
 rules:
-  - apiGroups:
-    - ""
-    resources:
-    - pods
+  - apiGroups: [""]
+    resources: ["pods"]
     verbs:
     - get
     - list
@@ -31,15 +29,11 @@ rules:
     - update
     - watch
 
-  - apiGroups:
-    - ""
-    resources:
-    - secrets
-    verbs:
-    - create
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create"]
 
-  - apiGroups:
-    - ""
+  - apiGroups: [""]
     resources:
     - services
     {{- if hasPrefix "0.1" .Values.image.tag }}
@@ -51,10 +45,15 @@ rules:
     - list
     - watch
 
-  - apiGroups:
-    - apps
-    resources:
-    - statefulsets
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs:
+    - create
+    - update
+    - patch
+
+  - apiGroups: ["apps"]
+    resources: ["statefulsets"]
     verbs:
     - create
     - get
@@ -63,8 +62,7 @@ rules:
     - update
     - watch
 
-  - apiGroups:
-    - mysql.oracle.com
+  - apiGroups: ["mysql.oracle.com"]
     resources:
     - mysqlbackups
     - mysqlbackupschedules
@@ -77,12 +75,9 @@ rules:
     - update
     - watch
 
-  - apiGroups:
-    - mysql.oracle.com
-    resources:
-    - mysqlbackups
-    verbs:
-    - create
+  - apiGroups: ["mysql.oracle.com"]
+    resources: ["mysqlbackups"]
+    verbs: ["create"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -91,10 +86,8 @@ metadata:
   name: mysql-agent{{ if .Values.operator.global }}{{ else}}
   namespace: {{ .Values.operator.namespace}}{{ end }}
 rules:
-  - apiGroups:
-    - ""
-    resources:
-    - pods
+  - apiGroups: [""]
+    resources: ["pods"]
     verbs:
     - get
     - list
@@ -102,15 +95,18 @@ rules:
     - update
     - watch
 
-  - apiGroups:
-    - ""
-    resources:
-    - secrets
-    verbs:
-    - get
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
 
-  - apiGroups:
-    - mysql.oracle.com
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs:
+    - create
+    - update
+    - patch
+
+  - apiGroups: ["mysql.oracle.com"]
     resources:
     - mysqlbackups
     - mysqlbackupschedules
