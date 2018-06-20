@@ -31,7 +31,11 @@ rules:
 
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["create"]
+    verbs:
+      {{- if hasPrefix "0.1" .Values.image.tag }}
+      - get
+      {{- end}}
+      - create
 
   - apiGroups: [""]
     resources:
