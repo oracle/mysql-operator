@@ -4,84 +4,87 @@ This guide provides a quick-start guide for users of the Oracle MySQL Operator.
 
 ## Prerequisites
 
-* Kubernetes
-* The mysql-operator repo checked out locally
+* A Kubernetes v1.8.0+ cluster.
+* The mysql-operator Git repository checked out locally.
+* [Helm](https://github.com/kubernetes/helm) installed and configured in your cluster.
 
-#### Create a namespace and Docker secret for the registry username/password
+### Configuring Helm and Tiller
 
-First create the namespace that the operator will reside in. By default this is mysql-operator:
+Before deploying the mysql-operator, you must ensure [Tiller](https://github.com/kubernetes/helm)
+is installed in your cluster. Tiller is the server side component to Helm.
 
-```
-kubectl create ns mysql-operator
-```
+Your cluster administrator may have already setup and configured Helm for you,
+in which case you can skip this step.
 
-## Deploy a version of the MySQL Operator using Helm
+Full documentation on installing Helm can be found in the [Installing helm docs](https://github.com/kubernetes/helm/blob/master/docs/install.md).
 
-The MySQL Operator is installed into your cluster with a Helm chart
+If your cluster has RBAC (Role Based Access Control) enabled, you will need to
+take special care when deploying Tiller, to ensure Tiller has permission to
+create resources as a cluster administrator. More information on deploying Helm
+with RBAC can be found in the [Helm RBAC docs](https://github.com/kubernetes/helm/blob/master/docs/rbac.md).
 
-### Ensure you have Helm installed and working.
+## Installation
 
-Install the helm tool locally by following [these instructions](https://docs.helm.sh/using_helm/#installing-helm)
+### Create a namespace
 
-If you  have not already installed tiller to your cluster set it up with:
+First create a namespace for the mysql-operator. By default this is
+`mysql-operator` unless you specify `--set operator.namespace=` when installing
+the mysql-operator Helm chart.
 
-```bash
-helm init
-```
-
-Verify helm is installed :
-```bash
-helm version
-
-Client: &version.Version{SemVer:"v2.5.0", GitCommit:"012cb0ac1a1b2f888144ef5a67b8dab6c2d45be6", GitTreeState:"clean"}
-Server: &version.Version{SemVer:"v2.5.0", GitCommit:"012cb0ac1a1b2f888144ef5a67b8dab6c2d45be6", GitTreeState:"clean"}
+```console
+$ kubectl create ns mysql-operator
 ```
 
 ### Installing the Chart
 
-The helm chart for the operator is [included in this git repo](../mysql-operator), run the following in the root of the checked out `mysql-operator` repo.
+The helm chart for the operator is [included in this Git repository](../mysql-operator),
+run the following in the root of the checked out `mysql-operator` repository.
 
-To install the chart in a cluster without RBAC with the release name `my-release`:
-
-```console
-$ helm install --name my-release mysql-operator
-```
-
-If your cluster has RBAC disabled then you will need to run:
+To install the chart in a cluster without RBAC with the release name `mysql-operator`:
 
 ```console
-$ helm install --name my-release mysql-operator --set rbac.enabled=false
+$ helm install \
+    --name mysql-operator \
+    mysql-operator
 ```
 
-The above command deploys the MySQL Operator on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
+If your cluster does not use RBAC (Role Based Access Control), you will need to
+disable creation of RBAC resources by adding `--set rbac.enabled=false` to your
+`helm install` command above.
+
+The above command deploys the MySQL Operator on the Kubernetes cluster in the
+default configuration. The [configuration](#configuration) section lists the
+parameters that can be configured during installation.
 
 > **Tip**: List all releases using `helm list`
 
 ### Uninstalling the Chart
 
-To uninstall/delete the `my-release` deployment:
+To uninstall/delete the `mysql-operator` deployment:
 
 ```console
-$ helm delete my-release
+$ helm delete mysql-operator
 ```
-
-The command removes all the Kubernetes components associated with the chart and deletes the release.
 
 ### Configuration
 
-The following tables lists the configurable parameters of the MySQL-operator chart and their default values.
+The following tables lists the configurable parameters of the MySQL-operator
+chart and their default values.
 
 Parameter | Description | Default
 --------- | ----------- | -------
 `rbac.enabled` | If true, enables RBAC | `true`
 `operator.namespace` | Controls the namespace in which the operator is deployed | `mysql-operator`
+`operator.global` | Controls whether the `mysql-operator` is installed in cluster-wide mode or in a single namespace | `true`
+`image.tag` | The version of the mysql-operator to install | `0.1.1`
 
 ## Create a simple MySQL cluster
 
-The first time you create a MySQL Cluster in a namespace you need to create the
+The first time you create a MySQL Cluster in a namespace (other than in the
+namespace into which you installed the mysql-operator) you need to create the
 `mysql-agent` ServiceAccount and RoleBinding in that namespace:
 
-```bash
+```console
 $ cat <<EOF | kubectl create -f -
 apiVersion: v1
 kind: ServiceAccount
@@ -105,26 +108,27 @@ subjects:
 EOF
 ```
 
-Now let's create a new MySQL cluster. Create a cluster.yaml file with the following contents
+Now let's create a new MySQL cluster. Create a `cluster.yaml` file with the following contents:
 
 ```yaml
-apiVersion: mysql.oracle.com/v1
+apiVersion: mysql.oracle.com/v1alpha1
 kind: Cluster
 metadata:
-  name: myappdb
+  name: my-app-db
+  namespace: my-namespace
 ```
 
 And create it with **kubectl**
 
-```
+```console
 $ kubectl apply -f cluster.yaml
-mysqlcluster "myappdb" created
+mysqlcluster "my-app-db" created
 ```
 
 You should now have a cluster in the default namespace
 
-```
-$ kubectl get mysqlclusters
+```console
+$ kubectl -n my-namespace get mysqlclusters
 NAME      KIND
 myappdb   Cluster.v1alpha1.mysql.oracle.com
 ```
@@ -133,18 +137,20 @@ To find out how to create larger clusters, and configure storage see [Clusters](
 
 #### Verify that you can connect to MySQL
 
-The first thing you need to do is fetch the MySQL root password which is auto-generated for us by default and stored ia secret named `<dbname>-root-password`
+The first thing you need to do is fetch the MySQL root password which is
+auto-generated for us by default and stored in a Secret named `<dbname>-root-password`
 
-```
-$ kubectl get secret myappdb-root-password -o jsonpath="{.data.password}" | base64 -D
+```console
+$ kubectl -n my-namespace get secret my-app-db-root-password -o jsonpath="{.data.password}" | base64 -D
 ETdmMKh2UuDq9m7y
 ```
 
-You can use a MySQL client container to verify  that you can connect to MySQL inside the Kubernetes cluster.
+You can use a MySQL client container to verify that you can connect to MySQL
+from within the Kubernetes cluster.
 
-```
-$ kubectl run mysql-client --image=mysql:5.7 -i -t --rm --restart=Never \
-    -- mysql -h myappdb -uroot -pETdmMKh2UuDq9m7y -e 'SELECT 1'
+```console
+$ kubectl run mysql-client --image=mysql:5.7 -it --rm --restart=Never \
+    -- mysql -h my-app-db -uroot -pETdmMKh2UuDq9m7y -e 'SELECT 1'
 Waiting for pod default/mysql-client to be running, status is Pending, pod ready: false
 mysql: [Warning] Using a password on the command line interface can be insecure.
 +---+
@@ -153,27 +159,3 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | 1 |
 +---+
 ```
-
-# Troubleshooting
-
-## cannot list configmaps in the namspace "kube-system"
-
-Note: If `helm list` gives the following error
-
-```console
-Error: User "system:serviceaccount:kube-system:default" cannot list configmaps in the namespace "kube-system". (get configmaps)
-```
-
-then it could be because the cluster you are targeting has role-based-authentication (RBAC) enabled. To fix this, issue the following commands:
-
-```console
-kubectl create serviceaccount --namespace kube-system tiller
-kubectl create clusterrolebinding \
-      tiller-cluster-rule \
-      --clusterrole=cluster-admin \
-      --serviceaccount=kube-system:tiller
-kubectl patch deploy --namespace kube-system \
-          tiller-deploy \
-          -p '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
-```
-
