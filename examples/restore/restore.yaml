@@ -1,5 +1,5 @@
-apiVersion: mysql.oracle.com/v1alpha1
-kind: Restore
+apiVersion: mysql.oracle.com/v1
+kind: MySQLRestore
 metadata:
   name: mysql-restore
 spec:

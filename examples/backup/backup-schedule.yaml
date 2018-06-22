@@ -1,5 +1,5 @@
-apiVersion: mysql.oracle.com/v1alpha1
-kind: BackupSchedule
+apiVersion: mysql.oracle.com/v1
+kind: MySQLBackupSchedule
 metadata:
   name: mysql-backup-schedule
 spec:

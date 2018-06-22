@@ -1,5 +1,5 @@
-apiVersion: mysql.oracle.com/v1alpha1
-kind: Backup
+apiVersion: mysql.oracle.com/v1
+kind: MySQLBackup
 metadata:
   name: mysql-backup
 spec:
