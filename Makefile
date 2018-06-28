@@ -26,27 +26,9 @@ ROOT_DIR        := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 PKG             := github.com/oracle/mysql-operator
 REGISTRY        := iad.ocir.io/$(TENANT)
 SRC_DIRS        := cmd pkg test/examples
-REGISTRY_STRING := $(subst /,_,$(REGISTRY))
-CMD_DIRECTORIES := $(sort $(dir $(wildcard ./cmd/*/)))
-COMMANDS        := $(CMD_DIRECTORIES:./cmd/%/=%)
-CONTAINER_FILES := $(addprefix .container-$(REGISTRY_STRING)-,$(addsuffix -$(VERSION),$(COMMANDS)))
-PUSH_FILES      := $(addprefix .push-$(REGISTRY_STRING)-,$(addsuffix -$(VERSION),$(COMMANDS)))
 
 ARCH    := amd64
 OS      := linux
-UNAME_S := $(shell uname -s)
-
-ifeq ($(UNAME_S),Darwin)
-	# Cross-compiling from OSX to linux, go install puts the binaries in $GOPATH/bin/$GOOS_$GOARCH
-    BINARIES := $(addprefix $(GOPATH)/bin/$(OS)_$(ARCH)/,$(COMMANDS))
-else
-ifeq ($(UNAME_S),Linux)
-	# Compiling on linux for linux, go install puts the binaries in $GOPATH/bin
-    BINARIES := $(addprefix $(GOPATH)/bin/,$(COMMANDS))
-else
-	$(error "Unsupported OS: $(UNAME_S)")
-endif
-endif
 
 .PHONY: all
 all: build
@@ -61,7 +43,6 @@ build-dirs:
 	@echo "Creating build directories"
 	@mkdir -p bin/$(OS)_$(ARCH)
 	@mkdir -p dist/
-	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/$(ARCH)
 
 .PHONY: dist
 dist: build-dirs
@@ -70,28 +51,24 @@ dist: build-dirs
 
 .PHONY: build
 build: dist build-dirs Makefile
-	@echo "Building: $(BINARIES)"
 	@touch pkg/version/version.go # Important. Work around for https://github.com/golang/go/issues/18369
-	ARCH=$(ARCH) OS=$(OS) VERSION=$(VERSION) PKG=$(PKG) ./hack/build.sh
-	cp $(BINARIES) ./bin/$(OS)_$(ARCH)/
-
-# Note: Only used for development, i.e. in CI the images are built using Wercker.
-.PHONY: containers
-containers: $(CONTAINER_FILES)
-.container-$(REGISTRY_STRING)-%-$(VERSION): build dist
-	@echo Builing container: $*
-	@docker login -u '$(DOCKER_REGISTRY_USERNAME)' -p '$(DOCKER_REGISTRY_PASSWORD)' $(REGISTRY)
-	@docker build --build-arg=http_proxy --build-arg=https_proxy -t $(REGISTRY)/$*:$(VERSION) -f docker/$*/Dockerfile .
-	@docker images -q $(REGISTRY)/$*:$(VERSION) > $@
+	@echo "Building mysql-operator"
+	@GOOS=${OS} GOARCH=${ARCH} go build -i -v -o bin/mysql-operator -installsuffix "static" \
+	    -ldflags "-X main.version=${VERSION} -X main.build=${BUILD}" \
+	    ./cmd/mysql-operator/
+	@echo "Building mysql-agent"
+	@GOOS=${OS} GOARCH=${ARCH} go build -i -v -o bin/mysql-agent -installsuffix "static" \
+	    -ldflags "-X main.version=${VERSION} -X main.build=${BUILD}" \
+	    ./cmd/mysql-agent/
 
 # Note: Only used for development, i.e. in CI the images are pushed using Wercker.
 .PHONY: push
-push: $(PUSH_FILES)
-.push-$(REGISTRY_STRING)-%-$(VERSION): .container-$(REGISTRY_STRING)-%-$(VERSION)
-	@echo Pushing container: $*
+push:
+	@docker build --build-arg=http_proxy --build-arg=https_proxy -t $(REGISTRY)/mysql-operator:$(VERSION) -f docker/mysql-operator/Dockerfile .
+	@docker build --build-arg=http_proxy --build-arg=https_proxy -t $(REGISTRY)/mysql-agent:$(VERSION) -f docker/mysql-agent/Dockerfile .
 	@docker login -u '$(DOCKER_REGISTRY_USERNAME)' -p '$(DOCKER_REGISTRY_PASSWORD)' $(REGISTRY)
-	@docker push $(REGISTRY)/$*:$(VERSION)
-	@docker images -q $(REGISTRY)/$*:$(VERSION) > $@
+	@docker push $(REGISTRY)/mysql-operator:$(VERSION)
+	@docker push $(REGISTRY)/mysql-agent:$(VERSION)
 
 .PHONY: version
 version:
@@ -102,15 +79,7 @@ lint:
 	@find pkg cmd -name '*.go' | grep -v 'generated' | xargs -L 1 golint
 
 .PHONY: clean
-clean: container-clean bin-clean
-
-.PHONY: container-clean
-container-clean:
-	rm -rf .container-* .push-* dist
-
-.PHONY: bin-clean
-bin-clean:
-	rm -rf .go bin
+clean: rm -rf bin
 
 .PHONY: run-dev
 run-dev:
