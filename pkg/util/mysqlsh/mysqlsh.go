@@ -197,8 +197,24 @@ func (r *runner) run(ctx context.Context, python string) ([]byte, error) {
 }
 
 func (r *runner) RebootClusterFromCompleteOutage(ctx context.Context) error {
-	python := fmt.Sprintf("dba.reboot_cluster_from_complete_outage('%s')", innodb.DefaultClusterName)
+	// Reset the seed list. This is needed if the cluster is going
+	// through a full restart and the pods are being created in order,
+	// because the StatefulSet will not create the service names
+	// pointing to the other pods until the previous pods are fully up.
+	// This causes MySQL to fail initializing the group replication
+	// plugin because it assumes that all the peer names must be valid
+	// hostnames and, even if they are not reachable from a
+	// connectivity point of view, they still must resolve to a valid
+	// IP address, which is not the case considering the StatefulSet
+	// behavior.
+	python := fmt.Sprintf("session.query('SET GLOBAL group_replication_group_seeds = \"\"')")
 	_, err := r.run(ctx, python)
+	if err != nil {
+		return err
+	}
+
+	python = fmt.Sprintf("dba.reboot_cluster_from_complete_outage('%s')", innodb.DefaultClusterName)
+	_, err = r.run(ctx, python)
 	return err
 }
 
