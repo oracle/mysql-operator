@@ -470,7 +470,7 @@ func (m *MySQLController) updateClusterStatus(cluster *v1alpha1.Cluster, ss *app
 	if condition == nil {
 		condition = &v1alpha1.ClusterCondition{Type: v1alpha1.ClusterReady}
 	}
-	if ss.Status.ReadyReplicas == ss.Status.Replicas {
+	if ss.Status.ReadyReplicas == ss.Status.Replicas && ss.Status.ReadyReplicas == cluster.Spec.Members {
 		condition.Status = corev1.ConditionTrue
 	} else {
 		condition.Status = corev1.ConditionFalse
