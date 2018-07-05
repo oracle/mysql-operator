@@ -40,13 +40,6 @@ const (
 	ClusterNameMaxLen = 28
 )
 
-// TODO (owain) we need to remove this because it's not reasonable for us to maintain a list
-// of all the potential MySQL versions that can be used and in reality, it shouldn't matter
-// too much. The burden of this is not worth the benfit to a user
-var validVersions = []string{
-	defaultVersion,
-}
-
 // setOperatorVersionLabel sets the specified operator version label on the label map.
 func setOperatorVersionLabel(labelMap map[string]string, label string) {
 	labelMap[constants.MySQLOperatorVersionLabel] = label

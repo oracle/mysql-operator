@@ -18,9 +18,12 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/oracle/mysql-operator/pkg/constants"
+	"github.com/coreos/go-semver/semver"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+
+	"github.com/oracle/mysql-operator/pkg/constants"
 )
 
 func validateCluster(c *Cluster) field.ErrorList {
@@ -67,12 +70,23 @@ func validateClusterStatus(s ClusterStatus, fldPath *field.Path) field.ErrorList
 
 func validateVersion(version string, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
-	for _, validVersion := range validVersions {
-		if version == validVersion {
-			return allErrs
+	min, err := semver.NewVersion(MinimumMySQLVersion)
+	if err != nil {
+		allErrs = append(allErrs, field.InternalError(fldPath, fmt.Errorf("unable to parse minimum MySQL version: %v", err)))
+	}
+
+	given, err := semver.NewVersion(version)
+	if err != nil {
+		allErrs = append(allErrs, field.Invalid(fldPath, version, fmt.Sprintf("unable to parse MySQL version: %v", err)))
+	}
+
+	if len(allErrs) == 0 {
+		if given.Compare(*min) == -1 {
+			allErrs = append(allErrs, field.Invalid(fldPath, version, fmt.Sprintf("minimum supported MySQL version is %s", MinimumMySQLVersion)))
 		}
 	}
-	return append(allErrs, field.Invalid(fldPath, version, "invalid version specified"))
+
+	return allErrs
 }
 
 func validateBaseServerID(baseServerID uint32, fldPath *field.Path) field.ErrorList {

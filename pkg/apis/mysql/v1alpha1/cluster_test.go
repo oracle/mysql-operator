@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -22,19 +23,43 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-func TestValidVersion(t *testing.T) {
-	for _, version := range validVersions {
-		errList := validateVersion(version, field.NewPath("spec", "version"))
-		if len(errList) > 0 {
-			t.Fail()
-		}
+func TestValidateVersion(t *testing.T) {
+	fldPath := field.NewPath("spec", "version")
+	testCases := map[string]struct {
+		name     string
+		version  string
+		expected field.ErrorList
+	}{
+		"minimum_version_valid": {
+			version:  MinimumMySQLVersion,
+			expected: field.ErrorList{},
+		},
+		"next_patch_version_valid": {
+			version:  "8.0.12",
+			expected: field.ErrorList{},
+		},
+		"next_minor_version_valid": {
+			version:  "8.1.0",
+			expected: field.ErrorList{},
+		},
+		"previous_version_invalid": {
+			version: "8.0.4",
+			expected: field.ErrorList{
+				field.Invalid(fldPath, "8.0.4", fmt.Sprintf("minimum supported MySQL version is %s", MinimumMySQLVersion)),
+			},
+		},
+		"5.7_version_invalid": {
+			version: "5.7.20-1.1.2",
+			expected: field.ErrorList{
+				field.Invalid(fldPath, "5.7.20-1.1.2", fmt.Sprintf("minimum supported MySQL version is %s", MinimumMySQLVersion)),
+			},
+		},
 	}
-}
-
-func TestInvalidVersion(t *testing.T) {
-	err := validateVersion("1.2.3", field.NewPath("spec", "version"))
-	if err == nil {
-		t.Fail()
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			errs := validateVersion(tc.version, fldPath)
+			assert.EqualValues(t, errs, tc.expected)
+		})
 	}
 }
 
