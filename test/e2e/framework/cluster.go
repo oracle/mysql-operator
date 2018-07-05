@@ -136,7 +136,6 @@ func (j *ClusterTestJig) waitForConditionOrFail(namespace, name string, timeout 
 func (j *ClusterTestJig) WaitForClusterReadyOrFail(namespace, name string, timeout time.Duration) *v1alpha1.Cluster {
 	Logf("Waiting up to %v for Cluster \"%s/%s\" to be ready", timeout, namespace, name)
 	cluster := j.waitForConditionOrFail(namespace, name, timeout, "have all nodes ready", func(cluster *v1alpha1.Cluster) bool {
-		Logf("Cluster conditions: %#v", cluster.Status.Conditions)
 		return clusterutil.IsClusterReady(cluster)
 	})
 	return cluster
