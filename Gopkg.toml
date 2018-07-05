@@ -73,6 +73,10 @@ required = [
   branch = "master"
   name = "github.com/heptiolabs/healthcheck"
 
+[[constraint]]
+  name = "github.com/coreos/go-semver"
+  revision = "e214231b295a8ea9479f11b70b35d5acf3556d9b"
+
 # gengo needs to be manually pinned to the version listed in code-generators
 # Gopkg.toml, because the k8s project does not produce Gopkg.toml files & dep
 # does not parse the Godeps.json file to determine revisions to use.

@@ -19,6 +19,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// MinimumMySQLVersion is the minimum version of MySQL server supported by the
+// MySQL Operator.
+const MinimumMySQLVersion = "8.0.11"
+
 // ClusterSpec defines the attributes a user can specify when creating a cluster
 type ClusterSpec struct {
 	// Version defines the MySQL Docker image version.
