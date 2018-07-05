@@ -17,23 +17,18 @@ ifdef WERCKER
     VERSION ?= ${WERCKER_GIT_COMMIT}
     TENANT := "oracle"
 else
-    NEW_NAMESPACE ?= e2e-${USER}
-    VERSION := ${USER}-$(shell date +%Y%m%d%H%M%S)
-    TENANT := "spinnaker"
+    VERSION ?= ${USER}-$(shell git describe --always --dirty)
+    TENANT ?= "spinnaker"
 endif
 
-ROOT_DIR        := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 PKG             := github.com/oracle/mysql-operator
-REGISTRY        := iad.ocir.io/$(TENANT)
+REGISTRY        := iad.ocir.io
 SRC_DIRS        := cmd pkg test/examples
-REGISTRY_STRING := $(subst /,_,$(REGISTRY))
 CMD_DIRECTORIES := $(sort $(dir $(wildcard ./cmd/*/)))
 COMMANDS        := $(CMD_DIRECTORIES:./cmd/%/=%)
-CONTAINER_FILES := $(addprefix .container-$(REGISTRY_STRING)-,$(addsuffix -$(VERSION),$(COMMANDS)))
-PUSH_FILES      := $(addprefix .push-$(REGISTRY_STRING)-,$(addsuffix -$(VERSION),$(COMMANDS)))
 
-ARCH    := amd64
-OS      := linux
+ARCH    ?= amd64
+OS      ?= linux
 UNAME_S := $(shell uname -s)
 
 ifeq ($(UNAME_S),Darwin)
@@ -75,23 +70,26 @@ build: dist build-dirs Makefile
 	ARCH=$(ARCH) OS=$(OS) VERSION=$(VERSION) PKG=$(PKG) ./hack/build.sh
 	cp $(BINARIES) ./bin/$(OS)_$(ARCH)/
 
-# Note: Only used for development, i.e. in CI the images are built using Wercker.
-.PHONY: containers
-containers: $(CONTAINER_FILES)
-.container-$(REGISTRY_STRING)-%-$(VERSION): build dist
-	@echo Builing container: $*
-	@docker login -u '$(DOCKER_REGISTRY_USERNAME)' -p '$(DOCKER_REGISTRY_PASSWORD)' $(REGISTRY)
-	@docker build --build-arg=http_proxy --build-arg=https_proxy -t $(REGISTRY)/$*:$(VERSION) -f docker/$*/Dockerfile .
-	@docker images -q $(REGISTRY)/$*:$(VERSION) > $@
+.PHONY: build-docker
+build-docker:
+	@docker build \
+	--build-arg=http_proxy \
+	--build-arg=https_proxy \
+	-t $(REGISTRY)/$(TENANT)/mysql-operator:$(VERSION) \
+	-f docker/mysql-operator/Dockerfile .
+
+	@docker build \
+	--build-arg=http_proxy \
+	--build-arg=https_proxy \
+	-t $(REGISTRY)/$(TENANT)/mysql-agent:$(VERSION) \
+	-f docker/mysql-agent/Dockerfile .
 
 # Note: Only used for development, i.e. in CI the images are pushed using Wercker.
 .PHONY: push
-push: $(PUSH_FILES)
-.push-$(REGISTRY_STRING)-%-$(VERSION): .container-$(REGISTRY_STRING)-%-$(VERSION)
-	@echo Pushing container: $*
-	@docker login -u '$(DOCKER_REGISTRY_USERNAME)' -p '$(DOCKER_REGISTRY_PASSWORD)' $(REGISTRY)
-	@docker push $(REGISTRY)/$*:$(VERSION)
-	@docker images -q $(REGISTRY)/$*:$(VERSION) > $@
+push: build build-docker
+	@docker login iad.ocir.io -u $(DOCKER_REGISTRY_USERNAME) -p '$(DOCKER_REGISTRY_PASSWORD)'
+	@docker push $(REGISTRY)/$(TENANT)/mysql-operator:$(VERSION)
+	@docker push $(REGISTRY)/$(TENANT)/mysql-agent:$(VERSION)
 
 .PHONY: version
 version:
@@ -102,14 +100,7 @@ lint:
 	@find pkg cmd -name '*.go' | grep -v 'generated' | xargs -L 1 golint
 
 .PHONY: clean
-clean: container-clean bin-clean
-
-.PHONY: container-clean
-container-clean:
-	rm -rf .container-* .push-* dist
-
-.PHONY: bin-clean
-bin-clean:
+clean:
 	rm -rf .go bin
 
 .PHONY: run-dev
