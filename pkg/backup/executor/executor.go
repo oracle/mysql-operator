@@ -34,8 +34,7 @@ var ExecutorProviders = [...]string{MySQLDumpProvider}
 // mysqldump.
 type Interface interface {
 	// Backup runs a backup operation using the given credentials, returning the content.
-	// TODO: default backupDir to allow streaming...
-	Backup(backupDir string, clusterName string) (io.ReadCloser, string, error)
+	Backup(clusterName string) (io.ReadCloser, string, error)
 	// Restore restores the given content to the mysql node.
 	Restore(content io.ReadCloser) error
 }

@@ -17,16 +17,15 @@ package backup
 import (
 	"os"
 
+	"github.com/pkg/errors"
+
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/backup/executor"
 	"github.com/oracle/mysql-operator/pkg/backup/storage"
 	"github.com/oracle/mysql-operator/pkg/resources/statefulsets"
 )
 
-const (
-	backupDir  = statefulsets.MySQLAgentBasePath + "/backup"
-	restoreDir = statefulsets.MySQLAgentBasePath + "/restore"
-)
+const restoreDir = statefulsets.MySQLAgentBasePath + "/restore"
 
 // Runner implementations can execute backups and store them in storage
 // backends.
@@ -40,8 +39,8 @@ type runner struct {
 	storage  storage.Interface
 }
 
-// NewConfiguredRunner creates a runner configured with the Backup/Restore target executor and
-// storage configurations.
+// NewConfiguredRunner creates a runner configured with the Backup/Restore
+// target executor and storage configurations.
 func NewConfiguredRunner(execConfig v1alpha1.BackupExecutor, execCreds map[string]string, provider v1alpha1.StorageProvider, storeCreds map[string]string) (Runner, error) {
 	exec, err := executor.New(execConfig, execCreds)
 	if err != nil {
@@ -58,26 +57,19 @@ func NewConfiguredRunner(execConfig v1alpha1.BackupExecutor, execCreds map[strin
 
 // Backup performs a backup using the executor and then stores it using the storage provider.
 func (r *runner) Backup(clusterName string) (string, error) {
-	if _, err := os.Stat(backupDir); os.IsNotExist(err) {
-		if err := os.MkdirAll(backupDir, os.ModePerm); err != nil {
-			return "", err
-		}
-	}
-	defer os.RemoveAll(backupDir)
-
-	reader, key, err := r.executor.Backup(backupDir, clusterName)
+	reader, key, err := r.executor.Backup(clusterName)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "executing backup")
 	}
 
 	err = r.storage.Store(key, reader)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "storing backup")
 	}
 	return key, nil
 }
 
-// Restore performs a retrieve using the storage providor then a restore using
+// Restore performs a retrieve using the storage provider then a restore using
 // the executor.
 func (r *runner) Restore(key string) error {
 	if _, err := os.Stat(restoreDir); os.IsNotExist(err) {
@@ -89,12 +81,12 @@ func (r *runner) Restore(key string) error {
 
 	reader, err := r.storage.Retrieve(key)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "retrieving backup %q", key)
 	}
 
 	err = r.executor.Restore(reader)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "restoring backup %q", key)
 	}
 
 	return nil
