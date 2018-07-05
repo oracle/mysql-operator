@@ -17,20 +17,18 @@ ifdef WERCKER
     VERSION ?= ${WERCKER_GIT_COMMIT}
     TENANT := "oracle"
 else
-    NEW_NAMESPACE ?= e2e-${USER}
-    VERSION := ${USER}-$(shell git describe --always --dirty)
-    TENANT := "spinnaker"
+    VERSION ?= ${USER}-$(shell git describe --always --dirty)
+    TENANT ?= "spinnaker"
 endif
 
-ROOT_DIR        := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 PKG             := github.com/oracle/mysql-operator
 REGISTRY        := iad.ocir.io
 SRC_DIRS        := cmd pkg test/examples
 CMD_DIRECTORIES := $(sort $(dir $(wildcard ./cmd/*/)))
 COMMANDS        := $(CMD_DIRECTORIES:./cmd/%/=%)
 
-ARCH    := amd64
-OS      := linux
+ARCH    ?= amd64
+OS      ?= linux
 UNAME_S := $(shell uname -s)
 
 ifeq ($(UNAME_S),Darwin)
@@ -72,12 +70,23 @@ build: dist build-dirs Makefile
 	ARCH=$(ARCH) OS=$(OS) VERSION=$(VERSION) PKG=$(PKG) ./hack/build.sh
 	cp $(BINARIES) ./bin/$(OS)_$(ARCH)/
 
+.PHONY: build-docker
+build-docker:
+	@docker build \
+	--build-arg=http_proxy \
+	--build-arg=https_proxy \
+	-t $(REGISTRY)/$(TENANT)/mysql-operator:$(VERSION) \
+	-f docker/mysql-operator/Dockerfile .
+
+	@docker build \
+	--build-arg=http_proxy \
+	--build-arg=https_proxy \
+	-t $(REGISTRY)/$(TENANT)/mysql-agent:$(VERSION) \
+	-f docker/mysql-agent/Dockerfile .
+
 # Note: Only used for development, i.e. in CI the images are pushed using Wercker.
 .PHONY: push
-push: build
-	@docker build --build-arg=http_proxy --build-arg=https_proxy -t $(REGISTRY)/$(TENANT)/mysql-operator:$(VERSION) -f docker/mysql-operator/Dockerfile .
-	@docker build --build-arg=http_proxy --build-arg=https_proxy -t $(REGISTRY)/$(TENANT)/mysql-agent:$(VERSION) -f docker/mysql-agent/Dockerfile .
-
+push: build build-docker
 	@docker login iad.ocir.io -u $(DOCKER_REGISTRY_USERNAME) -p '$(DOCKER_REGISTRY_PASSWORD)'
 	@docker push $(REGISTRY)/$(TENANT)/mysql-operator:$(VERSION)
 	@docker push $(REGISTRY)/$(TENANT)/mysql-agent:$(VERSION)
