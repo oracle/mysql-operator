@@ -21,6 +21,7 @@ import (
 var (
 	clusterCreateCount       = metrics.NewAgentEventCounter("cluster_created", "Total number of times an innodb cluster is successfully created")
 	clusterCreateErrorCount  = metrics.NewAgentEventCounter("cluster_create_error", "Total number of times and innodb cluster fails to create")
+	clusterNoQuorumCount     = metrics.NewAgentEventCounter("cluster_no_quorum", "Total number of times the cluster has been seen in a NO_QUORUM state from an instance")
 	instanceAddCount         = metrics.NewAgentEventCounter("instance_added", "Total number of times an instance is successfully added to the innodb cluster")
 	instanceAddErrorCount    = metrics.NewAgentEventCounter("instance_add_error", "Total number of times an instance failed to add to the innodb cluster")
 	instanceRejoinCount      = metrics.NewAgentEventCounter("instance_rejoined", "Total number of times an instance successfully rejoins the innodb cluster")
@@ -32,6 +33,7 @@ var (
 func RegisterMetrics() {
 	metrics.RegisterAgentMetric(clusterCreateCount)
 	metrics.RegisterAgentMetric(clusterCreateErrorCount)
+	metrics.RegisterAgentMetric(clusterNoQuorumCount)
 	metrics.RegisterAgentMetric(instanceAddCount)
 	metrics.RegisterAgentMetric(instanceAddErrorCount)
 	metrics.RegisterAgentMetric(instanceRejoinCount)

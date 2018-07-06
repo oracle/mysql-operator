@@ -31,11 +31,12 @@ type InstanceStatus string
 
 // Instance statuses.
 const (
-	InstanceStatusOnline     InstanceStatus = "ONLINE"
-	InstanceStatusMissing                   = "(MISSING)"
-	InstanceStatusRecovering                = "RECOVERING"
-	InstanceStatusNotFound                  = ""
-	InstanceStatusUnknown                   = "UNKNOWN"
+	InstanceStatusOnline      InstanceStatus = "ONLINE"
+	InstanceStatusMissing                    = "(MISSING)"
+	InstanceStatusRecovering                 = "RECOVERING"
+	InstanceStatusUnreachable                = "UNREACHABLE"
+	InstanceStatusNotFound                   = ""
+	InstanceStatusUnknown                    = "UNKNOWN"
 )
 
 // instanceState denotes the state of a MySQL Instance.
@@ -79,12 +80,24 @@ type InstanceState struct {
 	State  instanceState  `json:"state"`
 }
 
+// ReplicaSetStatus denotes the state of a MySQL replica set.
+type ReplicaSetStatus string
+
+// Replica set statuses
+const (
+	ReplicaSetStatusOk            ReplicaSetStatus = "OK"
+	ReplicaSetStatusOkPartial                      = "OK_PARTIAL"
+	ReplicaSetStatusOkNoTolerance                  = "OK_NO_TOLERANCE"
+	ReplicaSetStatusNoQuorum                       = "NO_QUORUM"
+	ReplicaSetStatusUnknown                        = "UNKNOWN"
+)
+
 // ReplicaSet holds the server instances which belong to an InnoDB
 // cluster.
 type ReplicaSet struct {
 	Name       string               `json:"name"`
 	Primary    string               `json:"primary"`
-	Status     string               `json:"status"`
+	Status     ReplicaSetStatus     `json:"status"`
 	StatusText string               `json:"statusText"`
 	Topology   map[string]*Instance `json:"topology"`
 }

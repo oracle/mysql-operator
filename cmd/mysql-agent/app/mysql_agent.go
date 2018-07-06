@@ -90,7 +90,7 @@ func Run(opts *options.MySQLAgentOpts) error {
 
 	var wg sync.WaitGroup
 
-	manager, err := clustermgr.NewLocalClusterManger(kubeclient, kubeInformerFactory)
+	manager, err := clustermgr.NewLocalClusterManger(kubeclient, kubeInformerFactory, opts.ForceNoQuorumShutdown)
 	if err != nil {
 		return errors.Wrap(err, "failed to create new local MySQL InnoDB cluster manager")
 	}

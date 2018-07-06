@@ -42,6 +42,8 @@ const pollingIntervalSeconds = 15
 type ClusterManager struct {
 	kubeClient kubernetes.Interface
 
+	forceNoQuorumShutdown bool
+
 	// kubeInformerFactory is a kubernetes core informer factory.
 	kubeInformerFactory kubeinformers.SharedInformerFactory
 
@@ -64,21 +66,26 @@ type ClusterManager struct {
 func NewClusterManager(
 	kubeClient kubernetes.Interface,
 	kubeInformerFactory kubeinformers.SharedInformerFactory,
+	forceNoQuorumShutdown bool,
 	mysqlshFactory func(string) mysqlsh.Interface,
 	instance *cluster.Instance,
 ) *ClusterManager {
 	manager := &ClusterManager{
-		kubeClient:          kubeClient,
-		kubeInformerFactory: kubeInformerFactory,
-		mysqlshFactory:      mysqlshFactory,
-		Instance:            instance,
-		localMySh:           mysqlshFactory(instance.GetShellURI()),
+		kubeClient:            kubeClient,
+		kubeInformerFactory:   kubeInformerFactory,
+		forceNoQuorumShutdown: forceNoQuorumShutdown,
+		mysqlshFactory:        mysqlshFactory,
+		Instance:              instance,
+		localMySh:             mysqlshFactory(instance.GetShellURI()),
 	}
 	return manager
 }
 
 // NewLocalClusterManger creates a new cluster.ClusterManager for the local MySQL instance.
-func NewLocalClusterManger(kubeclient kubernetes.Interface, kubeInformerFactory kubeinformers.SharedInformerFactory) (*ClusterManager, error) {
+func NewLocalClusterManger(kubeclient kubernetes.Interface,
+	kubeInformerFactory kubeinformers.SharedInformerFactory,
+	forceNoQuorumShutdown bool,
+) (*ClusterManager, error) {
 	// Create a new instance representing the local MySQL instance.
 	instance, err := cluster.NewLocalInstance()
 	if err != nil {
@@ -88,6 +95,7 @@ func NewLocalClusterManger(kubeclient kubernetes.Interface, kubeInformerFactory 
 	return NewClusterManager(
 		kubeclient,
 		kubeInformerFactory,
+		forceNoQuorumShutdown,
 		func(uri string) mysqlsh.Interface { return mysqlsh.New(utilexec.New(), uri) },
 		instance,
 	), nil
@@ -147,6 +155,48 @@ func (m *ClusterManager) Sync(ctx context.Context) bool {
 	// most up to date information.
 	cluster.SetStatus(clusterStatus)
 
+	if clusterStatus.DefaultReplicaSet.Status == innodb.ReplicaSetStatusNoQuorum {
+		glog.V(4).Info("Cluster as seen from this instance is in NO_QUORUM state")
+		metrics.IncEventCounter(clusterNoQuorumCount)
+
+		if m.forceNoQuorumShutdown {
+			// If we end up in NO_QUORUM, it effectively means we abruptly
+			// lost the majority due to a crash or network partition.
+			//
+			// The solution is typically a manual intervention by the
+			// operator to manually recover the situation via
+			// forceQuorumUsingPartitionOf() because, even if the other
+			// instances come back online, they won't be able to rejoin
+			// the group because there is no more quorum which can
+			// validate the join of other members (although the MySQL
+			// source code seems to have a "The member has resumed contact
+			// with a majority of the members in the group. Regular
+			// operation is restored and transactions are unblocked."
+			// message that I'm unable to reproduce.
+			//
+			// Before giving up completely and requiring manual
+			// intervention, we can shutdown all the instances that
+			// see the NO_QUORUM status, with the hope that the first
+			// instance in the stateful set will actually reform the group
+			// by seeing that there's no cluster to connect to anymore. By
+			// letting just the first instance do this, we effectively
+			// minimize the chances of forming a split brain.
+			//
+			// If we didn't shutdown the instances, the first instance
+			// would see there's still a cluster, and would try to rejoin
+			// it instead of bootstrapping, failing since there's no quorum
+			// that can guarantee a join
+			glog.Errorln("Cluster is in a NO_QUORUM state, shutting down the database " +
+				"so the first member can reform the majority")
+
+			if !shutdownDatabase(ctx) {
+				glog.Errorln("Cluster instance couldn't be shut down")
+			}
+
+			return false
+		}
+	}
+
 	online := false
 	instanceStatus := clusterStatus.GetInstanceStatus(m.Instance.Name())
 	switch instanceStatus {
@@ -186,6 +236,9 @@ func (m *ClusterManager) Sync(ctx context.Context) bool {
 		} else {
 			metrics.IncEventCounter(instanceAddErrorCount)
 		}
+
+	case innodb.InstanceStatusUnreachable:
+		metrics.IncStatusCounter(instanceStatusCount, innodb.InstanceStatusUnreachable)
 
 	default:
 		metrics.IncStatusCounter(instanceStatusCount, innodb.InstanceStatusUnknown)
