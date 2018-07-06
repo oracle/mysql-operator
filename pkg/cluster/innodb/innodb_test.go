@@ -65,7 +65,7 @@ func TestDeepCopyReplicaSet(t *testing.T) {
 				Primary: "localhost:3310",
 				Status:  "OK",
 				Topology: map[string]*Instance{
-					"localhost:3310": &Instance{
+					"localhost:3310": {
 						Address: "localhost:3310",
 						Mode:    "R/O",
 						Role:    "HA",
@@ -107,7 +107,7 @@ func TestDeepCopyClusterStatus(t *testing.T) {
 					Primary: "localhost:3310",
 					Status:  "OK",
 					Topology: map[string]*Instance{
-						"localhost:3310": &Instance{
+						"localhost:3310": {
 							Address: "localhost:3310",
 							Mode:    "R/O",
 							Role:    "HA",

@@ -421,11 +421,15 @@ func (m *MySQLController) syncHandler(key string) error {
 	return nil
 }
 
-// ensureMySQLOperatorVersion updates the MySQLOperator resource types that require it to make it consistent with the specifed operator version.
+// ensureMySQLOperatorVersion updates the MySQLOperator resource types that
+//require it to make it consistent with the specified operator version.
 func (m *MySQLController) ensureMySQLOperatorVersion(c *v1alpha1.Cluster, ss *apps.StatefulSet, operatorVersion string) error {
 	// Ensure the Pods belonging to the Cluster are updated to the correct 'mysql-agent' image for the current MySQLOperator version.
 	container := statefulsets.MySQLAgentName
 	pods, err := m.podLister.List(SelectorForCluster(c))
+	if err != nil {
+		return errors.Wrapf(err, "listing pods matching %q", SelectorForCluster(c).String())
+	}
 	for _, pod := range pods {
 		if requiresMySQLAgentPodUpgrade(pod, container, operatorVersion) && canUpgradeMySQLAgent(pod) {
 			glog.Infof("Upgrading cluster pod '%s/%s' to latest operator version: %s", pod.Namespace, pod.Name, operatorVersion)

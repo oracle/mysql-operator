@@ -61,7 +61,7 @@ func fakeWorker(clc *ClusterLabelerController) {
 
 func TestClusterLabelerLabelsPrimaryAndSecondaries(t *testing.T) {
 	pods := []corev1.Pod{
-		corev1.Pod{
+		{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Pod",
@@ -74,7 +74,7 @@ func TestClusterLabelerLabelsPrimaryAndSecondaries(t *testing.T) {
 				},
 			},
 		},
-		corev1.Pod{
+		{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Pod",
@@ -87,7 +87,7 @@ func TestClusterLabelerLabelsPrimaryAndSecondaries(t *testing.T) {
 				},
 			},
 		},
-		corev1.Pod{
+		{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Pod",
@@ -109,19 +109,19 @@ func TestClusterLabelerLabelsPrimaryAndSecondaries(t *testing.T) {
 			Status:     "OK",
 			StatusText: "Cluster is ONLINE and can tolerate up to ONE failure.",
 			Topology: map[string]*innodb.Instance{
-				"test-cluster-0.test-cluster:3306": &innodb.Instance{
+				"test-cluster-0.test-cluster:3306": {
 					Address: "test-cluster-0.test-cluster:3306",
 					Mode:    "R/W",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
 				},
-				"test-cluster-1.test-cluster:3306": &innodb.Instance{
+				"test-cluster-1.test-cluster:3306": {
 					Address: "test-cluster-1.test-cluster:3306",
 					Mode:    "R/O",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
 				},
-				"test-cluster-2.test-cluster:3306": &innodb.Instance{
+				"test-cluster-2.test-cluster:3306": {
 					Address: "test-cluster-2.test-cluster:3306",
 					Mode:    "R/O",
 					Role:    "HA",
@@ -174,7 +174,7 @@ func TestClusterLabelerLabelsPrimaryAndSecondaries(t *testing.T) {
 
 func TestClusterLabelerRelabelsOldPrimary(t *testing.T) {
 	pods := []corev1.Pod{
-		corev1.Pod{
+		{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Pod",
@@ -188,7 +188,7 @@ func TestClusterLabelerRelabelsOldPrimary(t *testing.T) {
 				},
 			},
 		},
-		corev1.Pod{
+		{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Pod",
@@ -202,7 +202,7 @@ func TestClusterLabelerRelabelsOldPrimary(t *testing.T) {
 				},
 			},
 		},
-		corev1.Pod{
+		{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Pod",
@@ -225,19 +225,19 @@ func TestClusterLabelerRelabelsOldPrimary(t *testing.T) {
 			Status:     "OK",
 			StatusText: "Cluster is ONLINE and can tolerate up to ONE failure.",
 			Topology: map[string]*innodb.Instance{
-				"test-cluster-0.test-cluster:3306": &innodb.Instance{
+				"test-cluster-0.test-cluster:3306": {
 					Address: "test-cluster-0.test-cluster:3306",
 					Mode:    "R/O",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
 				},
-				"test-cluster-1.test-cluster:3306": &innodb.Instance{
+				"test-cluster-1.test-cluster:3306": {
 					Address: "test-cluster-1.test-cluster:3306",
 					Mode:    "R/W",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
 				},
-				"test-cluster-2.test-cluster:3306": &innodb.Instance{
+				"test-cluster-2.test-cluster:3306": {
 					Address: "test-cluster-2.test-cluster:3306",
 					Mode:    "R/O",
 					Role:    "HA",
@@ -280,7 +280,7 @@ func TestClusterLabelerRelabelsOldPrimary(t *testing.T) {
 
 func TestClusterLabelerDoesntRelabelCorrectlyLabeledPods(t *testing.T) {
 	pods := []corev1.Pod{
-		corev1.Pod{
+		{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Pod",
@@ -294,7 +294,7 @@ func TestClusterLabelerDoesntRelabelCorrectlyLabeledPods(t *testing.T) {
 				},
 			},
 		},
-		corev1.Pod{
+		{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Pod",
@@ -308,7 +308,7 @@ func TestClusterLabelerDoesntRelabelCorrectlyLabeledPods(t *testing.T) {
 				},
 			},
 		},
-		corev1.Pod{
+		{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Pod",
@@ -331,19 +331,19 @@ func TestClusterLabelerDoesntRelabelCorrectlyLabeledPods(t *testing.T) {
 			Status:     "OK",
 			StatusText: "Cluster is ONLINE and can tolerate up to ONE failure.",
 			Topology: map[string]*innodb.Instance{
-				"test-cluster-0.test-cluster:3306": &innodb.Instance{
+				"test-cluster-0.test-cluster:3306": {
 					Address: "test-cluster-0.test-cluster:3306",
 					Mode:    "R/W",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
 				},
-				"test-cluster-1.test-cluster:3306": &innodb.Instance{
+				"test-cluster-1.test-cluster:3306": {
 					Address: "test-cluster-1.test-cluster:3306",
 					Mode:    "R/O",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
 				},
-				"test-cluster-2.test-cluster:3306": &innodb.Instance{
+				"test-cluster-2.test-cluster:3306": {
 					Address: "test-cluster-2.test-cluster:3306",
 					Mode:    "R/O",
 					Role:    "HA",
@@ -366,7 +366,7 @@ func TestClusterLabelerDoesntRelabelCorrectlyLabeledPods(t *testing.T) {
 
 func TestClusterLabelerRemovesLabelFromInstanceInMissingState(t *testing.T) {
 	pods := []corev1.Pod{
-		corev1.Pod{
+		{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Pod",
@@ -380,7 +380,7 @@ func TestClusterLabelerRemovesLabelFromInstanceInMissingState(t *testing.T) {
 				},
 			},
 		},
-		corev1.Pod{
+		{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Pod",
@@ -394,7 +394,7 @@ func TestClusterLabelerRemovesLabelFromInstanceInMissingState(t *testing.T) {
 				},
 			},
 		},
-		corev1.Pod{
+		{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Pod",
@@ -417,19 +417,19 @@ func TestClusterLabelerRemovesLabelFromInstanceInMissingState(t *testing.T) {
 			Status:     "OK",
 			StatusText: "Cluster is ONLINE and can tolerate up to ONE failure.",
 			Topology: map[string]*innodb.Instance{
-				"test-cluster-0.test-cluster:3306": &innodb.Instance{
+				"test-cluster-0.test-cluster:3306": {
 					Address: "test-cluster-0.test-cluster:3306",
 					Mode:    "R/W",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
 				},
-				"test-cluster-1.test-cluster:3306": &innodb.Instance{
+				"test-cluster-1.test-cluster:3306": {
 					Address: "test-cluster-1.test-cluster:3306",
 					Mode:    "R/O",
 					Role:    "HA",
 					Status:  innodb.InstanceStatusOnline,
 				},
-				"test-cluster-2.test-cluster:3306": &innodb.Instance{
+				"test-cluster-2.test-cluster:3306": {
 					Address: "test-cluster-2.test-cluster:3306",
 					Mode:    "R/O",
 					Role:    "HA",
