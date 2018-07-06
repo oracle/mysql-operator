@@ -108,7 +108,7 @@ run-dev:
 	@go run \
 	    -ldflags "-X ${PKG}/pkg/version.buildVersion=${MYSQL_AGENT_VERSION}" \
 	    cmd/mysql-operator/main.go \
-	    --mysql-agent-image=iad.ocir.io/spinnaker/mysql-agent \
+	    --mysql-agent-image=iad.ocir.io/$(TENANT)/mysql-agent \
 	    --kubeconfig=${KUBECONFIG} \
 	    --v=4 \
 	    --namespace=${USER}
