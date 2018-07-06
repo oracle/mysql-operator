@@ -29,9 +29,10 @@ type ClusterSpec struct {
 	Version string `json:"version"`
 	// Members defines the number of MySQL instances in a cluster
 	Members int32 `json:"members,omitempty"`
-	// BaseServerID defines the base number used to create uniq server_id for MySQL instances in a cluster.
-	// The baseServerId value need to be in range from 1 to 4294967286
-	// If ommited in the manifest file, or set to 0, defaultBaseServerID value will be used.
+	// BaseServerID defines the base number used to create unique server_id
+	// for MySQL instances in the cluster. Valid range 1 to 4294967286.
+	// If omitted in the manifest file (or set to 0) defaultBaseServerID
+	// value will be used.
 	BaseServerID uint32 `json:"baseServerId,omitempty"`
 	// MultiMaster defines the mode of the MySQL cluster. If set to true,
 	// all instances will be R/W. If false (the default), only a single instance

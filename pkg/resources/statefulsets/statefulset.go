@@ -207,7 +207,7 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 		// TODO(apryde): Add BaseImage to cluster CRD.
 		Image: fmt.Sprintf("%s:%s", mysqlServerImage, cluster.Spec.Version),
 		Ports: []v1.ContainerPort{
-			v1.ContainerPort{
+			{
 				ContainerPort: 3306,
 			},
 		},
@@ -220,11 +220,11 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 			replicationGroupSeedsEnvVar(replicationGroupSeeds),
 			multiMasterEnvVar(cluster.Spec.MultiMaster),
 			rootPassword,
-			v1.EnvVar{
+			{
 				Name:  "MYSQL_ROOT_HOST",
 				Value: "%",
 			},
-			v1.EnvVar{
+			{
 				Name:  "MYSQL_LOG_CONSOLE",
 				Value: "true",
 			},
@@ -252,7 +252,7 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 			replicationGroupSeedsEnvVar(replicationGroupSeeds),
 			multiMasterEnvVar(cluster.Spec.MultiMaster),
 			rootPassword,
-			v1.EnvVar{
+			{
 				Name: "MY_POD_IP",
 				ValueFrom: &v1.EnvVarSource{
 					FieldRef: &v1.ObjectFieldSelector{
@@ -318,21 +318,21 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 			VolumeSource: v1.VolumeSource{
 				Projected: &v1.ProjectedVolumeSource{
 					Sources: []v1.VolumeProjection{
-						v1.VolumeProjection{
+						{
 							Secret: &v1.SecretProjection{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: cluster.Spec.SSLSecret.Name,
 								},
 								Items: []v1.KeyToPath{
-									v1.KeyToPath{
+									{
 										Key:  "ca.crt",
 										Path: "ca.crt",
 									},
-									v1.KeyToPath{
+									{
 										Key:  "tls.crt",
 										Path: "tls.crt",
 									},
-									v1.KeyToPath{
+									{
 										Key:  "tls.key",
 										Path: "tls.key",
 									},

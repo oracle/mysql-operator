@@ -408,7 +408,7 @@ func TestMySQLControllerSyncClusterFromScratch(t *testing.T) {
 	assertOperatorServiceInvariants(t, fakeController, cluster)
 	assertOperatorStatefulSetInvariants(t, fakeController, cluster)
 	assertOperatorVersionInvariants(t, fakeController, namespace, name, version)
-	cluster, err := fakeController.opClient.MySQLV1alpha1().Clusters(namespace).Get(name, metav1.GetOptions{})
+	_, err := fakeController.opClient.MySQLV1alpha1().Clusters(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Get client Cluster err: %+v", err)
 	}
@@ -482,7 +482,7 @@ func mockClusterPod(ss *apps.StatefulSet, ordinal int) *v1.Pod {
 		},
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{
-				v1.Container{Name: statefulsets.MySQLAgentName, Image: image},
+				{Name: statefulsets.MySQLAgentName, Image: image},
 			},
 		},
 	}
