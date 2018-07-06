@@ -10,8 +10,8 @@ backup that you wish to restore, and the clusterRef is the name of the
 destination cluster of the restore operation.
 
 ```yaml
-apiVersion: mysql.oracle.com/v1alpha1
-kind: Restore
+apiVersion: mysql.oracle.com/v1
+kind: MySQLRestore
 metadata:
   name: example-restore
 spec:

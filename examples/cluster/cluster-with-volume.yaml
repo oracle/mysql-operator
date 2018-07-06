@@ -15,8 +15,8 @@ spec:
   persistentVolumeReclaimPolicy: Recycle
   storageClassName: manual
 ---
-apiVersion: mysql.oracle.com/v1alpha1
-kind: Cluster
+apiVersion: mysql.oracle.com/v1
+kind: MySQLCluster
 metadata:
   name: mysql
 spec:

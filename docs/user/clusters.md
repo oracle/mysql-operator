@@ -7,8 +7,8 @@ MySQL cluster examples.
 The following example will create a MySQL Cluster with 3 members, one primary and 2 secondaries:
 
 ```yaml
-apiVersion: mysql.oracle.com/v1alpha1
-kind: Cluster
+apiVersion: mysql.oracle.com/v1
+kind: MySQLCluster
 metadata:
   name: mysql-test-cluster
 spec:
@@ -20,10 +20,10 @@ spec:
 The following example will create a MySQL Cluster with 3 primary (read/write) members:
 
 ```yaml
-apiVersion: mysql.oracle.com/v1alpha1
-kind: Cluster
+apiVersion: mysql.oracle.com/v1
+kind: MySQLCluster
 metadata:
-  name: mysql-multimaster-cluster
+  namespace: mysql-multimaster-cluster
 spec:
   multiMaster: true
   members: 3
@@ -40,8 +40,8 @@ $ kubectl create secret generic mysql-root-user-secret --from-literal=password=f
 Create your cluster and reference it
 
 ```yaml
-apiVersion: mysql.oracle.com/v1alpha1
-kind: Cluster
+apiVersion: mysql.oracle.com/v1
+kind: MySQLCluster
 metadata:
   name: example-mysql-cluster-custom-secret
 spec:
@@ -72,8 +72,8 @@ spec:
   persistentVolumeReclaimPolicy: Recycle
   storageClassName: manual
 ---
-apiVersion: mysql.oracle.com/v1alpha1
-kind: Cluster
+apiVersion: mysql.oracle.com/v1
+kind: MySQLCluster
 metadata:
   name: example-mysql-cluster-with-volume
 spec:
@@ -129,8 +129,8 @@ spec:
   persistentVolumeReclaimPolicy: Recycle
   storageClassName: manual
 ---
-apiVersion: mysql.oracle.com/v1alpha1
-kind: Cluster
+apiVersion: mysql.oracle.com/v1
+kind: MySQLCluster
 metadata:
   name: example-mysql-cluster-with-volume
 spec:
@@ -179,8 +179,8 @@ kubectl create configmap mycnf --from-file=examples/my.cnf
 Now we can reference our config map in our cluster spec definition. For example:
 
 ```yaml
-apiVersion: mysql.oracle.com/v1alpha1
-kind: Cluster
+apiVersion: mysql.oracle.com/v1
+kind: MySQLCluster
 metadata:
   name: mysql-cluster-with-config
   members: 3
@@ -194,8 +194,8 @@ By default, the MySQL Operator starts a cluster with `--server_id` set to `1000`
 
 The following example will create a MySQL Cluster with following `server_id`'s: 42,43,44
 ```yaml
-apiVersion: mysql.oracle.com/v1alpha1
-kind: Cluster
+apiVersion: mysql.oracle.com/v1
+kind: MySQLCluster
 metadata:
   name: mysql-cluster-with-custom-serverid
   members: 3

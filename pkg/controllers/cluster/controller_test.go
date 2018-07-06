@@ -52,8 +52,8 @@ func TestMessageResourceExistsFormatString(t *testing.T) {
 	ss := statefulsets.NewForCluster(
 		&v1alpha1.Cluster{
 			TypeMeta: metav1.TypeMeta{
-				Kind:       "Cluster",
-				APIVersion: "mysql.oracle.com/v1alpha1",
+				Kind:       "MySQLCluster",
+				APIVersion: "mysql.oracle.com/v1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-cluster",

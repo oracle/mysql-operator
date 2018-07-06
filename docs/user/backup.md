@@ -41,8 +41,8 @@ operator. The credentialsSecret is the name of a secret that contains your Objec
 Storage credentials. Note: The databases field is mandatory.
 
 ```yaml
-apiVersion: mysql.oracle.com/v1alpha1
-kind: Backup
+apiVersion: mysql.oracle.com/v1
+kind: MySQLBackup
 metadata:
   name: mysql-backup
 spec:
@@ -147,8 +147,8 @@ databases field is mandatory. For example, the following will create a backup of
 the employees database every 30 minutes:
 
 ```yaml
-apiVersion: mysql.oracle.com/v1alpha1
-kind: BackupSchedule
+apiVersion: mysql.oracle.com/v1
+kind: MySQLBackupSchedule
 metadata:
   name: mysql-backup-schedule
 spec:
