@@ -49,7 +49,8 @@ spec:
   executor:
     mysqldump:
       databases:
-        - test
+        - name: test
+        - name: wordpress
   storageProvider:
     s3:
       endpoint: ocitenancy.compat.objectstorage.ociregion.oraclecloud.com
