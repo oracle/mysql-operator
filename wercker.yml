@@ -155,7 +155,6 @@ e2e-test:
           --operator-version="$(cat dist/version.txt)" \
           --s3-access-key="${S3_ACCESS_KEY}" \
           --s3-secret-key="${S3_SECRET_KEY}" \
-          --delete-namespace-on-failure=false
 
 release:
   box:
