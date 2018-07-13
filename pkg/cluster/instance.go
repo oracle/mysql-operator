@@ -135,6 +135,7 @@ func (i *Instance) WhitelistCIDR() (string, error) {
 		"10.0.0.0/8",
 		"172.16.0.0/12",
 		"192.168.0.0/16",
+		"100.64.0.0/10", // IPv4 shared address space (RFC 6598), improperly used by kops
 	} {
 		_, block, _ := net.ParseCIDR(addrRange)
 		privateRanges = append(privateRanges, block)
