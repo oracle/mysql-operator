@@ -2,6 +2,7 @@
 
 [![wercker status](https://app.wercker.com/status/cc1710e8b354d1a22f36b04c8313eac9/s/master "wercker status")](https://app.wercker.com/project/byKey/cc1710e8b354d1a22f36b04c8313eac9)
 [![Go Report Card](https://goreportcard.com/badge/github.com/oracle/mysql-operator)](https://goreportcard.com/report/github.com/oracle/mysql-operator)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Foracle%2Fmysql-operator.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Foracle%2Fmysql-operator?ref=badge_shield)
 
 The MySQL [Operator][1] creates, configures and manages MySQL clusters running on Kubernetes.
 
@@ -52,3 +53,6 @@ See [LICENSE](LICENSE) for more details.
 [3]: https://dev.mysql.com/doc/refman/5.7/en/mysql-innodb-cluster-userguide.html
 [4]: https://dev.mysql.com/doc/refman/5.7/en/group-replication.html
 [5]: docs/tutorial.md
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Foracle%2Fmysql-operator.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Foracle%2Fmysql-operator?ref=badge_large)
