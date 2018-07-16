@@ -15,6 +15,7 @@
 package cluster
 
 import (
+	"net"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -73,5 +74,31 @@ func TestGetPodName(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, tt.name, name)
 		})
+	}
+}
+
+func TestWhitelistCIDR(t *testing.T) {
+	testCases := []struct {
+		ip       string
+		expected string
+	}{
+		{ip: "192.168.0.1", expected: "192.168.0.0/16"},
+		{ip: "192.167.0.1", expected: ""},
+		{ip: "10.1.1.1", expected: "10.0.0.0/8"},
+		{ip: "172.15.0.1", expected: ""},
+		{ip: "172.16.0.1", expected: "172.16.0.0/12"},
+		{ip: "172.17.0.1", expected: "172.16.0.0/12"},
+		{ip: "100.64.0.1", expected: "100.64.0.0/10"},
+		{ip: "100.63.0.1", expected: ""},
+		{ip: "1.2.3.4", expected: ""},
+	}
+
+	for _, tt := range testCases {
+		i := Instance{IP: net.ParseIP(tt.ip)}
+
+		cidr, _ := i.WhitelistCIDR()
+		if cidr != tt.expected {
+			t.Errorf("ip: %v, cidr: %v, expected: %v", tt.ip, cidr, tt.expected)
+		}
 	}
 }

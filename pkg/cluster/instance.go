@@ -129,16 +129,25 @@ func (i *Instance) PodName() string {
 
 // WhitelistCIDR returns the CIDR range to whitelist for GR based on the Pod's IP.
 func (i *Instance) WhitelistCIDR() (string, error) {
-	switch i.IP.To4()[0] {
-	case 10:
-		return "10.0.0.0/8", nil
-	case 172:
-		return "172.16.0.0/12", nil
-	case 192:
-		return "192.168.0.0/16", nil
-	default:
-		return "", errors.Errorf("pod IP %q is not a private IPv4 address", i.IP.String())
+	var privateRanges []*net.IPNet
+
+	for _, addrRange := range []string{
+		"10.0.0.0/8",
+		"172.16.0.0/12",
+		"192.168.0.0/16",
+		"100.64.0.0/10", // IPv4 shared address space (RFC 6598), improperly used by kops
+	} {
+		_, block, _ := net.ParseCIDR(addrRange)
+		privateRanges = append(privateRanges, block)
 	}
+
+	for _, block := range privateRanges {
+		if block.Contains(i.IP) {
+			return block.String(), nil
+		}
+	}
+
+	return "", errors.Errorf("pod IP %q is not a private IPv4 address", i.IP.String())
 }
 
 // statefulPodRegex is a regular expression that extracts the parent StatefulSet
