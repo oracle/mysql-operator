@@ -43,7 +43,7 @@ Create your cluster and reference it
 apiVersion: mysql.oracle.com/v1alpha1
 kind: Cluster
 metadata:
-  name: example-mysql-cluster-custom-secret
+  name: mysql-cluster-custom-secret
 spec:
   members: 1
   rootPasswordSecret:
@@ -75,7 +75,7 @@ spec:
 apiVersion: mysql.oracle.com/v1alpha1
 kind: Cluster
 metadata:
-  name: example-mysql-cluster-with-volume
+  name: mysql-cluster-with-volume
 spec:
   members: 1
   volumeClaimTemplate:
@@ -132,7 +132,7 @@ spec:
 apiVersion: mysql.oracle.com/v1alpha1
 kind: Cluster
 metadata:
-  name: example-mysql-cluster-with-volume
+  name: mysql-cluster-with-volume
 spec:
   members: 1
   rootPasswordSecret:
