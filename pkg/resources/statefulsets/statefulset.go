@@ -146,13 +146,6 @@ func mysqlRootPassword(cluster *v1alpha1.Cluster) v1.EnvVar {
 	}
 }
 
-func serviceNameEnvVar(serviceName string) v1.EnvVar {
-	return v1.EnvVar{
-		Name:  "MYSQL_CLUSTER_SERVICE_NAME",
-		Value: serviceName,
-	}
-}
-
 func getReplicationGroupSeeds(name string, members int) string {
 	seeds := []string{}
 	for i := 0; i < members; i++ {
@@ -164,9 +157,7 @@ func getReplicationGroupSeeds(name string, members int) string {
 // Builds the MySQL operator container for a cluster.
 // The 'mysqlImage' parameter is the image name of the mysql server to use with
 // no version information.. e.g. 'mysql/mysql-server'
-func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, rootPassword v1.EnvVar, serviceName string, members int, baseServerID uint32) v1.Container {
-	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Namespace, members)
-
+func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, rootPassword v1.EnvVar, members int, baseServerID uint32) v1.Container {
 	args := []string{
 		"--server_id=$(expr $base + $index)",
 		"--datadir=/var/lib/mysql",
@@ -214,11 +205,6 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 		VolumeMounts: volumeMounts(cluster),
 		Command:      []string{"/bin/bash", "-ecx", cmd},
 		Env: []v1.EnvVar{
-			clusterNameEnvVar(cluster),
-			namespaceEnvVar(),
-			serviceNameEnvVar(serviceName),
-			replicationGroupSeedsEnvVar(replicationGroupSeeds),
-			multiMasterEnvVar(cluster.Spec.MultiMaster),
 			rootPassword,
 			{
 				Name:  "MYSQL_ROOT_HOST",
@@ -232,7 +218,7 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 	}
 }
 
-func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, rootPassword v1.EnvVar, serviceName string, members int) v1.Container {
+func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, rootPassword v1.EnvVar, members int) v1.Container {
 	agentVersion := version.GetBuildVersion()
 	if version := os.Getenv("MYSQL_AGENT_VERSION"); version != "" {
 		agentVersion = version
@@ -248,7 +234,6 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 		Env: []v1.EnvVar{
 			clusterNameEnvVar(cluster),
 			namespaceEnvVar(),
-			serviceNameEnvVar(serviceName),
 			replicationGroupSeedsEnvVar(replicationGroupSeeds),
 			multiMasterEnvVar(cluster.Spec.MultiMaster),
 			rootPassword,
@@ -346,8 +331,8 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 	}
 
 	containers := []v1.Container{
-		mysqlServerContainer(cluster, images.MySQLServerImage, rootPassword, serviceName, members, baseServerID),
-		mysqlAgentContainer(cluster, images.MySQLAgentImage, rootPassword, serviceName, members)}
+		mysqlServerContainer(cluster, images.MySQLServerImage, rootPassword, members, baseServerID),
+		mysqlAgentContainer(cluster, images.MySQLAgentImage, rootPassword, members)}
 
 	podLabels := map[string]string{
 		constants.ClusterLabel: cluster.Name,
