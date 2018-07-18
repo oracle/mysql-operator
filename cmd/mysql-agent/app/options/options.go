@@ -96,7 +96,7 @@ func (s *MySQLAgentOpts) Validate() error {
 	if len(s.ClusterName) == 0 {
 		return fmt.Errorf("must set --cluster-name or $MYSQL_CLUSTER_NAME")
 	}
-	if len(s.ClusterName) == 0 {
+	if len(s.Hostname) == 0 {
 		return fmt.Errorf("failed to detect hostname. Set --hostname")
 	}
 	return nil
