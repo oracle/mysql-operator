@@ -32,7 +32,7 @@ import (
 	kubernetes "k8s.io/client-go/kubernetes"
 	rest "k8s.io/client-go/rest"
 
-	options "github.com/oracle/mysql-operator/cmd/mysql-agent/app/options"
+	agentopts "github.com/oracle/mysql-operator/pkg/options/agent"
 	cluster "github.com/oracle/mysql-operator/pkg/cluster"
 	backupcontroller "github.com/oracle/mysql-operator/pkg/controllers/backup"
 	clustermgr "github.com/oracle/mysql-operator/pkg/controllers/cluster/manager"
@@ -49,7 +49,7 @@ const (
 
 // resyncPeriod computes the time interval a shared informer waits before
 // resyncing with the api server.
-func resyncPeriod(opts *options.MySQLAgentOpts) func() time.Duration {
+func resyncPeriod(opts *agentopts.MySQLAgentOpts) func() time.Duration {
 	return func() time.Duration {
 		factor := rand.Float64() + 1
 		return time.Duration(float64(opts.MinResyncPeriod.Nanoseconds()) * factor)
@@ -57,7 +57,7 @@ func resyncPeriod(opts *options.MySQLAgentOpts) func() time.Duration {
 }
 
 // Run runs the MySQL backup controller. It should never exit.
-func Run(opts *options.MySQLAgentOpts) error {
+func Run(opts *agentopts.MySQLAgentOpts) error {
 	kubeconfig, err := rest.InClusterConfig()
 	if err != nil {
 		return err

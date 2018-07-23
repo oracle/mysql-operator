@@ -30,7 +30,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	cache "k8s.io/client-go/tools/cache"
 
-	options "github.com/oracle/mysql-operator/cmd/mysql-operator/app/options"
+	operatoropts "github.com/oracle/mysql-operator/pkg/options/operator"
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/constants"
 	"github.com/oracle/mysql-operator/pkg/controllers/util"
@@ -42,8 +42,8 @@ import (
 	buildversion "github.com/oracle/mysql-operator/pkg/version"
 )
 
-func mockOperatorConfig() options.MySQLOperatorServer {
-	opts := options.MySQLOperatorServer{}
+func mockOperatorConfig() operatoropts.MySQLOperatorOpts {
+	opts := operatoropts.MySQLOperatorOpts{}
 	opts.EnsureDefaults()
 	return opts
 }
