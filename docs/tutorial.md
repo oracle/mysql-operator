@@ -141,7 +141,7 @@ The first thing you need to do is fetch the MySQL root password which is
 auto-generated for us by default and stored in a Secret named `<dbname>-root-password`
 
 ```console
-$ kubectl -n my-namespace get secret my-app-db-root-password -o jsonpath="{.data.password}" | base64 -D
+$ kubectl -n my-namespace get secret my-app-db-root-password -o jsonpath="{.data.password}" | base64 --decode
 ETdmMKh2UuDq9m7y
 ```
 
