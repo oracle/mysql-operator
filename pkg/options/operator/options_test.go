@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package options
+package operator
 
 import (
 	"testing"
@@ -21,12 +21,12 @@ import (
 )
 
 func TestEnsureDefaults(t *testing.T) {
-	server := MySQLOperatorServer{}
+	server := MySQLOperatorOpts{}
 	server.EnsureDefaults()
 	assertRequiredDefaults(t, server)
 }
 
-func assertRequiredDefaults(t *testing.T, s MySQLOperatorServer) {
+func assertRequiredDefaults(t *testing.T, s MySQLOperatorOpts) {
 	if &s == nil {
 		t.Error("MySQLOperatorServer: was nil, expected a valid configuration.")
 	}
@@ -52,16 +52,16 @@ func assertRequiredDefaults(t *testing.T, s MySQLOperatorServer) {
 }
 
 func TestEnsureDefaultsOverrideSafety(t *testing.T) {
-	expected := mockMySQLOperatorServer()
-	ensured := mockMySQLOperatorServer()
+	expected := mockMySQLOperatorOpts()
+	ensured := mockMySQLOperatorOpts()
 	ensured.EnsureDefaults()
 	if expected != ensured {
-		t.Errorf("MySQLOperatorServer.EnsureDefaults() should not modify pre-configured values.")
+		t.Errorf("MySQLOperatorOpts.EnsureDefaults() should not modify pre-configured values.")
 	}
 }
 
-func mockMySQLOperatorServer() MySQLOperatorServer {
-	return MySQLOperatorServer{
+func mockMySQLOperatorOpts() MySQLOperatorOpts {
+	return MySQLOperatorOpts{
 		KubeConfig: "some-kube-config",
 		Master:     "some-master",
 		Hostname:   "some-hostname",

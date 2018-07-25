@@ -26,8 +26,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	agentopts "github.com/oracle/mysql-operator/cmd/mysql-agent/app/options"
-	operatoropts "github.com/oracle/mysql-operator/cmd/mysql-operator/app/options"
+	agentopts "github.com/oracle/mysql-operator/pkg/options/agent"
+	operatoropts "github.com/oracle/mysql-operator/pkg/options/operator"
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/constants"
 	"github.com/oracle/mysql-operator/pkg/resources/secrets"

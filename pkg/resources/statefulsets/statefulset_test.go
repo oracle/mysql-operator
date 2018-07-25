@@ -22,12 +22,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	options "github.com/oracle/mysql-operator/cmd/mysql-operator/app/options"
+	operatoropts "github.com/oracle/mysql-operator/pkg/options/operator"
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 )
 
-func mockOperatorConfig() options.MySQLOperatorServer {
-	opts := options.MySQLOperatorServer{}
+func mockOperatorConfig() operatoropts.MySQLOperatorOpts {
+	opts := operatoropts.MySQLOperatorOpts{}
 	opts.EnsureDefaults()
 	return opts
 }

@@ -50,7 +50,7 @@ import (
 	informersv1alpha1 "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions/mysql/v1alpha1"
 	listersv1alpha1 "github.com/oracle/mysql-operator/pkg/generated/listers/mysql/v1alpha1"
 
-	options "github.com/oracle/mysql-operator/cmd/mysql-operator/app/options"
+	operatoropts "github.com/oracle/mysql-operator/pkg/options/operator"
 	secrets "github.com/oracle/mysql-operator/pkg/resources/secrets"
 	services "github.com/oracle/mysql-operator/pkg/resources/services"
 	statefulsets "github.com/oracle/mysql-operator/pkg/resources/statefulsets"
@@ -80,7 +80,7 @@ const (
 // The MySQLController watches the Kubernetes API for changes to MySQL resources
 type MySQLController struct {
 	// Global MySQLOperator configuration options.
-	opConfig options.MySQLOperatorServer
+	opConfig operatoropts.MySQLOperatorOpts
 
 	kubeClient kubernetes.Interface
 	opClient   clientset.Interface
@@ -138,7 +138,7 @@ type MySQLController struct {
 
 // NewController creates a new MySQLController.
 func NewController(
-	opConfig options.MySQLOperatorServer,
+	opConfig operatoropts.MySQLOperatorOpts,
 	opClient clientset.Interface,
 	kubeClient kubernetes.Interface,
 	clusterInformer informersv1alpha1.ClusterInformer,

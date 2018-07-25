@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package options
+package operator
 
 import (
 	"io/ioutil"
@@ -40,8 +40,8 @@ type Images struct {
 	MySQLAgentImage  string `yaml:"mysqlAgent"`
 }
 
-// MySQLOperatorServer holds the options for the MySQLOperator.
-type MySQLOperatorServer struct {
+// MySQLOperatorOpts holds the options for the MySQLOperator.
+type MySQLOperatorOpts struct {
 	// KubeConfig is the path to a kubeconfig file, specifying how to connect to
 	// the API server.
 	KubeConfig string `yaml:"kubeconfig"`
@@ -65,14 +65,14 @@ type MySQLOperatorServer struct {
 	MinResyncPeriod metav1.Duration `yaml:"minResyncPeriod"`
 }
 
-// NewMySQLOperatorServer will create a new MySQLOperatorServer. If a valid
+// MySQLOperatorOpts will create a new MySQLOperatorOpts. If a valid
 // config file is specified and exists, it will be used to initialise the
 // server. Otherwise, a default server will be created.
 //
 // The values specified by either default may later be customised and overidden
 // by user specified commandline parameters.
-func NewMySQLOperatorServer(filePath string) (*MySQLOperatorServer, error) {
-	var config MySQLOperatorServer
+func NewMySQLOperatorOpts(filePath string) (*MySQLOperatorOpts, error) {
+	var config MySQLOperatorOpts
 	yamlPath, err := filepath.Abs(filePath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to determine MySQLOperator configuration absolute path: '%s'", filePath)
@@ -87,7 +87,7 @@ func NewMySQLOperatorServer(filePath string) (*MySQLOperatorServer, error) {
 			return nil, errors.Wrapf(err, "failed to parse MySQLOperator configuration: '%s'", filePath)
 		}
 	} else {
-		config = MySQLOperatorServer{}
+		config = MySQLOperatorOpts{}
 	}
 	config.EnsureDefaults()
 	return &config, nil
@@ -95,7 +95,7 @@ func NewMySQLOperatorServer(filePath string) (*MySQLOperatorServer, error) {
 
 // EnsureDefaults provides a default configuration when required values have
 // not been set.
-func (s *MySQLOperatorServer) EnsureDefaults() {
+func (s *MySQLOperatorOpts) EnsureDefaults() {
 	if s.Hostname == "" {
 		hostname, err := os.Hostname()
 		if err != nil {
@@ -118,7 +118,7 @@ func (s *MySQLOperatorServer) EnsureDefaults() {
 }
 
 // AddFlags adds the mysql-operator flags to a given FlagSet.
-func (s *MySQLOperatorServer) AddFlags(fs *pflag.FlagSet) *pflag.FlagSet {
+func (s *MySQLOperatorOpts) AddFlags(fs *pflag.FlagSet) *pflag.FlagSet {
 	fs.StringVar(&s.KubeConfig, "kubeconfig", s.KubeConfig, "Path to Kubeconfig file with authorization and master location information.")
 	fs.StringVar(&s.Master, "master", s.Master, "The address of the Kubernetes API server (overrides any value in kubeconfig).")
 	fs.StringVar(&s.Namespace, "namespace", metav1.NamespaceAll, "The namespace for which the MySQL operator manages MySQL clusters. Defaults to all.")

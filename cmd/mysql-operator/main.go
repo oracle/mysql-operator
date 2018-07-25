@@ -26,7 +26,7 @@ import (
 	"k8s.io/apiserver/pkg/util/logs"
 
 	"github.com/oracle/mysql-operator/cmd/mysql-operator/app"
-	"github.com/oracle/mysql-operator/cmd/mysql-operator/app/options"
+	operatoropts "github.com/oracle/mysql-operator/pkg/options/operator"
 	"github.com/oracle/mysql-operator/pkg/version"
 )
 
@@ -38,7 +38,7 @@ const (
 func main() {
 	fmt.Fprintf(os.Stderr, "Starting mysql-operator version '%s'\n", version.GetBuildVersion())
 
-	opts, err := options.NewMySQLOperatorServer(configPath)
+	opts, err := operatoropts.NewMySQLOperatorOpts(configPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error reading config: %v\n", err)
 		os.Exit(1)

@@ -26,14 +26,14 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/oracle/mysql-operator/cmd/mysql-agent/app"
-	"github.com/oracle/mysql-operator/cmd/mysql-agent/app/options"
+	agentopts "github.com/oracle/mysql-operator/pkg/options/agent"
 	"github.com/oracle/mysql-operator/pkg/version"
 )
 
 func main() {
 	fmt.Fprintf(os.Stderr, "Starting mysql-agent version %s\n", version.GetBuildVersion())
 
-	opts := options.NewMySQLAgentOpts()
+	opts := agentopts.NewMySQLAgentOpts()
 
 	opts.AddFlags(pflag.CommandLine)
 	pflag.CommandLine.SetNormalizeFunc(utilflag.WordSepNormalizeFunc)
