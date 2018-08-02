@@ -16,6 +16,8 @@ package framework
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -59,6 +61,8 @@ type Framework struct {
 	// we install a Cleanup action before each test and clear it after.  If we
 	// should abort, the AfterSuite hook should run all Cleanup actions.
 	cleanupHandle CleanupActionHandle
+
+	werckerReportArtifactsDir string
 }
 
 // NewDefaultFramework constructs a new e2e test Framework with default options.
@@ -70,8 +74,9 @@ func NewDefaultFramework(baseName string) *Framework {
 // NewFramework constructs a new e2e test Framework.
 func NewFramework(baseName string, client clientset.Interface) *Framework {
 	f := &Framework{
-		BaseName:  baseName,
-		ClientSet: client,
+		BaseName:                  baseName,
+		ClientSet:                 client,
+		werckerReportArtifactsDir: os.Getenv("WERCKER_REPORT_ARTIFACTS_DIR"),
 	}
 
 	BeforeEach(f.BeforeEach)
@@ -248,6 +253,10 @@ func (f *Framework) BeforeEach() {
 func (f *Framework) AfterEach() {
 	RemoveCleanupAction(f.cleanupHandle)
 
+	if err := f.outputLogs(); err != nil {
+		Logf("Failed to output container logs: %v", err)
+	}
+
 	nsDeletionErrors := map[string]error{}
 
 	// Whether to delete namespace is determined by 3 factors: delete-namespace flag, delete-namespace-on-failure flag and the test result
@@ -271,4 +280,83 @@ func (f *Framework) AfterEach() {
 		Failf(strings.Join(messages, ","))
 	}
 	f.OperatorInstalled = false
+}
+
+func (f *Framework) outputLogs() error {
+	pods, err := f.ClientSet.CoreV1().Pods(f.Namespace.Name).List(metav1.ListOptions{})
+	if err != nil {
+		return errors.Wrap(err, "listing test Pods")
+	}
+
+	var opPod v1.Pod
+	var agPods []v1.Pod
+	for _, pod := range pods.Items {
+		if strings.Contains(pod.Spec.Containers[0].Image, "mysql-operator") {
+			opPod = pod
+			continue
+		}
+		if strings.Contains(pod.Spec.Containers[0].Image, "mysql-agent") || strings.Contains(pod.Spec.Containers[0].Image, "mysql-server") {
+			agPods = append(agPods, pod)
+		}
+	}
+
+	// Operator Logs
+	if opPod.Name != "" {
+		if err := f.printContainerLogs(opPod.GetName(), &v1.PodLogOptions{}); err != nil {
+			return errors.Wrapf(err, "exporting mysql operator container logs for %s", opPod.GetName())
+		}
+	} else {
+		Logf("MySQL Operator Pod could not be found. Logs have not been exported.")
+	}
+
+	for _, agPod := range agPods {
+		// Server Logs
+		if err := f.printContainerLogs(agPod.GetName(), &v1.PodLogOptions{Container: "mysql"}); err != nil {
+			return errors.Wrapf(err, "exporting mysql server container logs for %s", agPod.GetName())
+		}
+		// Agent Logs
+		if err := f.printContainerLogs(agPod.GetName(), &v1.PodLogOptions{Container: "mysql-agent"}); err != nil {
+			return errors.Wrapf(err, "exporting mysql agent container logs for %s", agPod.GetName())
+		}
+	}
+
+	return nil
+}
+
+func (f *Framework) printLogs(read io.ReadCloser, filepath string) error {
+	defer read.Close()
+	dst := os.Stdout
+	if f.werckerReportArtifactsDir != "" {
+		file, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, 0666)
+		if err != nil {
+			return errors.Wrapf(err, "opening log file %q", filepath)
+		}
+		dst = file
+		defer dst.Close()
+	}
+	_, err := io.Copy(dst, read)
+	if err != nil {
+		var s string
+		if filepath != "" {
+			s = filepath
+		} else {
+			s = "stdout"
+		}
+		return errors.Wrapf(err, "writing logs to %q", s)
+	}
+	return nil
+}
+
+func (f *Framework) printContainerLogs(podName string, options *v1.PodLogOptions) error {
+	podLogs := f.ClientSet.CoreV1().Pods(f.Namespace.Name).GetLogs(podName, options)
+	if podLogs != nil {
+		Logf("Writing %s container logs to file for %s", options.Container, podName)
+		read, err := podLogs.Stream()
+		if err != nil {
+			return errors.Wrapf(err, "streaming request response for %s", podName)
+		}
+		f.printLogs(read, fmt.Sprintf("%s/%s%s", f.werckerReportArtifactsDir, podName, ".log"))
+		Logf("Finished writing %s container logs for %s", options.Container, podName)
+	}
+	return nil
 }
