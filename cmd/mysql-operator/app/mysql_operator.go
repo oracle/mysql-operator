@@ -28,13 +28,13 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
-	operatoropts "github.com/oracle/mysql-operator/pkg/options/operator"
 	backupcontroller "github.com/oracle/mysql-operator/pkg/controllers/backup"
 	backupschedule "github.com/oracle/mysql-operator/pkg/controllers/backup/schedule"
 	cluster "github.com/oracle/mysql-operator/pkg/controllers/cluster"
 	restorecontroller "github.com/oracle/mysql-operator/pkg/controllers/restore"
 	clientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 	informers "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions"
+	operatoropts "github.com/oracle/mysql-operator/pkg/options/operator"
 	metrics "github.com/oracle/mysql-operator/pkg/util/metrics"
 	signals "github.com/oracle/mysql-operator/pkg/util/signals"
 )
