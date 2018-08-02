@@ -32,13 +32,13 @@ import (
 	kubernetes "k8s.io/client-go/kubernetes"
 	rest "k8s.io/client-go/rest"
 
-	agentopts "github.com/oracle/mysql-operator/pkg/options/agent"
 	cluster "github.com/oracle/mysql-operator/pkg/cluster"
 	backupcontroller "github.com/oracle/mysql-operator/pkg/controllers/backup"
 	clustermgr "github.com/oracle/mysql-operator/pkg/controllers/cluster/manager"
 	restorecontroller "github.com/oracle/mysql-operator/pkg/controllers/restore"
 	clientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 	informers "github.com/oracle/mysql-operator/pkg/generated/informers/externalversions"
+	agentopts "github.com/oracle/mysql-operator/pkg/options/agent"
 	metrics "github.com/oracle/mysql-operator/pkg/util/metrics"
 	signals "github.com/oracle/mysql-operator/pkg/util/signals"
 )
