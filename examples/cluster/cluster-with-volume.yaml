@@ -21,7 +21,7 @@ metadata:
   name: mysql
 spec:
   members: 1
-  secretRef:
+  rootPasswordSecret:
     name: mysql-root-user-secret
   volumeClaimTemplate:
     metadata:

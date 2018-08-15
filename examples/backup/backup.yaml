@@ -14,5 +14,5 @@ spec:
       bucket:   mybucket
       credentialsSecret:
         name: s3-credentials
-  clusterRef:
+  cluster:
     name: mysql
