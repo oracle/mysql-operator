@@ -71,6 +71,7 @@ rules:
     - mysqlbackups
     - mysqlbackupschedules
     - mysqlclusters
+    - mysqlclusters/finalizers
     - mysqlrestores
     verbs:
     - get
@@ -115,6 +116,7 @@ rules:
     - mysqlbackups
     - mysqlbackupschedules
     - mysqlclusters
+    - mysqlclusters/finalizers
     - mysqlrestores
     verbs:
     - get
