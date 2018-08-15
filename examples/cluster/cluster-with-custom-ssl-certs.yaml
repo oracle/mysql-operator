@@ -4,5 +4,5 @@ metadata:
   name: mysql
 spec:
   members: 3
-  sslSecretRef:
+  sslSecret:
     name: mysql-ssl-secret

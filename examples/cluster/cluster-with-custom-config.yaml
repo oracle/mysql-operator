@@ -4,5 +4,5 @@ metadata:
   name: mysql
 spec:
   members: 1
-  configRef:
+  config:
     name: mycnf

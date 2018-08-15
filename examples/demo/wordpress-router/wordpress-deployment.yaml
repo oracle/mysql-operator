@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
       - name: mysqlrouter
-        image: mysql/mysql-router:8.0.11
+        image: mysql/mysql-router:8.0.12
         env:
         - name: MYSQL_PASSWORD
           valueFrom:
@@ -48,7 +48,7 @@ spec:
         - "-cx"
         - "exec /run.sh mysqlrouter"
       - name: wordpress
-        image: wordpress:4.9.0-apache
+        image: wordpress:4.9-php7.2-apache
         env:
         - name: WORDPRESS_DB_HOST
           value: 127.0.0.1:6446

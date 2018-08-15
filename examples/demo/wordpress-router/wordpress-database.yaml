@@ -21,7 +21,7 @@ metadata:
   name: mysql-wordpress
 spec:
   members: 3
-  configRef:
+  config:
     name: mysql-config
-  secretRef:
+  rootPasswordSecret:
     name: wordpress-mysql-root-password
