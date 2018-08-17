@@ -19,6 +19,8 @@ import (
 	"strings"
 	"time"
 
+	apps "k8s.io/api/apps/v1beta1"
+	"k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -35,6 +37,7 @@ import (
 	"github.com/oracle/mysql-operator/pkg/controllers/cluster/labeler"
 	mysqlclientset "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"
 	"github.com/oracle/mysql-operator/pkg/resources/secrets"
+	"github.com/oracle/mysql-operator/pkg/resources/statefulsets"
 )
 
 // TestDBName is the name of database to use when executing test SQL queries.
@@ -112,7 +115,7 @@ func (j *ClusterTestJig) CreateAndAwaitClusterOrFail(namespace string, members i
 	return cluster
 }
 
-func (j *ClusterTestJig) waitForConditionOrFail(namespace, name string, timeout time.Duration, message string, conditionFn func(*v1alpha1.Cluster) bool) *v1alpha1.Cluster {
+func (j *ClusterTestJig) WaitForConditionOrFail(namespace, name string, timeout time.Duration, message string, conditionFn func(*v1alpha1.Cluster) bool) *v1alpha1.Cluster {
 	var cluster *v1alpha1.Cluster
 	pollFunc := func() (bool, error) {
 		c, err := j.MySQLClient.MySQLV1alpha1().Clusters(namespace).Get(name, metav1.GetOptions{})
@@ -135,10 +138,97 @@ func (j *ClusterTestJig) waitForConditionOrFail(namespace, name string, timeout 
 // the running phase.
 func (j *ClusterTestJig) WaitForClusterReadyOrFail(namespace, name string, timeout time.Duration) *v1alpha1.Cluster {
 	Logf("Waiting up to %v for Cluster \"%s/%s\" to be ready", timeout, namespace, name)
-	cluster := j.waitForConditionOrFail(namespace, name, timeout, "have all nodes ready", func(cluster *v1alpha1.Cluster) bool {
+	cluster := j.WaitForConditionOrFail(namespace, name, timeout, "have all nodes ready", func(cluster *v1alpha1.Cluster) bool {
 		return clusterutil.IsClusterReady(cluster)
 	})
 	return cluster
+}
+
+// WaitForClusterUpgradedOrFail waits for a MySQL cluster to be upgraded to the
+// given version or fails.
+func (j *ClusterTestJig) WaitForClusterUpgradedOrFail(namespace, name, version string, timeout time.Duration) *v1alpha1.Cluster {
+	Logf("Waiting up to %v for Cluster \"%s/%s\" to be upgraded", timeout, namespace, name)
+
+	cluster := j.WaitForConditionOrFail(namespace, name, timeout, "be upgraded ", func(cluster *v1alpha1.Cluster) bool {
+		set, err := j.KubeClient.AppsV1beta1().StatefulSets(cluster.Namespace).Get(cluster.Name, metav1.GetOptions{})
+		if err != nil {
+			Failf("Failed to get StatefulSet %[1]q for Cluster %[1]q: %[2]v", name, err)
+		}
+
+		set = j.waitForSSRollingUpdate(set)
+
+		var actualVersion string
+		{
+			var found bool
+			var index int
+			for i, c := range set.Spec.Template.Spec.Containers {
+				if c.Name == statefulsets.MySQLServerName {
+					index = i
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				Failf("no %q container found for StatefulSet %q", statefulsets.MySQLServerName, set.Name)
+			}
+			image := set.Spec.Template.Spec.Containers[index].Image
+			parts := strings.Split(image, ":")
+			if len(parts) < 2 {
+				Failf("invalid image %q for StatefulSet %q", image, set.Name)
+			}
+			actualVersion = parts[len(parts)-1]
+		}
+
+		return actualVersion == version
+	})
+	return cluster
+}
+
+// waitForSSState periodically polls for the ss and its pods until the until function returns either true or an error
+func (j *ClusterTestJig) waitForSSState(ss *apps.StatefulSet, until func(*apps.StatefulSet, *v1.PodList) (bool, error)) {
+	pollErr := wait.PollImmediate(Poll, DefaultTimeout,
+		func() (bool, error) {
+			ssGet, err := j.KubeClient.AppsV1beta1().StatefulSets(ss.Namespace).Get(ss.Name, metav1.GetOptions{})
+			if err != nil {
+				return false, err
+			}
+
+			selector, err := metav1.LabelSelectorAsSelector(ss.Spec.Selector)
+			ExpectNoError(err)
+			podList, err := j.KubeClient.CoreV1().Pods(ss.Namespace).List(metav1.ListOptions{LabelSelector: selector.String()})
+			ExpectNoError(err)
+
+			return until(ssGet, podList)
+		})
+	if pollErr != nil {
+		Failf("Failed waiting for state update: %v", pollErr)
+	}
+}
+
+// waitForRollingUpdate waits for all Pods in set to exist and have the correct revision and for the RollingUpdate to
+// complete. set must have a RollingUpdateStatefulSetStrategyType.
+func (j *ClusterTestJig) waitForSSRollingUpdate(set *apps.StatefulSet) *apps.StatefulSet {
+	var pods *v1.PodList
+	if set.Spec.UpdateStrategy.Type != apps.RollingUpdateStatefulSetStrategyType {
+		Failf("StatefulSet %s/%s attempt to wait for rolling update with updateStrategy %s",
+			set.Namespace,
+			set.Name,
+			set.Spec.UpdateStrategy.Type)
+	}
+	Logf("Waiting for StatefulSet %s/%s to complete update", set.Namespace, set.Name)
+	j.waitForSSState(set, func(set2 *apps.StatefulSet, pods2 *v1.PodList) (bool, error) {
+		set = set2
+		pods = pods2
+		if len(pods.Items) < int(*set.Spec.Replicas) {
+			return false, nil
+		}
+		if set.Status.UpdateRevision != set.Status.CurrentRevision {
+			return false, nil
+		}
+		return true, nil
+	})
+	return set
 }
 
 // SanityCheckCluster checks basic properties of a given Cluster match

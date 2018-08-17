@@ -378,6 +378,9 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 					Volumes:            podVolumes,
 				},
 			},
+			UpdateStrategy: apps.StatefulSetUpdateStrategy{
+				Type: apps.RollingUpdateStatefulSetStrategyType,
+			},
 			ServiceName: serviceName,
 		},
 	}
