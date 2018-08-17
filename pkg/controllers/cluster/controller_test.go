@@ -30,6 +30,9 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	cache "k8s.io/client-go/tools/cache"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/constants"
 	"github.com/oracle/mysql-operator/pkg/controllers/util"
@@ -41,6 +44,76 @@ import (
 	statefulsets "github.com/oracle/mysql-operator/pkg/resources/statefulsets"
 	buildversion "github.com/oracle/mysql-operator/pkg/version"
 )
+
+func TestGetMySQLContainerIndex(t *testing.T) {
+	testCases := map[string]struct {
+		containers []v1.Container
+		index      int
+		errors     bool
+	}{
+		"empty_errors": {
+			containers: []v1.Container{},
+			errors:     true,
+		},
+		"mysql_server_only": {
+			containers: []v1.Container{{Name: "mysql"}},
+			index:      0,
+		},
+		"mysql_server_and_agent": {
+			containers: []v1.Container{{Name: "mysql-agent"}, {Name: "mysql"}},
+			index:      1,
+		},
+		"mysql_agent_only": {
+			containers: []v1.Container{{Name: "mysql-agent"}},
+			errors:     true,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			index, err := getMySQLContainerIndex(tc.containers)
+			if tc.errors {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, index, tc.index)
+			}
+		})
+	}
+}
+
+func TestSplitImage(t *testing.T) {
+	testCases := map[string]struct {
+		image   string
+		name    string
+		version string
+		errors  bool
+	}{
+		"8.0.11": {
+			image:   "mysql/mysql-server:8.0.11",
+			name:    "mysql/mysql-server",
+			version: "8.0.11",
+			errors:  false,
+		},
+		"invalid": {
+			image:  "mysql/mysql-server",
+			errors: true,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			name, version, err := splitImage(tc.image)
+			if tc.errors {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, name, tc.name)
+				assert.Equal(t, version, tc.version)
+			}
+		})
+	}
+}
 
 func mockOperatorConfig() operatoropts.MySQLOperatorOpts {
 	opts := operatoropts.MySQLOperatorOpts{}

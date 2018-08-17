@@ -427,29 +427,34 @@ func (m *MySQLController) syncHandler(key string) error {
 	return nil
 }
 
-func (m *MySQLController) ensureMySQLVersion(c *v1alpha1.Cluster, ss *apps.StatefulSet) error {
-	var index int
-	{
-		var found bool
-		for i, c := range ss.Spec.Template.Spec.Containers {
-			if c.Name == statefulsets.MySQLServerName {
-				index = i
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			return errors.Errorf("no %q container found for StatefulSet %q", statefulsets.MySQLServerName, ss.Name)
+func getMySQLContainerIndex(containers []corev1.Container) (int, error) {
+	for i, c := range containers {
+		if c.Name == statefulsets.MySQLServerName {
+			return i, nil
 		}
 	}
 
-	image := ss.Spec.Template.Spec.Containers[index].Image
+	return 0, errors.Errorf("no %q container found", statefulsets.MySQLServerName)
+}
+
+// splitImage splits an image into its name and version.
+func splitImage(image string) (string, string, error) {
 	parts := strings.Split(image, ":")
 	if len(parts) < 2 {
-		return errors.Errorf("invalid image %q for StatefulSet %q", image, ss.Name)
+		return "", "", errors.Errorf("invalid image %q", image)
 	}
-	actualVersion := parts[len(parts)-1]
+	return strings.Join(parts[:len(parts)-1], ""), parts[len(parts)-1], nil
+}
+
+func (m *MySQLController) ensureMySQLVersion(c *v1alpha1.Cluster, ss *apps.StatefulSet) error {
+	index, err := getMySQLContainerIndex(ss.Spec.Template.Spec.Containers)
+	if err != nil {
+		return errors.Wrapf(err, "getting MySQL container for StatefulSet %q", ss.Name)
+	}
+	imageName, actualVersion, err := splitImage(ss.Spec.Template.Spec.Containers[index].Image)
+	if err != nil {
+		return errors.Wrapf(err, "getting MySQL version for StatefulSet %q", ss.Name)
+	}
 
 	actual, err := semver.NewVersion(actualVersion)
 	if err != nil {
@@ -468,10 +473,7 @@ func (m *MySQLController) ensureMySQLVersion(c *v1alpha1.Cluster, ss *apps.State
 	}
 
 	updated := ss.DeepCopy()
-
-	updated.Spec.Template.Spec.Containers[index].Image = fmt.Sprintf(
-		"%s:%s", strings.Join(parts[:len(parts)-1], ""), expected.String(),
-	)
+	updated.Spec.Template.Spec.Containers[index].Image = fmt.Sprintf("%s:%s", imageName, c.Spec.Version)
 	// NOTE: We do this as previously we defaulted to the OnDelete strategy
 	// so clusters created with previous versions would not support upgrades.
 	updated.Spec.UpdateStrategy = apps.StatefulSetUpdateStrategy{
