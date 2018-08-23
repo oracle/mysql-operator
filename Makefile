@@ -24,24 +24,9 @@ endif
 PKG             := github.com/oracle/mysql-operator
 REGISTRY        := iad.ocir.io
 SRC_DIRS        := cmd pkg test/examples
-CMD_DIRECTORIES := $(sort $(dir $(wildcard ./cmd/*/)))
-COMMANDS        := $(CMD_DIRECTORIES:./cmd/%/=%)
 
 ARCH    ?= amd64
 OS      ?= linux
-UNAME_S := $(shell uname -s)
-
-ifeq ($(UNAME_S),Darwin)
-	# Cross-compiling from OSX to linux, go install puts the binaries in $GOPATH/bin/$GOOS_$GOARCH
-    BINARIES := $(addprefix $(GOPATH)/bin/$(OS)_$(ARCH)/,$(COMMANDS))
-else
-ifeq ($(UNAME_S),Linux)
-	# Compiling on linux for linux, go install puts the binaries in $GOPATH/bin
-    BINARIES := $(addprefix $(GOPATH)/bin/,$(COMMANDS))
-else
-	$(error "Unsupported OS: $(UNAME_S)")
-endif
-endif
 
 .PHONY: all
 all: build
@@ -65,10 +50,15 @@ dist: build-dirs
 
 .PHONY: build
 build: dist build-dirs Makefile
-	@echo "Building: $(BINARIES)"
 	@touch pkg/version/version.go # Important. Work around for https://github.com/golang/go/issues/18369
-	ARCH=$(ARCH) OS=$(OS) VERSION=$(VERSION) PKG=$(PKG) ./hack/build.sh
-	cp $(BINARIES) ./bin/$(OS)_$(ARCH)/
+	@echo "Building mysql-operator"
+	@GOOS=${OS} GOARCH=${ARCH} go build -i -v -o bin/mysql-operator -installsuffix "static" \
+	    -ldflags "-X main.version=${VERSION} -X main.build=${BUILD}" \
+	    ./cmd/mysql-operator/
+	@echo "Building mysql-agent"
+	@GOOS=${OS} GOARCH=${ARCH} go build -i -v -o bin/mysql-agent -installsuffix "static" \
+	    -ldflags "-X main.version=${VERSION} -X main.build=${BUILD}" \
+	    ./cmd/mysql-agent/
 
 .PHONY: build-docker
 build-docker:
