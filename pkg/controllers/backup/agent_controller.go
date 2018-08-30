@@ -127,7 +127,19 @@ func NewAgentController(
 		cache.ResourceEventHandlerFuncs{
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				new := newObj.(*v1alpha1.Backup)
-				_, cond := backuputil.GetBackupCondition(&new.Status, v1alpha1.BackupScheduled)
+
+				_, cond := backuputil.GetBackupCondition(&new.Status, v1alpha1.BackupComplete)
+				if cond != nil && cond.Status == corev1.ConditionTrue {
+					glog.V(2).Infof("Backup %q is Complete, skipping.", kubeutil.NamespaceAndName(new))
+					return
+				}
+				_, cond = backuputil.GetBackupCondition(&new.Status, v1alpha1.BackupRunning)
+				if cond != nil && cond.Status == corev1.ConditionTrue {
+					glog.V(2).Infof("Backup %q is Running, skipping.", kubeutil.NamespaceAndName(new))
+					return
+				}
+
+				_, cond = backuputil.GetBackupCondition(&new.Status, v1alpha1.BackupScheduled)
 				if cond != nil && cond.Status == corev1.ConditionTrue && new.Spec.ScheduledMember == c.podName {
 					key, err := cache.MetaNamespaceKeyFunc(new)
 					if err != nil {
@@ -341,6 +353,16 @@ func (controller *AgentController) performBackup(backup *v1alpha1.Backup, creds 
 	}
 
 	finished := time.Now()
+
+	// Get (updated) resource from store.
+	backup, err = controller.backupLister.Backups(backup.GetNamespace()).Get(backup.GetName())
+	if err != nil {
+		return errors.Wrap(err, "error getting Backup")
+	}
+	// Don't modify items in the cache.
+	backup = backup.DeepCopy()
+	// Set defaults (incl. operator version label).
+	backup = backup.EnsureDefaults()
 
 	backup.Status.TimeStarted = metav1.Time{Time: started}
 	backup.Status.TimeCompleted = metav1.Time{Time: finished}
