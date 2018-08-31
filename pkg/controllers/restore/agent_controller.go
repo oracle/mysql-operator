@@ -137,7 +137,20 @@ func NewAgentController(
 		cache.ResourceEventHandlerFuncs{
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				new := newObj.(*v1alpha1.Restore)
-				_, cond := restoreutil.GetRestoreCondition(&new.Status, v1alpha1.RestoreScheduled)
+
+				_, cond := restoreutil.GetRestoreCondition(&new.Status, v1alpha1.RestoreComplete)
+				if cond != nil && cond.Status == corev1.ConditionTrue {
+					glog.V(2).Infof("Restore %q is Complete, skipping.", kubeutil.NamespaceAndName(new))
+					return
+				}
+
+				_, cond = restoreutil.GetRestoreCondition(&new.Status, v1alpha1.RestoreRunning)
+				if cond != nil && cond.Status == corev1.ConditionTrue {
+					glog.V(2).Infof("Restore %q is Running, skipping.", kubeutil.NamespaceAndName(new))
+					return
+				}
+
+				_, cond = restoreutil.GetRestoreCondition(&new.Status, v1alpha1.RestoreScheduled)
 				if cond != nil && cond.Status == corev1.ConditionTrue && new.Spec.ScheduledMember == c.podName {
 					key, err := cache.MetaNamespaceKeyFunc(new)
 					if err != nil {
@@ -147,8 +160,8 @@ func NewAgentController(
 					c.queue.Add(key)
 					return
 				}
-				glog.V(4).Infof("Restore %q is not Scheduled on this agent")
 
+				glog.V(4).Infof("Restore %q is not Scheduled on this agent")
 			},
 		},
 	)

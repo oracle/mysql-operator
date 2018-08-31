@@ -72,9 +72,9 @@ func (csu *clusterUpdater) UpdateClusterLabels(cluster *v1alpha1.Cluster, lbls l
 		key := fmt.Sprintf("%s/%s", cluster.GetNamespace(), cluster.GetName())
 		glog.V(4).Infof("Conflict updating Cluster labels. Getting updated Cluster %s from cache...", key)
 
-		updated, err := csu.lister.Clusters(cluster.GetNamespace()).Get(cluster.GetName())
+		updated, err := csu.lister.Clusters(cluster.Namespace).Get(cluster.Name)
 		if err != nil {
-			glog.Errorf("Error getting updated Cluster %s: %v", key, err)
+			glog.Errorf("Error getting updated Cluster %q: %v", key, err)
 			return err
 		}
 
