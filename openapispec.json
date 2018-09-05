@@ -1,0 +1,475 @@
+{
+  "swagger": "2.0",
+  "info": {
+   "title": "OpenAPI Doc Generator",
+   "version": "0.0.1"
+  },
+  "paths": {},
+  "definitions": {
+   "typedir.Backup": {
+    "description": "Backup is a backup of a Cluster.",
+    "required": [
+     "spec",
+     "status"
+    ],
+    "properties": {
+     "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+      "type": "string"
+     },
+     "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+      "type": "string"
+     },
+     "spec": {
+      "$ref": "#/definitions/typedir.BackupSpec"
+     },
+     "status": {
+      "$ref": "#/definitions/typedir.BackupStatus"
+     }
+    }
+   },
+   "typedir.BackupCondition": {
+    "description": "BackupCondition describes the observed state of a Backup at a certain point.",
+    "required": [
+     "type",
+     "status"
+    ],
+    "properties": {
+     "message": {
+      "type": "string"
+     },
+     "reason": {
+      "description": "\n\tLastTransitionTime metav1.Time `json:\"lastTransitionTime\"`",
+      "type": "string"
+     },
+     "status": {
+      "type": "string"
+     },
+     "type": {
+      "type": "string"
+     }
+    }
+   },
+   "typedir.BackupExecutor": {
+    "description": "BackupExecutor represents the configuration of the tool performing the backup. This includes the tool to use, and, what database and tables should be backed up. The storage of the backup is configured in the relevant Storage configuration.",
+    "required": [
+     "mySQLDump"
+    ],
+    "properties": {
+     "mySQLDump": {
+      "$ref": "#/definitions/typedir.MySQLDumpBackupExecutor"
+     }
+    }
+   },
+   "typedir.BackupList": {
+    "description": "BackupList is a list of Backups.",
+    "required": [
+     "items"
+    ],
+    "properties": {
+     "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+      "type": "string"
+     },
+     "items": {
+      "type": "array",
+      "items": {
+       "$ref": "#/definitions/typedir.Backup"
+      }
+     },
+     "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+      "type": "string"
+     }
+    }
+   },
+   "typedir.BackupOutcome": {
+    "description": "BackupOutcome describes the location of a Backup",
+    "required": [
+     "location"
+    ],
+    "properties": {
+     "location": {
+      "description": "Location is the Object Storage network location of the Backup.",
+      "type": "string"
+     }
+    }
+   },
+   "typedir.BackupSchedule": {
+    "description": "BackupSchedule is a backup schedule for a Cluster.",
+    "required": [
+     "spec"
+    ],
+    "properties": {
+     "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+      "type": "string"
+     },
+     "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+      "type": "string"
+     },
+     "spec": {
+      "$ref": "#/definitions/typedir.BackupScheduleSpec"
+     },
+     "status": {
+      "$ref": "#/definitions/typedir.ScheduleStatus"
+     }
+    }
+   },
+   "typedir.BackupScheduleList": {
+    "description": "BackupScheduleList is a list of BackupSchedules.",
+    "required": [
+     "items"
+    ],
+    "properties": {
+     "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+      "type": "string"
+     },
+     "items": {
+      "type": "array",
+      "items": {
+       "$ref": "#/definitions/typedir.BackupSchedule"
+      }
+     },
+     "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+      "type": "string"
+     }
+    }
+   },
+   "typedir.BackupScheduleSpec": {
+    "description": "BackupScheduleSpec defines the specification for a MySQL backup schedule.",
+    "required": [
+     "schedule",
+     "backupTemplate"
+    ],
+    "properties": {
+     "backupTemplate": {
+      "description": "BackupTemplate is the specification of the backup structure to get scheduled.",
+      "$ref": "#/definitions/typedir.BackupSpec"
+     },
+     "schedule": {
+      "description": "Schedule specifies the cron string used for backup scheduling.",
+      "type": "string"
+     }
+    }
+   },
+   "typedir.BackupSpec": {
+    "description": "BackupSpec defines the specification for a MySQL backup. This includes what should be backed up, what tool should perform the backup, and, where the backup should be stored.",
+    "required": [
+     "executor",
+     "storageProvider",
+     "scheduledMember"
+    ],
+    "properties": {
+     "executor": {
+      "description": "Executor is the configuration of the tool that will produce the backup, and a definition of what databases and tables to backup.",
+      "$ref": "#/definitions/typedir.BackupExecutor"
+     },
+     "scheduledMember": {
+      "description": "Cluster is the Cluster to backup.\n\tCluster *corev1.LocalObjectReference `json:\"cluster\"`\nScheduledMember is the Pod name of the Cluster member on which the Backup will be executed.",
+      "type": "string"
+     },
+     "storageProvider": {
+      "description": "StorageProvider configures where and how backups should be stored.",
+      "$ref": "#/definitions/typedir.StorageProvider"
+     }
+    }
+   },
+   "typedir.BackupStatus": {
+    "description": "BackupStatus captures the current status of a Backup.",
+    "properties": {
+     "conditions": {
+      "description": "\n\t// TimeStarted is the time at which the backup was started.\n\tTimeStarted metav1.Time `json:\"timeStarted\"`\n\t// TimeCompleted is the time at which the backup completed.\n\tTimeCompleted metav1.Time `json:\"timeCompleted\"`",
+      "type": "array",
+      "items": {
+       "$ref": "#/definitions/typedir.BackupCondition"
+      }
+     },
+     "outcome": {
+      "description": "Outcome holds the results of a successful backup.",
+      "$ref": "#/definitions/typedir.BackupOutcome"
+     }
+    }
+   },
+   "typedir.Cluster": {
+    "description": "Cluster represents a cluster spec and associated metadata",
+    "required": [
+     "spec",
+     "status"
+    ],
+    "properties": {
+     "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+      "type": "string"
+     },
+     "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+      "type": "string"
+     },
+     "spec": {
+      "$ref": "#/definitions/typedir.ClusterSpec"
+     },
+     "status": {
+      "$ref": "#/definitions/typedir.ClusterStatus"
+     }
+    }
+   },
+   "typedir.ClusterCondition": {
+    "description": "ClusterCondition describes the observed state of a Cluster at a certain point.",
+    "required": [
+     "type",
+     "status"
+    ],
+    "properties": {
+     "message": {
+      "type": "string"
+     },
+     "reason": {
+      "description": "\n\tLastTransitionTime metav1.Time `json:\"lastTransitionTime\"`",
+      "type": "string"
+     },
+     "status": {
+      "type": "string"
+     },
+     "type": {
+      "type": "string"
+     }
+    }
+   },
+   "typedir.ClusterList": {
+    "description": "ClusterList is a placeholder type for a list of MySQL clusters",
+    "required": [
+     "items"
+    ],
+    "properties": {
+     "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+      "type": "string"
+     },
+     "items": {
+      "type": "array",
+      "items": {
+       "$ref": "#/definitions/typedir.Cluster"
+      }
+     },
+     "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+      "type": "string"
+     }
+    }
+   },
+   "typedir.ClusterSpec": {
+    "description": "ClusterSpec defines the attributes a user can specify when creating a cluster",
+    "required": [
+     "version"
+    ],
+    "properties": {
+     "baseServerID": {
+      "description": "BaseServerID defines the base number used to create unique server_id for MySQL instances in the cluster. Valid range 1 to 4294967286. If omitted in the manifest file (or set to 0) defaultBaseServerID value will be used.",
+      "type": "integer",
+      "format": "int64"
+     },
+     "members": {
+      "description": "Members defines the number of MySQL instances in a cluster",
+      "type": "integer",
+      "format": "int32"
+     },
+     "multiMaster": {
+      "description": "MultiMaster defines the mode of the MySQL cluster. If set to true, all instances will be R/W. If false (the default), only a single instance will be R/W and the rest will be R/O.",
+      "type": "boolean"
+     },
+     "nodeSelector": {
+      "description": "NodeSelector is a selector which must be true for the pod to fit on a node. Selector which must match a node's labels for the pod to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/",
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
+     "version": {
+      "description": "Version defines the MySQL Docker image version.",
+      "type": "string"
+     }
+    }
+   },
+   "typedir.ClusterStatus": {
+    "description": "ClusterStatus defines the current status of a MySQL cluster propagating useful information back to the cluster admin",
+    "properties": {
+     "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+      "type": "string"
+     },
+     "conditions": {
+      "type": "array",
+      "items": {
+       "$ref": "#/definitions/typedir.ClusterCondition"
+      }
+     },
+     "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+      "type": "string"
+     }
+    }
+   },
+   "typedir.Database": {
+    "description": "Database represents a database to backup.",
+    "required": [
+     "name"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     }
+    }
+   },
+   "typedir.MySQLDumpBackupExecutor": {
+    "description": "MySQLDumpBackupExecutor executes backups using mysqldump.",
+    "required": [
+     "databases"
+    ],
+    "properties": {
+     "databases": {
+      "type": "array",
+      "items": {
+       "$ref": "#/definitions/typedir.Database"
+      }
+     }
+    }
+   },
+   "typedir.Restore": {
+    "description": "Restore is a MySQL Operator resource that represents the restoration of backup of a MySQL cluster.",
+    "required": [
+     "spec",
+     "status"
+    ],
+    "properties": {
+     "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+      "type": "string"
+     },
+     "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+      "type": "string"
+     },
+     "spec": {
+      "$ref": "#/definitions/typedir.RestoreSpec"
+     },
+     "status": {
+      "$ref": "#/definitions/typedir.RestoreStatus"
+     }
+    }
+   },
+   "typedir.RestoreCondition": {
+    "description": "RestoreCondition describes the observed state of a Restore at a certain point.",
+    "required": [
+     "type",
+     "status"
+    ],
+    "properties": {
+     "message": {
+      "type": "string"
+     },
+     "reason": {
+      "description": "\n\tLastTransitionTime metav1.Time `json:\"lastTransitionTime\"`",
+      "type": "string"
+     },
+     "status": {
+      "type": "string"
+     },
+     "type": {
+      "type": "string"
+     }
+    }
+   },
+   "typedir.RestoreList": {
+    "description": "RestoreList is a list of Restores.",
+    "required": [
+     "items"
+    ],
+    "properties": {
+     "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+      "type": "string"
+     },
+     "items": {
+      "type": "array",
+      "items": {
+       "$ref": "#/definitions/typedir.Restore"
+      }
+     },
+     "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+      "type": "string"
+     }
+    }
+   },
+   "typedir.RestoreSpec": {
+    "description": "RestoreSpec defines the specification for a restore of a MySQL backup.",
+    "required": [
+     "scheduledMember"
+    ],
+    "properties": {
+     "scheduledMember": {
+      "description": "Cluster is a refeference to the Cluster to which the Restore belongs.\n\tCluster *corev1.LocalObjectReference `json:\"cluster\"`\nBackup is a reference to the Backup object to be restored.\n\tBackup *corev1.LocalObjectReference `json:\"backup\"`\nScheduledMember is the Pod name of the Cluster member on which the Restore will be executed.",
+      "type": "string"
+     }
+    }
+   },
+   "typedir.RestoreStatus": {
+    "description": "RestoreStatus captures the current status of a MySQL restore.",
+    "properties": {
+     "conditions": {
+      "description": "\n\t// TimeStarted is the time at which the restore was started.\n\tTimeStarted metav1.Time `json:\"timeStarted\"`\n\t// TimeCompleted is the time at which the restore completed.\n\tTimeCompleted metav1.Time `json:\"timeCompleted\"`",
+      "type": "array",
+      "items": {
+       "$ref": "#/definitions/typedir.RestoreCondition"
+      }
+     }
+    }
+   },
+   "typedir.S3StorageProvider": {
+    "description": "S3StorageProvider represents an S3 compatible bucket for storing Backups.",
+    "required": [
+     "region",
+     "endpoint",
+     "bucket",
+     "forcePathStyle"
+    ],
+    "properties": {
+     "bucket": {
+      "description": "Bucket in which to store the Backup.",
+      "type": "string"
+     },
+     "endpoint": {
+      "description": "Endpoint (hostname only or fully qualified URI) of S3 compatible storage service.",
+      "type": "string"
+     },
+     "forcePathStyle": {
+      "description": "ForcePathStyle when set to true forces the request to use path-style addressing, i.e., `http://s3.amazonaws.com/BUCKET/KEY`. By default, the S3 client will use virtual hosted bucket addressing when possible (`http://BUCKET.s3.amazonaws.com/KEY`).",
+      "type": "boolean"
+     },
+     "region": {
+      "description": "Region in which the S3 compatible bucket is located.",
+      "type": "string"
+     }
+    }
+   },
+   "typedir.ScheduleStatus": {
+    "description": "ScheduleStatus captures the current state of a MySQL backup schedule."
+   },
+   "typedir.StorageProvider": {
+    "description": "StorageProvider defines the configuration for storing a Backup in a storage service.",
+    "required": [
+     "s3"
+    ],
+    "properties": {
+     "s3": {
+      "$ref": "#/definitions/typedir.S3StorageProvider"
+     }
+    }
+   }
+  }
+ }

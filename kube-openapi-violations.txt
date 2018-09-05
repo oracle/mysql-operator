@@ -1,0 +1,24 @@
+Devs-MacBook:openapi-spec-generator devdatta$ ./build-openapi-spec.sh /Users/devdatta/go/src/github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1
+2018/09/05 12:15:27 OpenAPI code generation error: Failed executing generator: some packages had errors:
+API rule violations exist
+exit status 1
+builder.go:28:2: no Go files in /Users/devdatta/go/src/github.com/cloud-ark/kubeplus/openapi-spec-generator/generated
+API rule violation: names_match,github.com/cloud-ark/kubeplus/openapi-spec-generator/typedir,BackupCondition,Type
+API rule violation: names_match,github.com/cloud-ark/kubeplus/openapi-spec-generator/typedir,BackupCondition,Status
+API rule violation: names_match,github.com/cloud-ark/kubeplus/openapi-spec-generator/typedir,BackupCondition,Reason
+API rule violation: names_match,github.com/cloud-ark/kubeplus/openapi-spec-generator/typedir,BackupCondition,Message
+API rule violation: names_match,github.com/cloud-ark/kubeplus/openapi-spec-generator/typedir,BackupExecutor,MySQLDump
+API rule violation: names_match,github.com/cloud-ark/kubeplus/openapi-spec-generator/typedir,BackupStatus,Conditions
+API rule violation: names_match,github.com/cloud-ark/kubeplus/openapi-spec-generator/typedir,ClusterCondition,Type
+API rule violation: names_match,github.com/cloud-ark/kubeplus/openapi-spec-generator/typedir,ClusterCondition,Status
+API rule violation: names_match,github.com/cloud-ark/kubeplus/openapi-spec-generator/typedir,ClusterCondition,Reason
+API rule violation: names_match,github.com/cloud-ark/kubeplus/openapi-spec-generator/typedir,ClusterCondition,Message
+API rule violation: names_match,github.com/cloud-ark/kubeplus/openapi-spec-generator/typedir,ClusterSpec,BaseServerID
+API rule violation: names_match,github.com/cloud-ark/kubeplus/openapi-spec-generator/typedir,ClusterStatus,Conditions
+API rule violation: names_match,github.com/cloud-ark/kubeplus/openapi-spec-generator/typedir,RestoreCondition,Type
+API rule violation: names_match,github.com/cloud-ark/kubeplus/openapi-spec-generator/typedir,RestoreCondition,Status
+API rule violation: names_match,github.com/cloud-ark/kubeplus/openapi-spec-generator/typedir,RestoreCondition,Reason
+API rule violation: names_match,github.com/cloud-ark/kubeplus/openapi-spec-generator/typedir,RestoreCondition,Message
+API rule violation: names_match,github.com/cloud-ark/kubeplus/openapi-spec-generator/typedir,RestoreStatus,Conditions
+FAIL
+API rule violation

@@ -24,6 +24,7 @@ import (
 const MinimumMySQLVersion = "8.0.11"
 
 // ClusterSpec defines the attributes a user can specify when creating a cluster
+//+k8s:openapi-gen=true
 type ClusterSpec struct {
 	// Version defines the MySQL Docker image version.
 	Version string `json:"version"`
@@ -33,7 +34,7 @@ type ClusterSpec struct {
 	// for MySQL instances in the cluster. Valid range 1 to 4294967286.
 	// If omitted in the manifest file (or set to 0) defaultBaseServerID
 	// value will be used.
-	BaseServerID uint32 `json:"baseServerId,omitempty"`
+	BaseServerID uint32 `json:"baseServerID,omitempty"`
 	// MultiMaster defines the mode of the MySQL cluster. If set to true,
 	// all instances will be R/W. If false (the default), only a single instance
 	// will be R/W and the rest will be R/O.
@@ -75,25 +76,27 @@ const (
 )
 
 // ClusterCondition describes the observed state of a Cluster at a certain point.
+//+k8s:openapi-gen=true
 type ClusterCondition struct {
-	Type   ClusterConditionType
-	Status corev1.ConditionStatus
+	Type   ClusterConditionType `json:"type"`
+	Status corev1.ConditionStatus `json:"status"`
 	// +optional
-	LastTransitionTime metav1.Time
+	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
 	// +optional
-	Reason string
+	Reason string `json:"reason"`
 	// +optional
-	Message string
+	Message string `json:"message"`
 }
 
 // ClusterStatus defines the current status of a MySQL cluster
 // propagating useful information back to the cluster admin
+//+k8s:openapi-gen=true
 type ClusterStatus struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 
 	// +optional
-	Conditions []ClusterCondition
+	Conditions []ClusterCondition `json:"conditions"`
 }
 
 // +genclient
@@ -102,6 +105,7 @@ type ClusterStatus struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Cluster represents a cluster spec and associated metadata
+//+k8s:openapi-gen=true
 type Cluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
@@ -113,6 +117,7 @@ type Cluster struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ClusterList is a placeholder type for a list of MySQL clusters
+//+k8s:openapi-gen=true
 type ClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
@@ -121,11 +126,13 @@ type ClusterList struct {
 }
 
 // Database represents a database to backup.
+//+k8s:openapi-gen=true
 type Database struct {
 	Name string `json:"name"`
 }
 
 // MySQLDumpBackupExecutor executes backups using mysqldump.
+//+k8s:openapi-gen=true
 type MySQLDumpBackupExecutor struct {
 	Databases []Database `json:"databases"`
 }
@@ -133,11 +140,13 @@ type MySQLDumpBackupExecutor struct {
 // BackupExecutor represents the configuration of the tool performing the backup. This includes the tool
 // to use, and, what database and tables should be backed up.
 // The storage of the backup is configured in the relevant Storage configuration.
+//+k8s:openapi-gen=true
 type BackupExecutor struct {
-	MySQLDump *MySQLDumpBackupExecutor `json:"mysqldump"`
+	MySQLDump *MySQLDumpBackupExecutor `json:"mySQLDump"`
 }
 
 // S3StorageProvider represents an S3 compatible bucket for storing Backups.
+//+k8s:openapi-gen=true
 type S3StorageProvider struct {
 	// Region in which the S3 compatible bucket is located.
 	Region string `json:"region"`
@@ -158,12 +167,14 @@ type S3StorageProvider struct {
 
 // StorageProvider defines the configuration for storing a Backup in a storage
 // service.
+//+k8s:openapi-gen=true
 type StorageProvider struct {
 	S3 *S3StorageProvider `json:"s3"`
 }
 
 // BackupSpec defines the specification for a MySQL backup. This includes what should be backed up,
 // what tool should perform the backup, and, where the backup should be stored.
+//+k8s:openapi-gen=true
 type BackupSpec struct {
 	// Executor is the configuration of the tool that will produce the backup, and a definition of
 	// what databases and tables to backup.
@@ -195,24 +206,27 @@ const (
 )
 
 // BackupCondition describes the observed state of a Backup at a certain point.
+//+k8s:openapi-gen=true
 type BackupCondition struct {
-	Type   BackupConditionType
-	Status corev1.ConditionStatus
+	Type   BackupConditionType `json:"type"`
+	Status corev1.ConditionStatus `json:"status"`
 	// +optional
-	LastTransitionTime metav1.Time
+	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
 	// +optional
-	Reason string
+	Reason string `json:"reason"`
 	// +optional
-	Message string
+	Message string `json:"message"`
 }
 
 // BackupOutcome describes the location of a Backup
+//+k8s:openapi-gen=true
 type BackupOutcome struct {
 	// Location is the Object Storage network location of the Backup.
 	Location string `json:"location"`
 }
 
 // BackupStatus captures the current status of a Backup.
+//+k8s:openapi-gen=true
 type BackupStatus struct {
 	// Outcome holds the results of a successful backup.
 	// +optional
@@ -224,7 +238,7 @@ type BackupStatus struct {
 	// +optional
 	TimeCompleted metav1.Time `json:"timeCompleted"`
 	// +optional
-	Conditions []BackupCondition
+	Conditions []BackupCondition `json:"conditions"`
 }
 
 // +genclient
@@ -233,6 +247,7 @@ type BackupStatus struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Backup is a backup of a Cluster.
+//+k8s:openapi-gen=true
 type Backup struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
@@ -244,6 +259,7 @@ type Backup struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // BackupList is a list of Backups.
+//+k8s:openapi-gen=true
 type BackupList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
@@ -252,6 +268,7 @@ type BackupList struct {
 }
 
 // BackupScheduleSpec defines the specification for a MySQL backup schedule.
+//+k8s:openapi-gen=true
 type BackupScheduleSpec struct {
 	// Schedule specifies the cron string used for backup scheduling.
 	Schedule string `json:"schedule"`
@@ -262,6 +279,7 @@ type BackupScheduleSpec struct {
 }
 
 // ScheduleStatus captures the current state of a MySQL backup schedule.
+//+k8s:openapi-gen=true
 type ScheduleStatus struct {
 	// LastBackup is the last time a Backup was run for this
 	// backup schedule.
@@ -275,6 +293,7 @@ type ScheduleStatus struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // BackupSchedule is a backup schedule for a Cluster.
+//+k8s:openapi-gen=true
 type BackupSchedule struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
@@ -286,6 +305,7 @@ type BackupSchedule struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // BackupScheduleList is a list of BackupSchedules.
+//+k8s:openapi-gen=true
 type BackupScheduleList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
@@ -311,18 +331,20 @@ const (
 )
 
 // RestoreCondition describes the observed state of a Restore at a certain point.
+//+k8s:openapi-gen=true
 type RestoreCondition struct {
-	Type   RestoreConditionType
-	Status corev1.ConditionStatus
+	Type   RestoreConditionType `json:"type"`
+	Status corev1.ConditionStatus `json:"status"`
 	// +optional
-	LastTransitionTime metav1.Time
+	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
 	// +optional
-	Reason string
+	Reason string `json:"reason"`
 	// +optional
-	Message string
+	Message string `json:"message"`
 }
 
 // RestoreSpec defines the specification for a restore of a MySQL backup.
+//+k8s:openapi-gen=true
 type RestoreSpec struct {
 	// Cluster is a refeference to the Cluster to which the Restore
 	// belongs.
@@ -335,6 +357,7 @@ type RestoreSpec struct {
 }
 
 // RestoreStatus captures the current status of a MySQL restore.
+//+k8s:openapi-gen=true
 type RestoreStatus struct {
 	// TimeStarted is the time at which the restore was started.
 	// +optional
@@ -343,7 +366,7 @@ type RestoreStatus struct {
 	// +optional
 	TimeCompleted metav1.Time `json:"timeCompleted"`
 	// +optional
-	Conditions []RestoreCondition
+	Conditions []RestoreCondition `json:"conditions"`
 }
 
 // +genclient
@@ -353,6 +376,7 @@ type RestoreStatus struct {
 
 // Restore is a MySQL Operator resource that represents the restoration of
 // backup of a MySQL cluster.
+//+k8s:openapi-gen=true
 type Restore struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
@@ -364,6 +388,7 @@ type Restore struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // RestoreList is a list of Restores.
+//+k8s:openapi-gen=true
 type RestoreList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
