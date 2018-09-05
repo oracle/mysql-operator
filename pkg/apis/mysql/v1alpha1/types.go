@@ -78,7 +78,7 @@ const (
 // ClusterCondition describes the observed state of a Cluster at a certain point.
 //+k8s:openapi-gen=true
 type ClusterCondition struct {
-	Type   ClusterConditionType `json:"type"`
+	Type   ClusterConditionType   `json:"type"`
 	Status corev1.ConditionStatus `json:"status"`
 	// +optional
 	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
@@ -208,7 +208,7 @@ const (
 // BackupCondition describes the observed state of a Backup at a certain point.
 //+k8s:openapi-gen=true
 type BackupCondition struct {
-	Type   BackupConditionType `json:"type"`
+	Type   BackupConditionType    `json:"type"`
 	Status corev1.ConditionStatus `json:"status"`
 	// +optional
 	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
@@ -333,7 +333,7 @@ const (
 // RestoreCondition describes the observed state of a Restore at a certain point.
 //+k8s:openapi-gen=true
 type RestoreCondition struct {
-	Type   RestoreConditionType `json:"type"`
+	Type   RestoreConditionType   `json:"type"`
 	Status corev1.ConditionStatus `json:"status"`
 	// +optional
 	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
