@@ -64,6 +64,8 @@ type ClusterSpec struct {
 	// and server key for group replication SSL.
 	// +optional
 	SSLSecret *corev1.LocalObjectReference `json:"sslSecret,omitempty"`
+	// SecurityContext holds pod-level security attributes and common container settings.
+	SecurityContext *corev1.PodSecurityContext `json:"securityContext,omitempty"`
 }
 
 // ClusterConditionType represents a valid condition of a Cluster.
