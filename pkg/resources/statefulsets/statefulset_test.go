@@ -165,3 +165,24 @@ func TestClusterCustomSSLSetup(t *testing.T) {
 
 	assert.True(t, hasExpectedVolumeMount, "Cluster is missing expected volume mount for custom SSL certs")
 }
+
+func TestClusterCustomSecurityContext(t *testing.T) {
+	userID := int64(27)
+	cluster := &v1alpha1.Cluster{
+		Spec: v1alpha1.ClusterSpec{
+			SecurityContext: &corev1.PodSecurityContext{
+				RunAsUser: &userID,
+				FSGroup:   &userID,
+			},
+		},
+	}
+
+	statefulSet := NewForCluster(cluster, mockOperatorConfig().Images, "mycluster")
+
+	if statefulSet.Spec.Template.Spec.SecurityContext != nil {
+		assert.EqualValues(t, userID, *statefulSet.Spec.Template.Spec.SecurityContext.RunAsUser, "SecurityContext Spec runAsUser does not have expected value")
+		assert.Equal(t, userID, *statefulSet.Spec.Template.Spec.SecurityContext.FSGroup, "SecurityContext Spec fsGroup does not have expected value")
+	} else {
+		t.Errorf("StatefulSet Spec is missing SecurityContext definition")
+	}
+}
