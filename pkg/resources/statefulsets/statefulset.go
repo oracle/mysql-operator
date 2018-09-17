@@ -394,5 +394,8 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 	if cluster.Spec.SecurityContext != nil {
 		ss.Spec.Template.Spec.SecurityContext = cluster.Spec.SecurityContext
 	}
+	if cluster.Spec.Tolerations != nil {
+		ss.Spec.Template.Spec.Tolerations = *cluster.Spec.Tolerations
+	}
 	return ss
 }

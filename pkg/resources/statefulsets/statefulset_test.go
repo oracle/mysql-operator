@@ -179,10 +179,45 @@ func TestClusterCustomSecurityContext(t *testing.T) {
 
 	statefulSet := NewForCluster(cluster, mockOperatorConfig().Images, "mycluster")
 
-	if statefulSet.Spec.Template.Spec.SecurityContext != nil {
+	if assert.NotNil(t, statefulSet.Spec.Template.Spec.SecurityContext, "StatefulSet Spec is missing SecurityContext definition") {
 		assert.EqualValues(t, userID, *statefulSet.Spec.Template.Spec.SecurityContext.RunAsUser, "SecurityContext Spec runAsUser does not have expected value")
 		assert.Equal(t, userID, *statefulSet.Spec.Template.Spec.SecurityContext.FSGroup, "SecurityContext Spec fsGroup does not have expected value")
-	} else {
-		t.Errorf("StatefulSet Spec is missing SecurityContext definition")
+	}
+}
+
+func TestClusterWithTolerations(t *testing.T) {
+	cluster := &v1alpha1.Cluster{
+		Spec: v1alpha1.ClusterSpec{
+			Tolerations: &[]corev1.Toleration{
+				{
+					Key:      "nodetype1",
+					Operator: corev1.TolerationOpEqual,
+					Value:    "true",
+					Effect:   corev1.TaintEffectNoSchedule,
+				},
+				{
+					Key:      "nodetype1",
+					Operator: corev1.TolerationOpEqual,
+					Value:    "true",
+					Effect:   corev1.TaintEffectNoExecute,
+				},
+			},
+		},
+	}
+
+	statefulSet := NewForCluster(cluster, mockOperatorConfig().Images, "mycluster")
+
+	if assert.NotNil(t, statefulSet.Spec.Template.Spec.Tolerations, "StatefulSet Spec is missing Tolerations") {
+		if assert.Len(t, statefulSet.Spec.Template.Spec.Tolerations, 2) {
+			assert.Equal(t, "nodetype1", statefulSet.Spec.Template.Spec.Tolerations[0].Key, "ClusterSpec.Tolerations[0].Key does not have expected value")
+			assert.Equal(t, corev1.TolerationOpEqual, statefulSet.Spec.Template.Spec.Tolerations[0].Operator, "ClusterSpec.Tolerations[0].Operator does not have expected value")
+			assert.Equal(t, "true", statefulSet.Spec.Template.Spec.Tolerations[0].Value, "ClusterSpec.Tolerations[0].Value does not have expected value")
+			assert.Equal(t, corev1.TaintEffectNoSchedule, statefulSet.Spec.Template.Spec.Tolerations[0].Effect, "ClusterSpec.Tolerations[0].Effect does not have expected value")
+
+			assert.Equal(t, "nodetype1", statefulSet.Spec.Template.Spec.Tolerations[1].Key, "ClusterSpec.Tolerations[1].Key does not have expected value")
+			assert.Equal(t, corev1.TolerationOpEqual, statefulSet.Spec.Template.Spec.Tolerations[1].Operator, "ClusterSpec.Tolerations[1].Operator does not have expected value")
+			assert.Equal(t, "true", statefulSet.Spec.Template.Spec.Tolerations[1].Value, "ClusterSpec.Tolerations[1].Value does not have expected value")
+			assert.Equal(t, corev1.TaintEffectNoExecute, statefulSet.Spec.Template.Spec.Tolerations[1].Effect, "ClusterSpec.Tolerations[1].Effect does not have expected value")
+		}
 	}
 }

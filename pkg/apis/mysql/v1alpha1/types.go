@@ -66,6 +66,9 @@ type ClusterSpec struct {
 	SSLSecret *corev1.LocalObjectReference `json:"sslSecret,omitempty"`
 	// SecurityContext holds pod-level security attributes and common container settings.
 	SecurityContext *corev1.PodSecurityContext `json:"securityContext,omitempty"`
+	// Tolerations allows specifying a list of tolerations for controlling which
+	// set of nodes a pod can be scheduled on
+	Tolerations *[]corev1.Toleration `json:"tolerations,omitempty"`
 }
 
 // ClusterConditionType represents a valid condition of a Cluster.
