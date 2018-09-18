@@ -78,9 +78,14 @@ build-docker:
 	-t $(REGISTRY)/$(TENANT)/mysql-operator:$(VERSION) \
 	-f docker/mysql-operator/Dockerfile .
 
+	# Retrieve the UID for the mysql user, passed in when building the mysql-agent image
+	$(eval MYSQL_AGENT_IMAGE := $(shell sed -n 's/^FROM \(.*\)/\1/p' docker/mysql-agent/Dockerfile))
+	$(eval MYSQL_UID=$(shell docker run --rm --entrypoint id ${MYSQL_AGENT_IMAGE} -u mysql))
+
 	@docker build \
 	--build-arg=http_proxy \
 	--build-arg=https_proxy \
+	--build-arg=MYSQL_USER=${MYSQL_UID} \
 	-t $(REGISTRY)/$(TENANT)/mysql-agent:$(VERSION) \
 	-f docker/mysql-agent/Dockerfile .
 
