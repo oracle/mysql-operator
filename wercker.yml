@@ -36,105 +36,103 @@ build:
         cp -R mysql-operator ${WERCKER_OUTPUT_DIR}/
         cp -R .git ${WERCKER_OUTPUT_DIR}/
 
-push-operator-image:
-  box:
-    id: oraclelinux:7.3
+build-image:
+  base-path: "/go/src/github.com/oracle/mysql-operator"
   steps:
     - script:
       name: set environment variables
       code: |
+        export IMAGE_PREFIX=wercker-build
         export VERSION=$(cat dist/version.txt)
-        echo "Pushing operator version ${VERSION}"
+        echo "Building mysql operator & agent images with version: ${VERSION}"
 
     - script:
-      name: prepare
+      name: build mysql-operator image
+      code: make build-docker-mysql-operator
+
+    - script:
+      name: build mysql-agent image
+      code: make build-docker-mysql-agent
+
+push-operator-image:
+  steps:
+    - script:
+      name: set environment variables
       code: |
-        mv bin/mysql-operator /mysql-operator
-        chmod +x /mysql-operator
+        export IMAGE_PREFIX=wercker-build
+        export VERSION=$(cat dist/version.txt)
 
     - internal/docker-push:
+      image-name: ${IMAGE_PREFIX}/mysql-operator:${VERSION}
       registry: https://iad.ocir.io/v2
       repository: iad.ocir.io/oracle/mysql-operator
       tag: $VERSION
-      entrypoint: /mysql-operator
       username: $OCIRUSERNAME
       password: $OCIRPASSWORD
 
     - internal/docker-push:
+      image-name: ${IMAGE_PREFIX}/mysql-operator:${VERSION}
       registry: https://lhr.ocir.io/v2
       repository: lhr.ocir.io/oracle/mysql-operator
       tag: $VERSION
-      entrypoint: /mysql-operator
       username: $OCIRUSERNAME
       password: $OCIRPASSWORD
 
     - internal/docker-push:
+      image-name: ${IMAGE_PREFIX}/mysql-operator:${VERSION}
       registry: https://phx.ocir.io/v2
       repository: phx.ocir.io/oracle/mysql-operator
       tag: $VERSION
-      entrypoint: /mysql-operator
       username: $OCIRUSERNAME
       password: $OCIRPASSWORD
 
     - internal/docker-push:
+      image-name: ${IMAGE_PREFIX}/mysql-operator:${VERSION}
       registry: https://fra.ocir.io/v2
       repository: fra.ocir.io/oracle/mysql-operator
       tag: $VERSION
-      entrypoint: /mysql-operator
       username: $OCIRUSERNAME
       password: $OCIRPASSWORD
 
 push-agent-image:
-  box:
-    id: mysql/mysql-server:8.0.11
   steps:
     - script:
       name: set environment variables
       code: |
+        export IMAGE_PREFIX=wercker-build
         export VERSION=$(cat dist/version.txt)
-        echo "Pushing agent version ${VERSION}"
-
-    - script:
-      name: prepare
-      code: |
-        mv bin/mysql-agent /mysql-agent
-        chmod +x /mysql-agent
 
     - internal/docker-push:
+      image-name: ${IMAGE_PREFIX}/mysql-agent:${VERSION}
       registry: https://iad.ocir.io/v2
       username: $OCIRUSERNAME
       password: $OCIRPASSWORD
       repository: iad.ocir.io/oracle/mysql-agent
       tag: $VERSION
-      entrypoint: /mysql-agent
-      user: mysql
 
     - internal/docker-push:
+      image-name: ${IMAGE_PREFIX}/mysql-agent:${VERSION}
       registry: https://lhr.ocir.io/v2
       username: $OCIRUSERNAME
       password: $OCIRPASSWORD
       repository: lhr.ocir.io/oracle/mysql-agent
       tag: $VERSION
-      entrypoint: /mysql-agent
-      user: mysql
 
     - internal/docker-push:
+      image-name: ${IMAGE_PREFIX}/mysql-agent:${VERSION}
       registry: https://phx.ocir.io/v2
       username: $OCIRUSERNAME
       password: $OCIRPASSWORD
       repository: phx.ocir.io/oracle/mysql-agent
       tag: $VERSION
-      entrypoint: /mysql-agent
-      user: mysql
 
     - internal/docker-push:
+      image-name: ${IMAGE_PREFIX}/mysql-agent:${VERSION}
       registry: https://fra.ocir.io/v2
       username: $OCIRUSERNAME
       password: $OCIRPASSWORD
       repository: fra.ocir.io/oracle/mysql-agent
       tag: $VERSION
-      entrypoint: /mysql-agent
-      user: mysql
 
 e2e-test:
   base-path: "/go/src/github.com/oracle/mysql-operator"

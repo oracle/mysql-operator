@@ -23,6 +23,7 @@ endif
 
 PKG             := github.com/oracle/mysql-operator
 REGISTRY        := iad.ocir.io
+IMAGE_PREFIX    ?= $(REGISTRY)/$(TENANT)
 SRC_DIRS        := cmd pkg test/examples
 CMD_DIRECTORIES := $(sort $(dir $(wildcard ./cmd/*/)))
 COMMANDS        := $(CMD_DIRECTORIES:./cmd/%/=%)
@@ -71,13 +72,18 @@ build: dist build-dirs Makefile
 	cp $(BINARIES) ./bin/$(OS)_$(ARCH)/
 
 .PHONY: build-docker
-build-docker:
+build-docker: build-docker-mysql-operator build-docker-mysql-agent
+
+.PHONY: build-docker-mysql-operator
+build-docker-mysql-operator:
 	@docker build \
 	--build-arg=http_proxy \
 	--build-arg=https_proxy \
-	-t $(REGISTRY)/$(TENANT)/mysql-operator:$(VERSION) \
+	-t $(IMAGE_PREFIX)/mysql-operator:$(VERSION) \
 	-f docker/mysql-operator/Dockerfile .
 
+.PHONY: build-docker-mysql-agent
+build-docker-mysql-agent:
 	# Retrieve the UID for the mysql user, passed in when building the mysql-agent image
 	$(eval MYSQL_AGENT_IMAGE := $(shell sed -n 's/^FROM \(.*\)/\1/p' docker/mysql-agent/Dockerfile))
 	$(eval MYSQL_UID=$(shell docker run --rm --entrypoint id ${MYSQL_AGENT_IMAGE} -u mysql))
@@ -86,7 +92,7 @@ build-docker:
 	--build-arg=http_proxy \
 	--build-arg=https_proxy \
 	--build-arg=MYSQL_USER=${MYSQL_UID} \
-	-t $(REGISTRY)/$(TENANT)/mysql-agent:$(VERSION) \
+	-t $(IMAGE_PREFIX)/mysql-agent:$(VERSION) \
 	-f docker/mysql-agent/Dockerfile .
 
 # Note: Only used for development, i.e. in CI the images are pushed using Wercker.
