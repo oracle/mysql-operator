@@ -36,7 +36,7 @@ build:
         cp -R mysql-operator ${WERCKER_OUTPUT_DIR}/
         cp -R .git ${WERCKER_OUTPUT_DIR}/
 
-build-image:
+push-operator-image:
   base-path: "/go/src/github.com/oracle/mysql-operator"
   steps:
     - script:
@@ -44,23 +44,11 @@ build-image:
       code: |
         export IMAGE_PREFIX=wercker-build
         export VERSION=$(cat dist/version.txt)
-        echo "Building mysql operator & agent images with version: ${VERSION}"
+        echo "Building mysql-operator image with version: ${VERSION}"
 
     - script:
       name: build mysql-operator image
       code: make build-docker-mysql-operator
-
-    - script:
-      name: build mysql-agent image
-      code: make build-docker-mysql-agent
-
-push-operator-image:
-  steps:
-    - script:
-      name: set environment variables
-      code: |
-        export IMAGE_PREFIX=wercker-build
-        export VERSION=$(cat dist/version.txt)
 
     - internal/docker-push:
       image-name: ${IMAGE_PREFIX}/mysql-operator:${VERSION}
@@ -95,12 +83,18 @@ push-operator-image:
       password: $OCIRPASSWORD
 
 push-agent-image:
+  base-path: "/go/src/github.com/oracle/mysql-operator"
   steps:
     - script:
       name: set environment variables
       code: |
         export IMAGE_PREFIX=wercker-build
         export VERSION=$(cat dist/version.txt)
+        echo "Building mysql-agent image with version: ${VERSION}"
+
+    - script:
+      name: build mysql-agent image
+      code: make build-docker-mysql-agent
 
     - internal/docker-push:
       image-name: ${IMAGE_PREFIX}/mysql-agent:${VERSION}
