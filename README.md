@@ -1,9 +1,11 @@
 # MySQL Operator
 
+The MySQL [Operator][1] creates, configures and manages MySQL clusters running on Kubernetes.
+
+[![issues](https://img.shields.io/github/issues/oracle/mysql-operator.svg)](https://github.com/oracle/mysql-operator/issues)
+[![tags](https://img.shields.io/github/tag/oracle/mysql-operator.svg)](https://github.com/oracle/mysql-operator/tags)
 [![wercker status](https://app.wercker.com/status/cc1710e8b354d1a22f36b04c8313eac9/s/master "wercker status")](https://app.wercker.com/project/byKey/cc1710e8b354d1a22f36b04c8313eac9)
 [![Go Report Card](https://goreportcard.com/badge/github.com/oracle/mysql-operator)](https://goreportcard.com/report/github.com/oracle/mysql-operator)
-
-The MySQL [Operator][1] creates, configures and manages MySQL clusters running on Kubernetes.
 
 The MySQL Operator is opinionated about the way in which clusters are configured.
 We build upon [InnoDB cluster][3] and [Group Replication][4] to provide a complete high
