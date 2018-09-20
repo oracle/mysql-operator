@@ -34,14 +34,12 @@ UNAME_S := $(shell uname -s)
 
 ifeq ($(UNAME_S),Darwin)
 	# Cross-compiling from OSX to linux, go install puts the binaries in $GOPATH/bin/$GOOS_$GOARCH
-    BINARIES := $(addprefix $(GOPATH)/bin/$(OS)_$(ARCH)/,$(COMMANDS))
-else
-ifeq ($(UNAME_S),Linux)
+	BINARIES := $(addprefix $(GOPATH)/bin/$(OS)_$(ARCH)/,$(COMMANDS))
+else ifeq ($(UNAME_S),Linux)
 	# Compiling on linux for linux, go install puts the binaries in $GOPATH/bin
-    BINARIES := $(addprefix $(GOPATH)/bin/,$(COMMANDS))
+	BINARIES := $(addprefix $(GOPATH)/bin/,$(COMMANDS))
 else
 	$(error "Unsupported OS: $(UNAME_S)")
-endif
 endif
 
 .PHONY: all
