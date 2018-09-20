@@ -38,7 +38,13 @@ build:
 
 push-operator-image:
   base-path: "/go/src/github.com/oracle/mysql-operator"
+  box: alpine
+  docker: true
   steps:
+    - script:
+      name: Install build utils
+      code: apk --no-cache add docker make
+
     - script:
       name: set environment variables
       code: |
@@ -84,7 +90,13 @@ push-operator-image:
 
 push-agent-image:
   base-path: "/go/src/github.com/oracle/mysql-operator"
+  box: alpine
+  docker: true
   steps:
+    - script:
+      name: Install build utils
+      code: apk --no-cache add docker make
+
     - script:
       name: set environment variables
       code: |
