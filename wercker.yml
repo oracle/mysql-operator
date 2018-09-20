@@ -56,37 +56,37 @@ push-operator-image:
       name: build mysql-operator image
       code: make build-docker-mysql-operator
 
-    - internal/docker-push:
-      image-name: ${IMAGE_PREFIX}/mysql-operator:${VERSION}
-      registry: https://iad.ocir.io/v2
-      repository: iad.ocir.io/oracle/mysql-operator
-      tag: $VERSION
-      username: $OCIRUSERNAME
-      password: $OCIRPASSWORD
-
-    - internal/docker-push:
-      image-name: ${IMAGE_PREFIX}/mysql-operator:${VERSION}
-      registry: https://lhr.ocir.io/v2
-      repository: lhr.ocir.io/oracle/mysql-operator
-      tag: $VERSION
-      username: $OCIRUSERNAME
-      password: $OCIRPASSWORD
-
-    - internal/docker-push:
-      image-name: ${IMAGE_PREFIX}/mysql-operator:${VERSION}
-      registry: https://phx.ocir.io/v2
-      repository: phx.ocir.io/oracle/mysql-operator
-      tag: $VERSION
-      username: $OCIRUSERNAME
-      password: $OCIRPASSWORD
-
-    - internal/docker-push:
-      image-name: ${IMAGE_PREFIX}/mysql-operator:${VERSION}
-      registry: https://fra.ocir.io/v2
-      repository: fra.ocir.io/oracle/mysql-operator
-      tag: $VERSION
-      username: $OCIRUSERNAME
-      password: $OCIRPASSWORD
+    # - internal/docker-push:
+    #   image-name: ${IMAGE_PREFIX}/mysql-operator:${VERSION}
+    #   registry: https://iad.ocir.io/v2
+    #   repository: iad.ocir.io/oracle/mysql-operator
+    #   tag: $VERSION
+    #   username: $OCIRUSERNAME
+    #   password: $OCIRPASSWORD
+    #
+    # - internal/docker-push:
+    #   image-name: ${IMAGE_PREFIX}/mysql-operator:${VERSION}
+    #   registry: https://lhr.ocir.io/v2
+    #   repository: lhr.ocir.io/oracle/mysql-operator
+    #   tag: $VERSION
+    #   username: $OCIRUSERNAME
+    #   password: $OCIRPASSWORD
+    #
+    # - internal/docker-push:
+    #   image-name: ${IMAGE_PREFIX}/mysql-operator:${VERSION}
+    #   registry: https://phx.ocir.io/v2
+    #   repository: phx.ocir.io/oracle/mysql-operator
+    #   tag: $VERSION
+    #   username: $OCIRUSERNAME
+    #   password: $OCIRPASSWORD
+    #
+    # - internal/docker-push:
+    #   image-name: ${IMAGE_PREFIX}/mysql-operator:${VERSION}
+    #   registry: https://fra.ocir.io/v2
+    #   repository: fra.ocir.io/oracle/mysql-operator
+    #   tag: $VERSION
+    #   username: $OCIRUSERNAME
+    #   password: $OCIRPASSWORD
 
 push-agent-image:
   base-path: "/go/src/github.com/oracle/mysql-operator"
