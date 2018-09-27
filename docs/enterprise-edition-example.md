@@ -6,7 +6,7 @@ This tutorial will explain how to create a mysqlcluster that runs the enterprise
 - The mysql-operator repository checked out locally.
 - Access to a Docker registry that contains the enterprise version of mysql.
 
-##Create the Operator
+## Create the Operator
 This file bundles the creation of various resources:
 
 1. Custom resources 
@@ -19,7 +19,7 @@ Section 3 of the file pulls the sql enterprise image from the docker store: `sto
 kubectl apply -f examples/example-enterprise-deployment.yaml
 ```
 
-##Create a secret with registry credentials
+## Create a secret with registry credentials
 To be able to pull the mysql enterprise edition from docker it is necessary to provide credentials, these credentials must be supplied in the form of a Kubernetes secret.
 
 - The name of the secret `myregistrykey` must match the name in the `imagepullsecrets` which is found in Section 3 of the `example-enterprise-deployment.yaml`.
@@ -36,7 +36,7 @@ kubectl create secret docker-registry myregistrykey \
 --docker-password= \
 --docker-email=
 ```
-##Create your mysqlcluster
+## Create your mysqlcluster
 Finally, create the mysqlcluster. 
 
 - The version to be used has been specified in the file. Without this a default version is used which is **not** guaranteed to match an available image of mysql enterprise.
