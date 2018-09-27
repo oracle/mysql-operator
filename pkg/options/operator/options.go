@@ -20,6 +20,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"k8s.io/api/core/v1"
+
 	"github.com/golang/glog"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
@@ -36,8 +38,9 @@ const (
 // Images is the configuration of required MySQLOperator images. Remember to configure the appropriate
 // credentials for the target repositories.
 type Images struct {
-	MySQLServerImage string `yaml:"mysqlServer"`
-	MySQLAgentImage  string `yaml:"mysqlAgent"`
+	MySQLServerImage string                   `yaml:"mysqlServer"`
+	MySQLAgentImage  string                   `yaml:"mysqlAgent"`
+	ImagePullSecret  *v1.LocalObjectReference `yaml:"imagePullSecret"`
 }
 
 // MySQLOperatorOpts holds the options for the MySQLOperator.
@@ -65,7 +68,7 @@ type MySQLOperatorOpts struct {
 	MinResyncPeriod metav1.Duration `yaml:"minResyncPeriod"`
 }
 
-// MySQLOperatorOpts will create a new MySQLOperatorOpts. If a valid
+// NewMySQLOperatorOpts will create a new MySQLOperatorOpts. If a valid
 // config file is specified and exists, it will be used to initialise the
 // server. Otherwise, a default server will be created.
 //

@@ -50,7 +50,7 @@ func getOperatorVersionLabel(labelMap map[string]string) string {
 	return labelMap[constants.MySQLOperatorVersionLabel]
 }
 
-// EnsureDefaults will ensure that if a user omits and fields in the
+// EnsureDefaults will ensure that if a user omits any fields in the
 // spec that are required, we set some sensible defaults.
 // For example a user can choose to omit the version
 // and number of members.
