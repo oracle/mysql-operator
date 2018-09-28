@@ -22,6 +22,7 @@ import (
 
 	apps "k8s.io/api/apps/v1beta1"
 	"k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -193,6 +194,12 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
          # a unique server id for this instance.
          index=$(cat /etc/hostname | grep -o '[^-]*$')
          /entrypoint.sh %s`, baseServerID, entryPointArgs)
+
+	var resourceLimits corev1.ResourceRequirements
+	if cluster.Spec.Resources != nil && cluster.Spec.Resources.Server != nil {
+		resourceLimits = *cluster.Spec.Resources.Server
+	}
+
 	return v1.Container{
 		Name: MySQLServerName,
 		// TODO(apryde): Add BaseImage to cluster CRD.
@@ -215,6 +222,7 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 				Value: "true",
 			},
 		},
+		Resources: resourceLimits,
 	}
 }
 
@@ -225,6 +233,11 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 	}
 
 	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Name, members)
+
+	var resourceLimits corev1.ResourceRequirements
+	if cluster.Spec.Resources != nil && cluster.Spec.Resources.Agent != nil {
+		resourceLimits = *cluster.Spec.Resources.Agent
+	}
 
 	return v1.Container{
 		Name:         MySQLAgentName,
@@ -262,6 +275,7 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 				},
 			},
 		},
+		Resources: resourceLimits,
 	}
 }
 

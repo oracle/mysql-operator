@@ -64,11 +64,13 @@ type ClusterSpec struct {
 	// and server key for group replication SSL.
 	// +optional
 	SSLSecret *corev1.LocalObjectReference `json:"sslSecret,omitempty"`
-	// SecurityContext holds pod-level security attributes and common container settings.
+	// SecurityContext holds Pod-level security attributes and common Container settings.
 	SecurityContext *corev1.PodSecurityContext `json:"securityContext,omitempty"`
 	// Tolerations allows specifying a list of tolerations for controlling which
-	// set of nodes a pod can be scheduled on
+	// set of Nodes a Pod can be scheduled on
 	Tolerations *[]corev1.Toleration `json:"tolerations,omitempty"`
+	// Resources holds ResourceRequirements for the MySQL Agent & Server Containers
+	Resources *Resources `json:"resources,omitempty"`
 }
 
 // ClusterConditionType represents a valid condition of a Cluster.
@@ -123,6 +125,12 @@ type ClusterList struct {
 	metav1.ListMeta `json:"metadata"`
 
 	Items []Cluster `json:"items"`
+}
+
+// Resources holds ResourceRequirements for the MySQL Agent & Server Containers
+type Resources struct {
+	Agent  *corev1.ResourceRequirements `json:"agent,omitempty"`
+	Server *corev1.ResourceRequirements `json:"server,omitempty"`
 }
 
 // Database represents a database to backup.
