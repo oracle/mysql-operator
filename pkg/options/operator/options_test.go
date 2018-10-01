@@ -36,9 +36,6 @@ func assertRequiredDefaults(t *testing.T, s MySQLOperatorOpts) {
 	if &s.Images == nil {
 		t.Error("MySQLOperatorServer.Images: was nil, expected a valid configuration.")
 	}
-	if s.Images.MySQLServerImage != mysqlServer {
-		t.Errorf("MySQLOperatorServer.Images.MySQLServerImage: was '%s', expected '%s'.", s.Images.MySQLServerImage, mysqlServer)
-	}
 	if s.Images.MySQLAgentImage != mysqlAgent {
 		t.Errorf("MySQLOperatorServer.Images.MySQLAgentImage: was '%s', expected '%s'.", s.Images.MySQLAgentImage, mysqlAgent)
 	}
@@ -66,8 +63,7 @@ func mockMySQLOperatorOpts() MySQLOperatorOpts {
 		Master:     "some-master",
 		Hostname:   "some-hostname",
 		Images: Images{
-			MySQLServerImage: "some-mysql-img",
-			MySQLAgentImage:  "some-agent-img",
+			MySQLAgentImage: "some-agent-img",
 		},
 		MinResyncPeriod: v1.Duration{Duration: 42},
 	}

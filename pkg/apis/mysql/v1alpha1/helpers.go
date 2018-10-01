@@ -27,6 +27,7 @@ const (
 	// maxBaseServerID is the maximum safe value for BaseServerID calculated
 	// as max MySQL server_id value - max Replication Group size.
 	maxBaseServerID uint32 = 4294967295 - 9
+	mysqlServer            = "mysql/mysql-server"
 )
 
 const (
@@ -65,6 +66,10 @@ func (c *Cluster) EnsureDefaults() *Cluster {
 
 	if c.Spec.Version == "" {
 		c.Spec.Version = defaultVersion
+	}
+
+	if c.Spec.MySQLServerImage == "" {
+		c.Spec.MySQLServerImage = mysqlServer
 	}
 
 	return c

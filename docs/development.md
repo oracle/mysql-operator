@@ -20,6 +20,10 @@ in the format of `$USER-TIMESTAMP`. This will need to be remembered as this is
 needed for a latter step or can be exported as the `$MYSQL_AGENT_VERSION`
 envrionment variable.
 
+```bash
+$ export MYSQL_AGENT_VERSION=$(cat dist/version.txt)
+```
+
 ## Create a namespace
 
 Create the namespace that the operator will reside in. By default this is
@@ -38,11 +42,13 @@ ServiceAccounts, ClusterRoles, and ClusterRoleBindings for the operator to
 function.
 
 ```bash
-$ kubectl -n $USER apply \
-    -f contrib/manifests/custom-resource-definitions.yaml \
-    -f contrib/manifests/rbac.yaml
-$ sed -e "s/<NAMESPACE>/${USER}/g" \
-    contrib/manifests/role-binding-template.yaml | kubectl -n $USER apply -f -
+$ kubectl -n $USER apply -f contrib/manifests/custom-resource-definitions.yaml 
+```
+```bash
+$ sed -e "s/<NAMESPACE>/${USER}/g" contrib/manifests/rbac.yaml | kubectl -n $USER apply -f -
+```
+```bash
+$ sed -e "s/<NAMESPACE>/${USER}/g" contrib/manifests/role-binding-template.yaml | kubectl -n $USER apply -f -
 ```
 
 ### Run the MySQL Operator
@@ -53,9 +59,6 @@ development purposes.
 ```bash
 $ make run-dev
 ```
-
-If you did not set an envrionment variable previously, prefix this command with
-`MYSQL_AGENT_VERSION=` followed by the $USER-TIMESTAMP fortmatted version.
 
 ## Creating an InnoDB cluster
 

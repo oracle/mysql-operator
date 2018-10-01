@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	"k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -27,6 +28,11 @@ const MinimumMySQLVersion = "8.0.11"
 type ClusterSpec struct {
 	// Version defines the MySQL Docker image version.
 	Version string `json:"version"`
+	// MySQLServerImage defines the image to be pulled for the mysqlServer.
+	MySQLServerImage string `json:"mysqlServer"`
+	// ImagePullSecret defines the name of the secret that contains the
+	// required credentials for pulling the MySQLServerImage.
+	ImagePullSecret *v1.LocalObjectReference `json:"imagePullSecret"`
 	// Members defines the number of MySQL instances in a cluster
 	Members int32 `json:"members,omitempty"`
 	// BaseServerID defines the base number used to create unique server_id

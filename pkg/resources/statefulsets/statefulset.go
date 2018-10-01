@@ -345,7 +345,7 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 	}
 
 	containers := []v1.Container{
-		mysqlServerContainer(cluster, images.MySQLServerImage, rootPassword, members, baseServerID),
+		mysqlServerContainer(cluster, cluster.Spec.MySQLServerImage, rootPassword, members, baseServerID),
 		mysqlAgentContainer(cluster, images.MySQLAgentImage, rootPassword, members)}
 
 	podLabels := map[string]string{
@@ -399,8 +399,8 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 		},
 	}
 
-	if images.ImagePullSecret != nil {
-		ss.Spec.Template.Spec.ImagePullSecrets = append(ss.Spec.Template.Spec.ImagePullSecrets, *images.ImagePullSecret)
+	if cluster.Spec.ImagePullSecret != nil {
+		ss.Spec.Template.Spec.ImagePullSecrets = append(ss.Spec.Template.Spec.ImagePullSecrets, *cluster.Spec.ImagePullSecret)
 	}
 	if cluster.Spec.VolumeClaimTemplate != nil {
 		ss.Spec.VolumeClaimTemplates = append(ss.Spec.VolumeClaimTemplates, *cluster.Spec.VolumeClaimTemplate)
