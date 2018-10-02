@@ -20,14 +20,15 @@ import (
 )
 
 const (
-	// The default MySQL version to use if not specified explicitly by user
-	defaultVersion      = "8.0.12"
+	// DefaultVersion is the MySQL version to use if not specified explicitly by user
+	DefaultVersion      = "8.0.12"
 	defaultMembers      = 3
 	defaultBaseServerID = 1000
 	// maxBaseServerID is the maximum safe value for BaseServerID calculated
 	// as max MySQL server_id value - max Replication Group size.
 	maxBaseServerID uint32 = 4294967295 - 9
-	mysqlServer            = "mysql/mysql-server"
+	// MysqlServer is the image to use if no image is specified explicitly by the user.
+	MysqlServer = "mysql/mysql-server"
 )
 
 const (
@@ -65,11 +66,11 @@ func (c *Cluster) EnsureDefaults() *Cluster {
 	}
 
 	if c.Spec.Version == "" {
-		c.Spec.Version = defaultVersion
+		c.Spec.Version = DefaultVersion
 	}
 
 	if c.Spec.MySQLServerImage == "" {
-		c.Spec.MySQLServerImage = mysqlServer
+		c.Spec.MySQLServerImage = MysqlServer
 	}
 
 	return c
