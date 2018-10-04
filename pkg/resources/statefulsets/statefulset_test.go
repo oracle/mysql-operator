@@ -18,10 +18,9 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/api/core/v1"
-
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
@@ -224,11 +223,77 @@ func TestClusterWithTolerations(t *testing.T) {
 	}
 }
 
+func TestClusterWithResourceRequirements(t *testing.T) {
+	mysqlServerResourceRequirements := corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("2"),
+			corev1.ResourceMemory: resource.MustParse("2Gi"),
+		},
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("500m"),
+			corev1.ResourceMemory: resource.MustParse("1Gi"),
+		},
+	}
+
+	mysqlAgentResourceRequirements := corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("500m"),
+			corev1.ResourceMemory: resource.MustParse("512Mi"),
+		},
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("100m"),
+			corev1.ResourceMemory: resource.MustParse("128Mi"),
+		},
+	}
+
+	cluster := &v1alpha1.Cluster{
+		Spec: v1alpha1.ClusterSpec{
+			Resources: &v1alpha1.Resources{
+				Server: &mysqlServerResourceRequirements,
+				Agent:  &mysqlAgentResourceRequirements,
+			},
+		},
+	}
+
+	statefulSet := NewForCluster(cluster, mockOperatorConfig().Images, "mycluster")
+
+	assert.Equal(t, mysqlServerResourceRequirements, statefulSet.Spec.Template.Spec.Containers[0].Resources, "MySQL-Server container resource requirements do not match expected.")
+	assert.Equal(t, mysqlAgentResourceRequirements, statefulSet.Spec.Template.Spec.Containers[1].Resources, "MySQL-Agent container resource requirements do not match expected.")
+}
+
+func TestClusterWithOnlyMysqlServerResourceRequirements(t *testing.T) {
+	mysqlServerResourceRequirements := corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("2"),
+			corev1.ResourceMemory: resource.MustParse("2Gi"),
+		},
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("500m"),
+			corev1.ResourceMemory: resource.MustParse("1Gi"),
+		},
+	}
+
+	cluster := &v1alpha1.Cluster{
+		Spec: v1alpha1.ClusterSpec{
+			Resources: &v1alpha1.Resources{
+				Server: &mysqlServerResourceRequirements,
+			},
+		},
+	}
+
+	statefulSet := NewForCluster(cluster, mockOperatorConfig().Images, "mycluster")
+
+	assert.Equal(t, mysqlServerResourceRequirements, statefulSet.Spec.Template.Spec.Containers[0].Resources, "MySQL-Server container resource requirements do not match expected.")
+	assert.Nil(t, statefulSet.Spec.Template.Spec.Containers[1].Resources.Limits, "MySQL-Agent container has resource limits set which were not initially defined in the spec")
+	assert.Nil(t, statefulSet.Spec.Template.Spec.Containers[1].Resources.Requests, "MySQL-Agent container has resource requests set which were not initially defined in the spec")
+
+}
+
 func TestClusterEnterpriseImage(t *testing.T) {
 	cluster := &v1alpha1.Cluster{
 		Spec: v1alpha1.ClusterSpec{
 			MySQLServerImage: "some/image/path",
-			ImagePullSecret: &v1.LocalObjectReference{
+			ImagePullSecret: &corev1.LocalObjectReference{
 				Name: "someSecretName",
 			},
 		},
