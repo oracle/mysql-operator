@@ -15,12 +15,14 @@
 package operator
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v2"
@@ -29,8 +31,7 @@ import (
 )
 
 const (
-	mysqlAgent  = "iad.ocir.io/oracle/mysql-agent"
-	mysqlServer = "mysql/mysql-server"
+	mysqlAgent = "iad.ocir.io/oracle/mysql-agent"
 )
 
 // Images is the configuration of required MySQLOperator images. Remember to configure the appropriate
@@ -111,7 +112,7 @@ func (s *MySQLOperatorOpts) EnsureDefaults() {
 		s.Images.MySQLAgentImage = mysqlAgent
 	}
 	if s.Images.DefaultMySQLServerImage == "" {
-		s.Images.DefaultMySQLServerImage = mysqlServer
+		s.Images.DefaultMySQLServerImage = v1alpha1.MysqlServer
 	}
 	if s.MinResyncPeriod.Duration <= 0 {
 		s.MinResyncPeriod = metav1.Duration{Duration: 12 * time.Hour}
@@ -123,7 +124,7 @@ func (s *MySQLOperatorOpts) AddFlags(fs *pflag.FlagSet) *pflag.FlagSet {
 	fs.StringVar(&s.KubeConfig, "kubeconfig", s.KubeConfig, "Path to Kubeconfig file with authorization and master location information.")
 	fs.StringVar(&s.Master, "master", s.Master, "The address of the Kubernetes API server (overrides any value in kubeconfig).")
 	fs.StringVar(&s.Namespace, "namespace", metav1.NamespaceAll, "The namespace for which the MySQL operator manages MySQL clusters. Defaults to all.")
-	fs.StringVar(&s.Images.DefaultMySQLServerImage, "mysql-server-image", mysqlServer, "The name of the default target for the 'mysql-server' image (can be overridden on a per-cluster basis). Defaults to: "+mysqlServer+".")
+	fs.StringVar(&s.Images.DefaultMySQLServerImage, "mysql-server-image", s.Images.DefaultMySQLServerImage, fmt.Sprintf("The default image repository to pull the MySQL Server image from (can be overridden on a per-cluster basis). Defaults to: %q.", v1alpha1.MysqlServer))
 	fs.StringVar(&s.Images.MySQLAgentImage, "mysql-agent-image", s.Images.MySQLAgentImage, "The name of the target 'mysql-agent' image. Defaults to: iad.ocir.io/oracle/mysql-agent.")
 	fs.DurationVar(&s.MinResyncPeriod.Duration, "min-resync-period", s.MinResyncPeriod.Duration, "The resync period in reflectors will be random between MinResyncPeriod and 2*MinResyncPeriod.")
 	return fs

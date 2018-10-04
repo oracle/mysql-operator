@@ -344,15 +344,8 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 		})
 	}
 
-	var serverImage string
-	if cluster.Spec.Repository != "" {
-		serverImage = cluster.Spec.Repository
-	} else {
-		serverImage = images.DefaultMySQLServerImage
-	}
-
 	containers := []v1.Container{
-		mysqlServerContainer(cluster, serverImage, rootPassword, members, baseServerID),
+		mysqlServerContainer(cluster, cluster.Spec.Repository, rootPassword, members, baseServerID),
 		mysqlAgentContainer(cluster, images.MySQLAgentImage, rootPassword, members)}
 
 	podLabels := map[string]string{

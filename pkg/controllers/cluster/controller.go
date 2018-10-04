@@ -324,6 +324,10 @@ func (m *MySQLController) syncHandler(key string) error {
 		return errors.Wrap(err, "validating Cluster")
 	}
 
+	if cluster.Spec.Repository == "" {
+		cluster.Spec.Repository = m.opConfig.Images.DefaultMySQLServerImage
+	}
+
 	operatorVersion := buildversion.GetBuildVersion()
 	// Ensure that the required labels are set on the cluster.
 	sel := combineSelectors(SelectorForCluster(cluster), SelectorForClusterOperatorVersion(operatorVersion))

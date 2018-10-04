@@ -310,30 +310,6 @@ func TestClusterEnterpriseImage(t *testing.T) {
 	assert.Equal(t, "some/image/path:"+v1alpha1.DefaultVersion, si)
 }
 
-func TestClusterNoImage(t *testing.T) {
-	cluster := &v1alpha1.Cluster{}
-	cluster.EnsureDefaults()
-
-	statefulSet := NewForCluster(cluster, mockOperatorConfig().Images, "mycluster")
-
-	si := statefulSet.Spec.Template.Spec.Containers[0].Image
-
-	assert.Equal(t, v1alpha1.MysqlServer+":"+v1alpha1.DefaultVersion, si)
-}
-
-func TestClusterNoImageOperatorDefault(t *testing.T) {
-	cluster := &v1alpha1.Cluster{}
-	cluster.EnsureDefaults()
-
-	operatorConf := mockOperatorConfig()
-	operatorConf.Images.DefaultMySQLServerImage = "newDefaultImage"
-	statefulSet := NewForCluster(cluster, operatorConf.Images, "mycluster")
-
-	si := statefulSet.Spec.Template.Spec.Containers[0].Image
-
-	assert.Equal(t, "newDefaultImage:"+v1alpha1.DefaultVersion, si)
-}
-
 func TestClusterDefaultOverride(t *testing.T) {
 	cluster := &v1alpha1.Cluster{}
 	cluster.EnsureDefaults()

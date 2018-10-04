@@ -24,7 +24,7 @@ To be able to pull the MySQL Enterprise Edition from Docker it is necessary to p
 
 >For alternative ways to create Kubernetes secrets see their documentation on [creating secrets from Docker configs](https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod) or [creating secrets manually](https://kubernetes.io/docs/concepts/containers/images/#creating-a-secret-with-a-docker-config).
 
-Enter your credentials into the following command and execute it to create a Kubernetes secret that will enable pulling images from the Docker store. Add  the `-n` flag to specify a namespace if you do not want to use the default namespace. 
+Enter your credentials into the following command and execute it to create a Kubernetes secret that will enable pulling images from the Docker store.
 ```
 kubectl create secret docker-registry myregistrykey \
 --docker-server=https://index.docker.io/v1/ \
@@ -35,15 +35,15 @@ kubectl create secret docker-registry myregistrykey \
 ## 03 - Create your MySQL Cluster
 Finally, create your MySQL Cluster with the required specifications entered under `spec:` 
 
-- The `repository:` field should be the path to a Docker registry containing the enterprise edition of MySQL. If this is ommited, the default is taken from the MySQL operator field `defaultMysqlServer:` which you can also specify.
-- The `imagePullSecrets`: field allows you to specify a list of Kubernetes secret names. These secret(s) should contains your credentials for the Docker registry.
+- The `repository:` field should be the path to a Docker registry containing the enterprise edition of MySQL. If this is omitted, the default is taken from the MySQL operator field `defaultMysqlServer:` which you can also specify.
+- The `imagePullSecrets`: field allows you to specify a list of Kubernetes secret names. These secret(s) should contain your credentials for the Docker registry.
 - The version to be used should be specified, without this, a default version is used which is **not** guaranteed to match an available image of MySQL Enterprise.
 - The namespace of the cluster  must match the namespace of the RBAC permissions created in step 01.
 ```
 kubectl apply -f examples/cluster/cluster-enterprise-version.yaml
 ```
 ### Check that it is running
-You can now run the following command to access the sql prompt in your MySQL Cluster, just replace `<NAMESPACE>` with the namespace you created your cluster in.
+You can now run the following command to access the SQL prompt in your MySQL Cluster, just replace `<NAMESPACE>` with the namespace you created your cluster in.
 ```
 sh hack/mysql.sh <NAMESPACE>/mysql-0
 ```
