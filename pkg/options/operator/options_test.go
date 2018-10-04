@@ -63,7 +63,8 @@ func mockMySQLOperatorOpts() MySQLOperatorOpts {
 		Master:     "some-master",
 		Hostname:   "some-hostname",
 		Images: Images{
-			MySQLAgentImage: "some-agent-img",
+			MySQLAgentImage:         "some-agent-img",
+			DefaultMySQLServerImage: "mysql/mysql-server",
 		},
 		MinResyncPeriod: v1.Duration{Duration: 42},
 	}
