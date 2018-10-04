@@ -54,8 +54,8 @@ func getOperatorVersionLabel(labelMap map[string]string) string {
 
 // EnsureDefaults will ensure that if a user omits any fields in the
 // spec that are required, we set some sensible defaults.
-// For example a user can choose to omit the version
-// and number of members.
+// For example a user can choose to omit the version and number of
+// members. MySQL server image default is defined through operator spec.
 func (c *Cluster) EnsureDefaults() *Cluster {
 	if c.Spec.Members == 0 {
 		c.Spec.Members = defaultMembers
@@ -67,10 +67,6 @@ func (c *Cluster) EnsureDefaults() *Cluster {
 
 	if c.Spec.Version == "" {
 		c.Spec.Version = DefaultVersion
-	}
-
-	if c.Spec.MySQLServerImage == "" {
-		c.Spec.MySQLServerImage = MysqlServer
 	}
 
 	return c

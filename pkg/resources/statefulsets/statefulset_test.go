@@ -292,10 +292,10 @@ func TestClusterWithOnlyMysqlServerResourceRequirements(t *testing.T) {
 func TestClusterEnterpriseImage(t *testing.T) {
 	cluster := &v1alpha1.Cluster{
 		Spec: v1alpha1.ClusterSpec{
-			MySQLServerImage: "some/image/path",
-			ImagePullSecret: &corev1.LocalObjectReference{
+			Repository: "some/image/path",
+			ImagePullSecrets: []corev1.LocalObjectReference{{
 				Name: "someSecretName",
-			},
+			}},
 		},
 	}
 	cluster.EnsureDefaults()
@@ -319,4 +319,31 @@ func TestClusterNoImage(t *testing.T) {
 	si := statefulSet.Spec.Template.Spec.Containers[0].Image
 
 	assert.Equal(t, v1alpha1.MysqlServer+":"+v1alpha1.DefaultVersion, si)
+}
+
+func TestClusterNoImageOperatorDefault(t *testing.T) {
+	cluster := &v1alpha1.Cluster{}
+	cluster.EnsureDefaults()
+
+	operatorConf := mockOperatorConfig()
+	operatorConf.Images.DefaultMySQLServerImage = "newDefaultImage"
+	statefulSet := NewForCluster(cluster, operatorConf.Images, "mycluster")
+
+	si := statefulSet.Spec.Template.Spec.Containers[0].Image
+
+	assert.Equal(t, "newDefaultImage:"+v1alpha1.DefaultVersion, si)
+}
+
+func TestClusterDefaultOverride(t *testing.T) {
+	cluster := &v1alpha1.Cluster{}
+	cluster.EnsureDefaults()
+	cluster.Spec.Repository = "OverrideDefaultImage"
+
+	operatorConf := mockOperatorConfig()
+	operatorConf.Images.DefaultMySQLServerImage = "newDefaultImage"
+	statefulSet := NewForCluster(cluster, operatorConf.Images, "mycluster")
+
+	si := statefulSet.Spec.Template.Spec.Containers[0].Image
+
+	assert.Equal(t, "OverrideDefaultImage:"+v1alpha1.DefaultVersion, si)
 }
