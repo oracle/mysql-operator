@@ -18,6 +18,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"strings"
 	"sync"
 	"time"
 
@@ -86,7 +87,7 @@ func (ex *Executor) Backup(backupDir string, clusterName string) (io.ReadCloser,
 	cmd.SetStdout(zw)
 
 	go func() {
-		glog.V(4).Infof("running cmd: '%v'", cmd)
+		glog.V(4).Infof("running cmd: '%s %s'", mysqldumpPath, SanitizeArgs(append(args, dbNames...), ex.config.password))
 		err = cmd.Run()
 		zw.Close()
 		if err != nil {
@@ -126,7 +127,13 @@ func (ex *Executor) Restore(content io.ReadCloser) error {
 	defer zr.Close()
 	cmd.SetStdin(zr)
 
-	glog.V(4).Infof("running cmd: '%v'", cmd)
+	glog.V(4).Infof("running cmd: '%s %s'", mysqlPath, SanitizeArgs(args, ex.config.password))
 	_, err = cmd.CombinedOutput()
 	return err
+}
+
+// SanitizeArgs takes a slice, redacts all occurrences of a given string and
+// returns a single string concatenated with spaces
+func SanitizeArgs(args []string, old string) string {
+	return strings.Replace(strings.Join(args, " "), old, "REDACTED", -1)
 }
