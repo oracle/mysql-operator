@@ -20,13 +20,15 @@ import (
 )
 
 const (
-	// The default MySQL version to use if not specified explicitly by user
-	defaultVersion      = "8.0.12"
+	// DefaultVersion is the MySQL version to use if not specified explicitly by user
+	DefaultVersion      = "8.0.12"
 	defaultMembers      = 3
 	defaultBaseServerID = 1000
 	// maxBaseServerID is the maximum safe value for BaseServerID calculated
 	// as max MySQL server_id value - max Replication Group size.
 	maxBaseServerID uint32 = 4294967295 - 9
+	// MysqlServer is the image to use if no image is specified explicitly by the user.
+	MysqlServer = "mysql/mysql-server"
 )
 
 const (
@@ -50,10 +52,10 @@ func getOperatorVersionLabel(labelMap map[string]string) string {
 	return labelMap[constants.MySQLOperatorVersionLabel]
 }
 
-// EnsureDefaults will ensure that if a user omits and fields in the
+// EnsureDefaults will ensure that if a user omits any fields in the
 // spec that are required, we set some sensible defaults.
-// For example a user can choose to omit the version
-// and number of members.
+// For example a user can choose to omit the version and number of
+// members.
 func (c *Cluster) EnsureDefaults() *Cluster {
 	if c.Spec.Members == 0 {
 		c.Spec.Members = defaultMembers
@@ -64,7 +66,7 @@ func (c *Cluster) EnsureDefaults() *Cluster {
 	}
 
 	if c.Spec.Version == "" {
-		c.Spec.Version = defaultVersion
+		c.Spec.Version = DefaultVersion
 	}
 
 	return c

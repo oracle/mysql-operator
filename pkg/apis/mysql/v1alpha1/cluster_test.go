@@ -85,8 +85,8 @@ func TestDefaultVersion(t *testing.T) {
 	cluster := &Cluster{}
 	cluster.EnsureDefaults()
 
-	if cluster.Spec.Version != defaultVersion {
-		t.Errorf("Expected default version to be %s but got %s", defaultVersion, cluster.Spec.Version)
+	if cluster.Spec.Version != DefaultVersion {
+		t.Errorf("Expected default version to be %s but got %s", DefaultVersion, cluster.Spec.Version)
 	}
 }
 

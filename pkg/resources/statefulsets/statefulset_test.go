@@ -286,4 +286,40 @@ func TestClusterWithOnlyMysqlServerResourceRequirements(t *testing.T) {
 	assert.Equal(t, mysqlServerResourceRequirements, statefulSet.Spec.Template.Spec.Containers[0].Resources, "MySQL-Server container resource requirements do not match expected.")
 	assert.Nil(t, statefulSet.Spec.Template.Spec.Containers[1].Resources.Limits, "MySQL-Agent container has resource limits set which were not initially defined in the spec")
 	assert.Nil(t, statefulSet.Spec.Template.Spec.Containers[1].Resources.Requests, "MySQL-Agent container has resource requests set which were not initially defined in the spec")
+
+}
+
+func TestClusterEnterpriseImage(t *testing.T) {
+	cluster := &v1alpha1.Cluster{
+		Spec: v1alpha1.ClusterSpec{
+			Repository: "some/image/path",
+			ImagePullSecrets: []corev1.LocalObjectReference{{
+				Name: "someSecretName",
+			}},
+		},
+	}
+	cluster.EnsureDefaults()
+
+	statefulSet := NewForCluster(cluster, mockOperatorConfig().Images, "mycluster")
+
+	pullSecrets := statefulSet.Spec.Template.Spec.ImagePullSecrets
+	ps := pullSecrets[len(pullSecrets)-1]
+	si := statefulSet.Spec.Template.Spec.Containers[0].Image
+
+	assert.Equal(t, "someSecretName", ps.Name)
+	assert.Equal(t, "some/image/path:"+v1alpha1.DefaultVersion, si)
+}
+
+func TestClusterDefaultOverride(t *testing.T) {
+	cluster := &v1alpha1.Cluster{}
+	cluster.EnsureDefaults()
+	cluster.Spec.Repository = "OverrideDefaultImage"
+
+	operatorConf := mockOperatorConfig()
+	operatorConf.Images.DefaultMySQLServerImage = "newDefaultImage"
+	statefulSet := NewForCluster(cluster, operatorConf.Images, "mycluster")
+
+	si := statefulSet.Spec.Template.Spec.Containers[0].Image
+
+	assert.Equal(t, "OverrideDefaultImage:"+v1alpha1.DefaultVersion, si)
 }

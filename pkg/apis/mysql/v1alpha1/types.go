@@ -27,6 +27,11 @@ const MinimumMySQLVersion = "8.0.11"
 type ClusterSpec struct {
 	// Version defines the MySQL Docker image version.
 	Version string `json:"version"`
+	// Repository defines the image repository from which to pull the MySQL server image.
+	Repository string `json:"repository"`
+	// ImagePullSecret defines the name of the secret that contains the
+	// required credentials for pulling from the specified Repository.
+	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecret"`
 	// Members defines the number of MySQL instances in a cluster
 	Members int32 `json:"members,omitempty"`
 	// BaseServerID defines the base number used to create unique server_id

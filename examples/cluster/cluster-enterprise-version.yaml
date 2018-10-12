@@ -1,0 +1,9 @@
+apiVersion: mysql.oracle.com/v1alpha1
+kind: Cluster
+metadata:
+  name: mysql-enterprise
+spec:
+  version: "8.0.11"
+  repository: store/oracle/mysql-enterprise-server
+  imagePullSecrets: 
+    - name: myregistrykey
