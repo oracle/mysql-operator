@@ -184,7 +184,7 @@ func (controller *AgentController) Run(ctx context.Context, numWorkers int) erro
 	defer glog.Info("Shutting down AgentController")
 
 	glog.Info("Waiting for caches to sync")
-	if !controllerutils.WaitForCacheSync(controllerAgentName, ctx.Done(),
+	if !controllerutils.WaitForCacheSync(agentControllerAgentName, ctx.Done(),
 		controller.clusterListerSynced,
 		controller.backupListerSynced,
 		controller.podListerSynced) {
