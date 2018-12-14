@@ -20,19 +20,18 @@ import (
 	"strconv"
 	"strings"
 
-	apps "k8s.io/api/apps/v1beta1"
-	"k8s.io/api/core/v1"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/constants"
 	agentopts "github.com/oracle/mysql-operator/pkg/options/agent"
 	operatoropts "github.com/oracle/mysql-operator/pkg/options/operator"
 	"github.com/oracle/mysql-operator/pkg/resources/secrets"
 	"github.com/oracle/mysql-operator/pkg/version"
+	apps "k8s.io/api/apps/v1beta1"
+	"k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 const (
@@ -147,11 +146,12 @@ func mysqlRootPassword(cluster *v1alpha1.Cluster) v1.EnvVar {
 	}
 }
 
-func getReplicationGroupSeeds(name string, members int) string {
+func getReplicationGroupSeeds(name string, namespace string, members int) string {
 	seeds := []string{}
 	for i := 0; i < members; i++ {
-		seeds = append(seeds, fmt.Sprintf("%[1]s-%[2]d.%[1]s:%[3]d", name, i, replicationGroupPort))
+		seeds = append(seeds, fmt.Sprintf("%[1]s-%[2]d.%[1]s.%[3]s:%[4]d", name, i, namespace, replicationGroupPort))
 	}
+	fmt.Println("generated seeds:", strings.Join(seeds, ","))
 	return strings.Join(seeds, ",")
 }
 
@@ -232,7 +232,7 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 		agentVersion = version
 	}
 
-	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Name, members)
+	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Name, cluster.Namespace, members)
 
 	var resourceLimits corev1.ResourceRequirements
 	if cluster.Spec.Resources != nil && cluster.Spec.Resources.Agent != nil {
