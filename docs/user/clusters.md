@@ -50,6 +50,30 @@ spec:
     name: mysql-root-user-secret
 ```
 
+### Create a cluster with initContainers
+
+The following example will create a MySQL Cluster with a containers.
+Format same as Kubernetes container.
+```yaml
+apiVersion: mysql.oracle.com/v1alpha1
+kind: Cluster
+metadata:
+  name: mysql-cluster-with-init-container
+spec:
+  members: 1
+  initContainers:
+  - name: sleep
+    image: busybox
+    command:
+    - echo
+    - "This is first init container"
+  - name: sleep
+    image: busybox
+    command:
+    - echo
+    - "This is second init container"
+```
+
 ### Create a cluster with a persistent volume
 
 The following example will create a MySQL Cluster with a persistent local volume.
