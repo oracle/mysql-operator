@@ -20,18 +20,19 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
-	"github.com/oracle/mysql-operator/pkg/constants"
-	agentopts "github.com/oracle/mysql-operator/pkg/options/agent"
-	operatoropts "github.com/oracle/mysql-operator/pkg/options/operator"
-	"github.com/oracle/mysql-operator/pkg/resources/secrets"
-	"github.com/oracle/mysql-operator/pkg/version"
 	apps "k8s.io/api/apps/v1beta1"
 	"k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
+	"github.com/oracle/mysql-operator/pkg/constants"
+	agentopts "github.com/oracle/mysql-operator/pkg/options/agent"
+	operatoropts "github.com/oracle/mysql-operator/pkg/options/operator"
+	"github.com/oracle/mysql-operator/pkg/resources/secrets"
+	"github.com/oracle/mysql-operator/pkg/version"
 )
 
 const (
@@ -151,7 +152,6 @@ func getReplicationGroupSeeds(name string, namespace string, members int) string
 	for i := 0; i < members; i++ {
 		seeds = append(seeds, fmt.Sprintf("%[1]s-%[2]d.%[1]s.%[3]s:%[4]d", name, i, namespace, replicationGroupPort))
 	}
-	fmt.Println("generated seeds:", strings.Join(seeds, ","))
 	return strings.Join(seeds, ",")
 }
 
