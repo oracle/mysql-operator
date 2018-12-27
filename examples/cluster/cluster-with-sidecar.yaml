@@ -1,0 +1,33 @@
+apiVersion: mysql.oracle.com/v1alpha1
+kind: Cluster
+metadata:
+  name: mysql
+spec:
+  members: 3
+  SidecarContainers:
+    - name: test-container
+      env:
+        - name: busybox
+          value: test-container
+      image: busybox:1.29.3
+      resources:
+        limits:
+          cpu: 500m
+          memory: 256Mi
+        requests:
+          cpu: 250m
+          memory: 128Mi
+      command: ["sleep", "3600"]
+    - name: test-container2
+      env:
+        - name: busybox
+          value: test-container2
+      image: busybox:1.29.3
+      resources:
+        limits:
+          cpu: 500m
+          memory: 256Mi
+        requests:
+          cpu: 250m
+          memory: 128Mi
+      command: ["sleep", "3600"]
