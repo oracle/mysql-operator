@@ -78,6 +78,10 @@ type ClusterSpec struct {
 	Resources *Resources `json:"resources,omitempty"`
 	// Init containers
 	InitContainers []corev1.Container `json:"initContainers,omitempty"`
+	// Resources for sidecar
+	SidecarContainers *[]corev1.Container `json:"sidecarContainers,omitempty"`
+	// Resources for additional volume
+	AdditionalVolume *[]corev1.Volume `json:"additionalVolume,omitempty"`
 }
 
 // ClusterConditionType represents a valid condition of a Cluster.

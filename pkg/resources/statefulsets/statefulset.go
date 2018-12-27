@@ -74,6 +74,15 @@ func volumeMounts(cluster *v1alpha1.Cluster) []v1.VolumeMount {
 		SubPath:   "mysql",
 	})
 
+	if cluster.Spec.AdditionalVolume != nil {
+		for _, v := range *cluster.Spec.AdditionalVolume {
+			mounts = append(mounts, v1.VolumeMount{
+				Name:      v.Name,
+				MountPath: fmt.Sprintf("/mnt/%s", v.Name),
+			})
+		}
+	}
+
 	// A user may explicitly define a my.cnf configuration file for
 	// their MySQL cluster.
 	if cluster.RequiresConfigMount() {
@@ -344,9 +353,17 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 		})
 	}
 
+	if cluster.Spec.AdditionalVolume != nil && len(*cluster.Spec.AdditionalVolume) > 0 {
+		podVolumes = append(podVolumes, *cluster.Spec.AdditionalVolume...)
+	}
+
 	containers := []v1.Container{
 		mysqlServerContainer(cluster, cluster.Spec.Repository, rootPassword, members, baseServerID),
 		mysqlAgentContainer(cluster, images.MySQLAgentImage, rootPassword, members)}
+
+	if cluster.Spec.SidecarContainers != nil && len(*cluster.Spec.SidecarContainers) > 0 {
+		containers = append(containers, *cluster.Spec.SidecarContainers...)
+	}
 
 	podLabels := map[string]string{
 		constants.ClusterLabel: cluster.Name,
