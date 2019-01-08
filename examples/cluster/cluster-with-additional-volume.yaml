@@ -4,7 +4,7 @@ metadata:
   name: mysql
 spec:
   members: 3
-  AdditionalVolume:
+  additionalVolume:
   # will mount to /mnt/$name
     - name: test-volume
       emptyDir: {}
