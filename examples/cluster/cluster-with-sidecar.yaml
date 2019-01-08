@@ -4,7 +4,7 @@ metadata:
   name: mysql
 spec:
   members: 3
-  SidecarContainers:
+  sidecarContainers:
     - name: test-container
       env:
         - name: busybox
