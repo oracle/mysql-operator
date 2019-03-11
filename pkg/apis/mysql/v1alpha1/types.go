@@ -178,6 +178,7 @@ type S3StorageProvider struct {
 // service.
 type StorageProvider struct {
 	S3 *S3StorageProvider `json:"s3"`
+	ProviderType string `json:"providerType"`
 }
 
 // BackupSpec defines the specification for a MySQL backup. This includes what should be backed up,

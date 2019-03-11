@@ -15,10 +15,11 @@
 package storage
 
 import (
+	"github.com/oracle/mysql-operator/pkg/backup/storage/oss"
+	"github.com/oracle/mysql-operator/pkg/backup/storage/s3"
 	"io"
 
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
-	"github.com/oracle/mysql-operator/pkg/backup/storage/s3"
 )
 
 // Interface abstracts the underlying storage provider.
@@ -33,5 +34,11 @@ type Interface interface {
 // NewStorageProvider accepts a secret map and uses its contents to determine the
 // desired object storage provider implementation.
 func NewStorageProvider(config v1alpha1.StorageProvider, credentials map[string]string) (Interface, error) {
-	return s3.NewProvider(config.S3, credentials)
+	if config.ProviderType == "s3" {
+		return s3.NewProvider(config.S3, credentials)
+	} else if config.ProviderType == "oss" {
+		return oss.NewProvider(config.S3, credentials)
+	} else {
+		return nil, nil
+	}
 }
