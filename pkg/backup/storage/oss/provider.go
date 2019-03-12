@@ -61,7 +61,7 @@ func (p *Provider) Store(key string, body io.ReadCloser) error {
 	if err != nil {
 		return errors.Wrapf(err, "error storing backup (provider=\"S3\", endpoint=%q, bucket=%q, key=%q)", p.Endpoint, p.Bucket, key)
 	}
-	err = bucket.PutObject(key, body);
+	err = bucket.PutObject(key, body)
 	return errors.Wrapf(err, "error storing backup (provider=\"S3\", endpoint=%q, bucket=%q, key=%q)", p.Endpoint, p.Bucket, key)
 }
 
