@@ -172,6 +172,7 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 		"--master-info-repository=TABLE",
 		"--relay-log-info-repository=TABLE",
 		"--transaction-write-set-extraction=XXHASH64",
+		"--group-replication-exit-state-action=READ_ONLY",
 		fmt.Sprintf("--relay-log=%s-${index}-relay-bin", cluster.Name),
 		fmt.Sprintf("--report-host=\"%[1]s-${index}.%[1]s\"", cluster.Name),
 		"--log-error-verbosity=3",
