@@ -33,6 +33,8 @@ import (
 	operatoropts "github.com/oracle/mysql-operator/pkg/options/operator"
 	"github.com/oracle/mysql-operator/pkg/resources/secrets"
 	"github.com/oracle/mysql-operator/pkg/version"
+
+	goverion "github.com/hashicorp/go-version"
 )
 
 const (
@@ -48,6 +50,8 @@ const (
 	mySQLSSLVolumeName    = "mysqlsslvolume"
 
 	replicationGroupPort = 13306
+
+	minMysqlVersionWithGroupExitStateArgs = "8.0.12"
 )
 
 func volumeMounts(cluster *v1alpha1.Cluster) []v1.VolumeMount {
@@ -155,6 +159,24 @@ func getReplicationGroupSeeds(name string, members int) string {
 	return strings.Join(seeds, ",")
 }
 
+func checkSupportGroupExitStateArgs(deployingVersion string) bool {
+	ver, err := goverion.NewVersion(deployingVersion)
+	if err != nil {
+		return false
+	}
+
+	minVer, err := goverion.NewVersion(minMysqlVersionWithGroupExitStateArgs)
+	if err != nil {
+		return false
+	}
+
+	if ver.GreaterThan(minVer) || ver.Equal(minVer) {
+		return true
+	}
+
+	return false
+}
+
 // Builds the MySQL operator container for a cluster.
 // The 'mysqlImage' parameter is the image name of the mysql server to use with
 // no version information.. e.g. 'mysql/mysql-server'
@@ -172,7 +194,6 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 		"--master-info-repository=TABLE",
 		"--relay-log-info-repository=TABLE",
 		"--transaction-write-set-extraction=XXHASH64",
-		"--group-replication-exit-state-action=READ_ONLY",
 		fmt.Sprintf("--relay-log=%s-${index}-relay-bin", cluster.Name),
 		fmt.Sprintf("--report-host=\"%[1]s-${index}.%[1]s\"", cluster.Name),
 		"--log-error-verbosity=3",
@@ -183,6 +204,10 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 			"--ssl-ca=/etc/ssl/mysql/ca.crt",
 			"--ssl-cert=/etc/ssl/mysql/tls.crt",
 			"--ssl-key=/etc/ssl/mysql/tls.key")
+	}
+
+	if checkSupportGroupExitStateArgs(cluster.Spec.Version) {
+		args = append(args, "--group-replication-exit-state-action=READ_ONLY")
 	}
 
 	entryPointArgs := strings.Join(args, " ")
