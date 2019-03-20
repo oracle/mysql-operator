@@ -323,3 +323,37 @@ func TestClusterDefaultOverride(t *testing.T) {
 
 	assert.Equal(t, "OverrideDefaultImage:"+v1alpha1.DefaultVersion, si)
 }
+
+func TestClusterSetGroupExitStateArgs(t *testing.T) {
+	cluster := &v1alpha1.Cluster{}
+	cluster.EnsureDefaults()
+	cluster.Spec.Version = "8.0.12"
+
+	statefulSet := NewForCluster(cluster, mockOperatorConfig().Images, "mycluster")
+
+	cmd := statefulSet.Spec.Template.Spec.Containers[0].Command[2]
+
+	assert.Contains(t, cmd, "--loose-group-replication-exit-state-action=READ_ONLY")
+
+	cluster2 := &v1alpha1.Cluster{}
+	cluster2.EnsureDefaults()
+	cluster2.Spec.Version = "8.0.13"
+
+	statefulSet2 := NewForCluster(cluster2, mockOperatorConfig().Images, "mycluster")
+
+	cmd2 := statefulSet2.Spec.Template.Spec.Containers[0].Command[2]
+
+	assert.Contains(t, cmd2, "--loose-group-replication-exit-state-action=READ_ONLY")
+}
+
+func TestClusterNotSetGroupExitStateArgs(t *testing.T) {
+	cluster := &v1alpha1.Cluster{}
+	cluster.EnsureDefaults()
+	cluster.Spec.Version = "8.0.11"
+
+	statefulSet := NewForCluster(cluster, mockOperatorConfig().Images, "mycluster")
+
+	cmd := statefulSet.Spec.Template.Spec.Containers[0].Command[2]
+
+	assert.NotContains(t, cmd, "--loose-group-replication-exit-state-action=READ_ONLY")
+}
