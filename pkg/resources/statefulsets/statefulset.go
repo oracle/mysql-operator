@@ -209,7 +209,7 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 	}
 
 	if checkSupportGroupExitStateArgs(cluster.Spec.Version) {
-		args = append(args, "--group-replication-exit-state-action=READ_ONLY")
+		args = append(args, "--loose-group-replication-exit-state-action=READ_ONLY")
 	}
 
 	entryPointArgs := strings.Join(args, " ")

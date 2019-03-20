@@ -333,7 +333,7 @@ func TestClusterSetGroupExitStateArgs(t *testing.T) {
 
 	cmd := statefulSet.Spec.Template.Spec.Containers[0].Command[2]
 
-	assert.Contains(t, cmd, "--group-replication-exit-state-action=READ_ONLY")
+	assert.Contains(t, cmd, "--loose-group-replication-exit-state-action=READ_ONLY")
 
 	cluster2 := &v1alpha1.Cluster{}
 	cluster2.EnsureDefaults()
@@ -343,7 +343,7 @@ func TestClusterSetGroupExitStateArgs(t *testing.T) {
 
 	cmd2 := statefulSet2.Spec.Template.Spec.Containers[0].Command[2]
 
-	assert.Contains(t, cmd2, "--group-replication-exit-state-action=READ_ONLY")
+	assert.Contains(t, cmd2, "--loose-group-replication-exit-state-action=READ_ONLY")
 }
 
 func TestClusterNotSetGroupExitStateArgs(t *testing.T) {
@@ -355,5 +355,5 @@ func TestClusterNotSetGroupExitStateArgs(t *testing.T) {
 
 	cmd := statefulSet.Spec.Template.Spec.Containers[0].Command[2]
 
-	assert.NotContains(t, cmd, "--group-replication-exit-state-action=READ_ONLY")
+	assert.NotContains(t, cmd, "--loose-group-replication-exit-state-action=READ_ONLY")
 }
