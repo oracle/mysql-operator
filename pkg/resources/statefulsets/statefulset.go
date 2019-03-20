@@ -34,7 +34,7 @@ import (
 	"github.com/oracle/mysql-operator/pkg/resources/secrets"
 	"github.com/oracle/mysql-operator/pkg/version"
 
-	goverion "github.com/hashicorp/go-version"
+	"github.com/coreos/go-semver/semver"
 )
 
 const (
@@ -159,22 +159,24 @@ func getReplicationGroupSeeds(name string, members int) string {
 	return strings.Join(seeds, ",")
 }
 
-func checkSupportGroupExitStateArgs(deployingVersion string) bool {
-	ver, err := goverion.NewVersion(deployingVersion)
-	if err != nil {
-		return false
+func checkSupportGroupExitStateArgs(deployingVersion string) (supportedVer bool) {
+	defer func() {
+		if r := recover(); r != nil {
+
+		}
+	}()
+
+	supportedVer = false
+
+	ver := semver.New(deployingVersion)
+	minVer := semver.New(minMysqlVersionWithGroupExitStateArgs)
+
+	if ver.LessThan(*minVer) {
+		return
 	}
 
-	minVer, err := goverion.NewVersion(minMysqlVersionWithGroupExitStateArgs)
-	if err != nil {
-		return false
-	}
-
-	if ver.GreaterThan(minVer) || ver.Equal(minVer) {
-		return true
-	}
-
-	return false
+	supportedVer = true
+	return
 }
 
 // Builds the MySQL operator container for a cluster.
