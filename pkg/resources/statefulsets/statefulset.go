@@ -416,6 +416,7 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 					ServiceAccountName: "mysql-agent",
 					NodeSelector:       cluster.Spec.NodeSelector,
 					Affinity:           cluster.Spec.Affinity,
+					InitContainers:     cluster.Spec.InitContainers,
 					Containers:         containers,
 					Volumes:            podVolumes,
 				},
