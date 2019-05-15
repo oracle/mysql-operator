@@ -1,6 +1,6 @@
 # MySQL Operator
 
-The MySQL [Operator][1] creates, configures and manages MySQL clusters running on Kubernetes.
+The MySQL [Operator][1] creates, configures and manages MySQL InnoDB clusters running on Kubernetes. It is not for MySQL NDB Cluster.
 
 [![issues](https://img.shields.io/github/issues/oracle/mysql-operator.svg)](https://github.com/oracle/mysql-operator/issues)
 [![tags](https://img.shields.io/github/tag/oracle/mysql-operator.svg)](https://github.com/oracle/mysql-operator/tags)
@@ -23,7 +23,7 @@ See the [tutorial][5] which provides a quick-start guide for users of the Oracle
 
 The MySQL Operator provides the following core features:
 
-- Create and delete highly available MySQL clusters in Kubernetes with minimal effort
+- Create and delete highly available MySQL InnoDB clusters in Kubernetes with minimal effort
 - Automate database backups, failure detection, and recovery
 - Schedule automated backups as part of a cluster definition
 - Create "on-demand" backups.
