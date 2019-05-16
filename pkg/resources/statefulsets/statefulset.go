@@ -151,10 +151,10 @@ func mysqlRootPassword(cluster *v1alpha1.Cluster) v1.EnvVar {
 	}
 }
 
-func getReplicationGroupSeeds(name string, members int) string {
+func getReplicationGroupSeeds(name string, namespace string, members int) string {
 	seeds := []string{}
 	for i := 0; i < members; i++ {
-		seeds = append(seeds, fmt.Sprintf("%[1]s-%[2]d.%[1]s:%[3]d", name, i, replicationGroupPort))
+		seeds = append(seeds, fmt.Sprintf("%[1]s-%[2]d.%[1]s.%[3]s:%[4]d", name, i, namespace, replicationGroupPort))
 	}
 	return strings.Join(seeds, ",")
 }
@@ -260,7 +260,7 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 		agentVersion = version
 	}
 
-	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Name, members)
+	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Name, cluster.Namespace, members)
 
 	var resourceLimits corev1.ResourceRequirements
 	if cluster.Spec.Resources != nil && cluster.Spec.Resources.Agent != nil {
