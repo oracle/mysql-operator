@@ -76,6 +76,10 @@ type ClusterSpec struct {
 	Tolerations *[]corev1.Toleration `json:"tolerations,omitempty"`
 	// Resources holds ResourceRequirements for the MySQL Agent & Server Containers
 	Resources *Resources `json:"resources,omitempty"`
+	// Resources for sidecar
+	SidecarContainers *[]corev1.Container `json:"sidecarContainers,omitempty"`
+	// Resources for additional volume
+	AdditionalVolume *[]corev1.Volume `json:"additionalVolume,omitempty"`
 }
 
 // ClusterConditionType represents a valid condition of a Cluster.
