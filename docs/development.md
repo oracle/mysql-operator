@@ -18,7 +18,7 @@ $ make push
 The resulting tag for the container image will be named as the agent version
 in the format of `$USER-TIMESTAMP`. This will need to be remembered as this is
 needed for a latter step or can be exported as the `$MYSQL_AGENT_VERSION`
-envrionment variable.
+environment variable.
 
 ```bash
 $ export MYSQL_AGENT_VERSION=$(cat dist/version.txt)
@@ -42,7 +42,7 @@ ServiceAccounts, ClusterRoles, and ClusterRoleBindings for the operator to
 function.
 
 ```bash
-$ kubectl -n $USER apply -f contrib/manifests/custom-resource-definitions.yaml 
+$ kubectl -n $USER apply -f contrib/manifests/custom-resource-definitions.yaml
 ```
 ```bash
 $ sed -e "s/<NAMESPACE>/${USER}/g" contrib/manifests/rbac.yaml | kubectl -n $USER apply -f -

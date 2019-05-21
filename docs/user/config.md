@@ -10,7 +10,7 @@ Some aspects of the MySQL Operator can be configured via:
 When applicable, a commandline parameter will override the equivalent config
 map parameter.
 
-Most of the time it should not be neccessary to supply any specific
+Most of the time it should not be necessary to supply any specific
 configuration and the operator will use sensible defaults when required
 values are not specified.
 

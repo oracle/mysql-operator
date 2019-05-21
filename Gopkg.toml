@@ -21,6 +21,7 @@
 
 # Code generation dependencies
 required = [
+  "github.com/client9/misspell/cmd/misspell",
   "k8s.io/code-generator/cmd/client-gen",
   "k8s.io/code-generator/cmd/conversion-gen",
   "k8s.io/code-generator/cmd/deepcopy-gen",

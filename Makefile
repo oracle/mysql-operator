@@ -50,6 +50,8 @@ all: build
 test: build-dirs Makefile
 	@echo "Testing: $(SRC_DIRS)"
 	PKG=$(PKG) ./hack/test.sh $(SRC_DIRS)
+	@echo "Running Spellchecker"
+	./hack/spellcheck.sh
 
 .PHONY: build-dirs
 build-dirs:
