@@ -183,6 +183,7 @@ apiVersion: mysql.oracle.com/v1alpha1
 kind: Cluster
 metadata:
   name: mysql-cluster-with-config
+spec:
   members: 3
   config:
     name: mycnf
@@ -198,6 +199,20 @@ apiVersion: mysql.oracle.com/v1alpha1
 kind: Cluster
 metadata:
   name: mysql-cluster-with-custom-serverid
+spec:
   members: 3
   baseServerId: 42
+```
+
+### Create a cluster with specific version of MySQL Server
+
+By default, the MySQL Operator starts a cluster with MySQL Server version set to minimum supported version defined by the Operator. This can be overriden in the cluster spec given the version used is equal to or higher than minimum supported version.
+
+```yaml
+apiVersion: mysql.oracle.com/v1alpha1
+kind: Cluster
+metadata:
+  name: mysql-cluster-with-custom-server-version
+spec:
+  version: 8.0.12
 ```
