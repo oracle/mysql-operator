@@ -19,9 +19,7 @@ build:
     - script:
       name: copy build artifacts
       code: |
-        mkdir -p ${WERCKER_OUTPUT_DIR}/bin
-        cp -R /go/bin/mysql-agent ${WERCKER_OUTPUT_DIR}/bin/
-        cp -R /go/bin/mysql-operator ${WERCKER_OUTPUT_DIR}/bin/
+        cp -R bin ${WERCKER_OUTPUT_DIR}/
         cp -R dist ${WERCKER_OUTPUT_DIR}/
 
     - script:
@@ -35,106 +33,96 @@ build:
         cp -R hack ${WERCKER_OUTPUT_DIR}/
         cp -R mysql-operator ${WERCKER_OUTPUT_DIR}/
         cp -R .git ${WERCKER_OUTPUT_DIR}/
+        cp -R docker ${WERCKER_OUTPUT_DIR}/
 
 push-operator-image:
-  box:
-    id: oraclelinux:7.3
   steps:
+    - internal/docker-build:
+      dockerfile: docker/mysql-operator/Dockerfile
+      image-name: wercker-build-mysql-operator
+
     - script:
-      name: set environment variables
+      name: Set environment variables
       code: |
         export VERSION=$(cat dist/version.txt)
-        echo "Pushing operator version ${VERSION}"
-
-    - script:
-      name: prepare
-      code: |
-        mv bin/mysql-operator /mysql-operator
-        chmod +x /mysql-operator
+        echo "Pushing mysql-operator version ${VERSION}"
 
     - internal/docker-push:
+      image-name: wercker-build-mysql-operator
       registry: https://iad.ocir.io/v2
       repository: iad.ocir.io/oracle/mysql-operator
       tag: $VERSION
-      entrypoint: /mysql-operator
       username: $OCIRUSERNAME
       password: $OCIRPASSWORD
 
     - internal/docker-push:
+      image-name: wercker-build-mysql-operator
       registry: https://lhr.ocir.io/v2
       repository: lhr.ocir.io/oracle/mysql-operator
       tag: $VERSION
-      entrypoint: /mysql-operator
       username: $OCIRUSERNAME
       password: $OCIRPASSWORD
 
     - internal/docker-push:
+      image-name: wercker-build-mysql-operator
       registry: https://phx.ocir.io/v2
       repository: phx.ocir.io/oracle/mysql-operator
       tag: $VERSION
-      entrypoint: /mysql-operator
       username: $OCIRUSERNAME
       password: $OCIRPASSWORD
 
     - internal/docker-push:
+      image-name: wercker-build-mysql-operator
       registry: https://fra.ocir.io/v2
       repository: fra.ocir.io/oracle/mysql-operator
       tag: $VERSION
-      entrypoint: /mysql-operator
       username: $OCIRUSERNAME
       password: $OCIRPASSWORD
 
 push-agent-image:
-  box:
-    id: mysql/mysql-server:8.0.11
   steps:
+    - internal/docker-build:
+      dockerfile: docker/mysql-agent/Dockerfile
+      image-name: wercker-build-mysql-agent
+      build-args: "MYSQL_USER=27"
+
     - script:
-      name: set environment variables
+      name: Set environment variables
       code: |
         export VERSION=$(cat dist/version.txt)
-        echo "Pushing agent version ${VERSION}"
-
-    - script:
-      name: prepare
-      code: |
-        mv bin/mysql-agent /mysql-agent
-        chmod +x /mysql-agent
+        echo "Pushing mysql-agent version ${VERSION}"
 
     - internal/docker-push:
+      image-name: wercker-build-mysql-agent
       registry: https://iad.ocir.io/v2
       username: $OCIRUSERNAME
       password: $OCIRPASSWORD
       repository: iad.ocir.io/oracle/mysql-agent
       tag: $VERSION
-      entrypoint: /mysql-agent
-      user: mysql
 
     - internal/docker-push:
+      image-name: wercker-build-mysql-agent
       registry: https://lhr.ocir.io/v2
       username: $OCIRUSERNAME
       password: $OCIRPASSWORD
       repository: lhr.ocir.io/oracle/mysql-agent
       tag: $VERSION
-      entrypoint: /mysql-agent
-      user: mysql
 
     - internal/docker-push:
+      image-name: wercker-build-mysql-agent
       registry: https://phx.ocir.io/v2
       username: $OCIRUSERNAME
       password: $OCIRPASSWORD
       repository: phx.ocir.io/oracle/mysql-agent
       tag: $VERSION
-      entrypoint: /mysql-agent
-      user: mysql
 
     - internal/docker-push:
+      image-name: wercker-build-mysql-agent
       registry: https://fra.ocir.io/v2
       username: $OCIRUSERNAME
       password: $OCIRPASSWORD
       repository: fra.ocir.io/oracle/mysql-agent
       tag: $VERSION
-      entrypoint: /mysql-agent
-      user: mysql
 
 e2e-test:
   base-path: "/go/src/github.com/oracle/mysql-operator"
