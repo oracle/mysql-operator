@@ -268,8 +268,8 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 	}
 
 	return v1.Container{
-		Name:         MySQLAgentName,
-		Image:        fmt.Sprintf("%s:%s", mysqlAgentImage, agentVersion),
+		Name:  MySQLAgentName,
+		Image: fmt.Sprintf("%s:%s", mysqlAgentImage, agentVersion),
 		Ports: []v1.ContainerPort{
 			{
 				ContainerPort: 8080,
