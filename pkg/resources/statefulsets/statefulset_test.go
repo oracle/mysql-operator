@@ -15,6 +15,7 @@
 package statefulsets
 
 import (
+	"github.com/oracle/mysql-operator/pkg/constants"
 	"reflect"
 	"testing"
 
@@ -356,4 +357,24 @@ func TestClusterNotSetGroupExitStateArgs(t *testing.T) {
 	cmd := statefulSet.Spec.Template.Spec.Containers[0].Command[2]
 
 	assert.NotContains(t, cmd, "--loose-group-replication-exit-state-action=READ_ONLY")
+}
+
+func TestClusterWithPodLabels(t *testing.T) {
+	cluster := &v1alpha1.Cluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1alpha1.ClusterSpec{
+			PodLabels: map[string]string{
+				"example.com/testing": "enabled",
+			},
+		},
+	}
+	cluster.EnsureDefaults()
+	statefulSet := NewForCluster(cluster, mockOperatorConfig().Images, "mycluster")
+
+	// check original labels exist
+	assert.Equal(t, "test", statefulSet.Spec.Template.Labels[constants.ClusterLabel])
+	// check additional labels exist
+	assert.Equal(t, "enabled", statefulSet.Spec.Template.Labels["example.com/testing"])
 }
