@@ -75,7 +75,9 @@ type ClusterSpec struct {
 	// set of Nodes a Pod can be scheduled on
 	Tolerations *[]corev1.Toleration `json:"tolerations,omitempty"`
 	// Resources holds ResourceRequirements for the MySQL Agent & Server Containers
-	Resources *Resources `json:"resources,omitempty"`
+	Resources *Resources        `json:"resources,omitempty"`
+	// PodLabels allow adding additional labels to the pods
+	PodLabels map[string]string `json:"podLabels,omitempty"`
 }
 
 // ClusterConditionType represents a valid condition of a Cluster.

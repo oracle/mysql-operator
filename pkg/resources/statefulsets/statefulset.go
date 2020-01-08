@@ -383,6 +383,12 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 		podLabels[constants.LabelClusterRole] = constants.ClusterRolePrimary
 	}
 
+	if cluster.Spec.PodLabels != nil {
+		for k, v := range cluster.Spec.PodLabels {
+			podLabels[k] = v
+		}
+	}
+
 	ss := &apps.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cluster.Namespace,
