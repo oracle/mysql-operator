@@ -357,3 +357,21 @@ func TestClusterNotSetGroupExitStateArgs(t *testing.T) {
 
 	assert.NotContains(t, cmd, "--loose-group-replication-exit-state-action=READ_ONLY")
 }
+
+func TestClusterWithPodAnnotations(t *testing.T) {
+	cluster := &v1alpha1.Cluster{
+		Spec: v1alpha1.ClusterSpec{
+			PodAnnotations: map[string]string{
+				"sidecar.istio.io/rewriteAppHTTPProbers": "true",
+			},
+		},
+	}
+	cluster.EnsureDefaults()
+
+	statefulSet := NewForCluster(cluster, mockOperatorConfig().Images, "mycluster")
+
+	// check original annotations exist
+	assert.Equal(t, "true", statefulSet.Spec.Template.Annotations["prometheus.io/scrape"])
+	// check additional annotations exist
+	assert.Equal(t, "true", statefulSet.Spec.Template.Annotations["sidecar.istio.io/rewriteAppHTTPProbers"])
+}

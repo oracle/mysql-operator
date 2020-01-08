@@ -383,6 +383,17 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 		podLabels[constants.LabelClusterRole] = constants.ClusterRolePrimary
 	}
 
+	podAnnotations := map[string]string{
+		"prometheus.io/scrape": "true",
+		"prometheus.io/port":   "8080",
+	}
+
+	if cluster.Spec.PodAnnotations != nil {
+		for k, v := range cluster.Spec.PodAnnotations {
+			podAnnotations[k] = v
+		}
+	}
+
 	ss := &apps.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cluster.Namespace,
@@ -403,11 +414,8 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 			Replicas: &cluster.Spec.Members,
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: podLabels,
-					Annotations: map[string]string{
-						"prometheus.io/scrape": "true",
-						"prometheus.io/port":   "8080",
-					},
+					Labels:      podLabels,
+					Annotations: podAnnotations,
 				},
 				Spec: v1.PodSpec{
 					// FIXME: LIMITED TO DEFAULT NAMESPACE. Need to dynamically
