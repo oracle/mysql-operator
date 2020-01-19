@@ -125,7 +125,7 @@ func (r *runner) GetClusterStatus(ctx context.Context) (*innodb.ClusterStatus, e
 	
 	var jsonData string
 	
-	if firstGraceIndex == -1 {
+	if firstBraceIndex == -1 {
 		return nil, errors.Errorf("no json found in output: %q", rawJson)
 	}
 	
