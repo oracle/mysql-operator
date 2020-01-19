@@ -118,9 +118,22 @@ func (r *runner) GetClusterStatus(ctx context.Context) (*innodb.ClusterStatus, e
 	if err != nil {
 		return nil, err
 	}
-
+	
+	//repair json decode problem 
+	rawJson := string(output)
+	firstBraceIndex := strings.Index(rawJson, "{")
+	
+	var jsonData string
+	
+	if firstGraceIndex == -1 {
+		return nil, errors.Errorf("no json found in output: %q", rawJson)
+	}
+	
+	jsonData = rawJson[firstBraceIndex:]
+	glog.V(2).Infof("mysqlsh clusterstatus: %q", jsonData)
+	
 	status := &innodb.ClusterStatus{}
-	err = json.Unmarshal(sanitizeJSON(output), status)
+	err = json.Unmarshal(sanitizeJSON([]byte(jsonData)), status)
 	if err != nil {
 		return nil, errors.Wrapf(err, "decoding cluster status output: %q", output)
 	}
