@@ -122,6 +122,7 @@ func (m *ClusterManager) Sync(ctx context.Context) bool {
 	clusterStatus, err := m.getClusterStatus(ctx)
 	if err != nil {
 		myshErr, ok := errors.Cause(err).(*mysqlsh.Error)
+		glog.V(2).Infof("get cluster*** error: %+v", err)
 		if !ok {
 			glog.Errorf("Failed to get the cluster status: %+v", err)
 			return false
