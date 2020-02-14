@@ -100,6 +100,7 @@ func (m *ClusterManager) getClusterStatus(ctx context.Context) (*innodb.ClusterS
 	if localMSHErr != nil {
 		var err error
 		clusterStatus, err = getClusterStatusFromGroupSeeds(ctx, m.kubeClient, m.Instance)
+		glog.V(2).Infof("get cluster seeds*** error: %+v", err)
 		if err != nil {
 			// NOTE: We return the localMSHErr rather than the error here so that we
 			// can dispatch on it.
