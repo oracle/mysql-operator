@@ -130,7 +130,7 @@ func multiMasterEnvVar(enabled bool) v1.EnvVar {
 func replicationGroupPortEnvVar(groupPort uint32) v1.EnvVar {
 	return v1.EnvVar{
 		Name: "GROUP_PORT",
-		Value: strconv.FromInt(groupPort),
+		Value: strconv.FormatUint(groupPort),
 	}
 }
 // Returns the MySQL_ROOT_PASSWORD environment variable
