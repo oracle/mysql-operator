@@ -249,6 +249,14 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 				Name:  "MYSQL_LOG_CONSOLE",
 				Value: "true",
 			},
+			{
+				Name: "MY_POD_NAME",
+				ValueFrom: &v1.EnvVarSource{
+					FieldRef: &v1.ObjectFieldSelector{
+						FieldPath: "metadata.name",
+					},
+				},
+			}
 		},
 		Resources: resourceLimits,
 	}

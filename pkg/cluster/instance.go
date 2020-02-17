@@ -62,7 +62,7 @@ func NewInstance(namespace, clusterName, parentName string, ordinal, port int, m
 // NewLocalInstance creates a new instance of this structure, with it's name and index
 // populated from os.Hostname().
 func NewLocalInstance() (*Instance, error) {
-	hostname, err := os.Hostname()
+	hostname, err := os.Getenv("MY_POD_NAME")
 	if err != nil {
 		return nil, err
 	}
