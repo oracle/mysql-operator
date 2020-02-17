@@ -127,6 +127,12 @@ func multiMasterEnvVar(enabled bool) v1.EnvVar {
 	}
 }
 
+func replicationGroupPortEnvVar(groupPort uint32) v1.EnvVar {
+	return v1.EnvVar{
+		Name: "GROUP_PORT",
+		Value: strconv.FromInt(groupPort),
+	}
+}
 // Returns the MySQL_ROOT_PASSWORD environment variable
 // If a user specifies a secret in the spec we use that
 // else we create a secret with a random password
@@ -287,11 +293,8 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 			namespaceEnvVar(),
 			replicationGroupSeedsEnvVar(replicationGroupSeeds),
 			multiMasterEnvVar(cluster.Spec.MultiMaster),
+			replicationGroupPortEnvVar(cluster.Spec.GroupPort),
 			rootPassword,
-			{
-				Name: "GROUP_PORT",
-				Value: strconv.FromInt(cluster.Spec.GroupPort),
-			},
 			{
 				Name: "MY_POD_IP",
 				ValueFrom: &v1.EnvVarSource{
