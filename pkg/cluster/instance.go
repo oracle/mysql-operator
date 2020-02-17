@@ -62,11 +62,11 @@ func NewInstance(namespace, clusterName, parentName string, ordinal, port int, m
 // NewLocalInstance creates a new instance of this structure, with it's name and index
 // populated from os.Hostname().
 func NewLocalInstance() (*Instance, error) {
-	hostname, err := os.Getenv("MY_POD_NAME")
-	if err != nil {
-		return nil, err
+	pod_name := os.Getenv("MY_POD_NAME")
+	if pod_name == nil {
+		return nil, errors.Errorf("env MY_POD_NAME is empty!!!")
 	}
-	name, ordinal := GetParentNameAndOrdinal(hostname)
+	name, ordinal := GetParentNameAndOrdinal(pod_name)
 	multiMaster, _ := strconv.ParseBool(os.Getenv("MYSQL_CLUSTER_MULTI_MASTER"))
 	return &Instance{
 		Namespace:   os.Getenv("POD_NAMESPACE"),
