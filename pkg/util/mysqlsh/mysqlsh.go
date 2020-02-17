@@ -87,6 +87,7 @@ func (r *runner) IsClustered(ctx context.Context) bool {
 
 func (r *runner) CreateCluster(ctx context.Context, opts Options) (*innodb.ClusterStatus, error) {
 	python := fmt.Sprintf("print dba.create_cluster('%s', %s).status()", innodb.DefaultClusterName, opts)
+	glog.V(2).Infof("mysqlsh CreateCluster: %q", python)
 	output, err := r.run(ctx, python)
 	if err != nil {
 		return nil, err

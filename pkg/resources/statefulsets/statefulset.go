@@ -151,10 +151,10 @@ func mysqlRootPassword(cluster *v1alpha1.Cluster) v1.EnvVar {
 	}
 }
 
-func getReplicationGroupSeeds(name string, members int) string {
+func getReplicationGroupSeeds(name string, members int, groupPort uint32) string {
 	seeds := []string{}
 	for i := 0; i < members; i++ {
-		seeds = append(seeds, fmt.Sprintf("%[1]s-%[2]d.%[1]s:%[3]d", name, i, replicationGroupPort))
+		seeds = append(seeds, fmt.Sprintf("%[1]s-%[2]d.%[1]s:%[3]d", name, i, groupPort))
 	}
 	return strings.Join(seeds, ",")
 }
@@ -269,7 +269,7 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 		agentVersion = version
 	}
 
-	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Name, members)
+	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Name, members, cluster.Spec.GroupPort)
 
 	var resourceLimits corev1.ResourceRequirements
 	if cluster.Spec.Resources != nil && cluster.Spec.Resources.Agent != nil {
@@ -288,6 +288,10 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 			replicationGroupSeedsEnvVar(replicationGroupSeeds),
 			multiMasterEnvVar(cluster.Spec.MultiMaster),
 			rootPassword,
+			{
+				Name: "GROUP_PORT",
+				Value: cluster.Spec.GroupPort,
+			},
 			{
 				Name: "MY_POD_IP",
 				ValueFrom: &v1.EnvVarSource{

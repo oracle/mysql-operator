@@ -324,9 +324,17 @@ func (m *ClusterManager) createCluster(ctx context.Context) (*innodb.ClusterStat
 	if err != nil {
 		return nil, errors.Wrap(err, "getting CIDR to whitelist for  GR")
 	}
+
+	localAddress := fmt.Sprintf("%s:%s", m.instance.Name(), os.Getenv("GROUP_PORT"))
+    groupSeeds := os.Getenv("REPLICATION_GROUP_SEEDS")
+
+    glog.Infof("localAddress: %s, groupSeeds: %s", localAddress, groupSeeds)
+    
 	opts := mysqlsh.Options{
 		"memberSslMode": "REQUIRED",
 		"ipWhitelist":   whitelistCIDR,
+		"localAddress": localAddress,
+		"groupSeeds": groupSeeds,
 	}
 	if m.Instance.MultiMaster {
 		opts["force"] = "True"
