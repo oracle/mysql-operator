@@ -220,7 +220,7 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 
          # Finds the replica index from the hostname, and uses this to define
          # a unique server id for this instance.
-         index=$( $MY_POD_NAME | grep -o '[^-]*$')
+         index=$(echo $MY_POD_NAME | grep -o '[^-]*$')
          /entrypoint.sh %s`, baseServerID, entryPointArgs)
 
 	var resourceLimits corev1.ResourceRequirements
