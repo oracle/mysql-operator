@@ -256,7 +256,7 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 						FieldPath: "metadata.name",
 					},
 				},
-			}
+			},
 		},
 		Resources: resourceLimits,
 	}
