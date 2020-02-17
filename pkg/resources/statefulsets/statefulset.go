@@ -290,7 +290,7 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 			rootPassword,
 			{
 				Name: "GROUP_PORT",
-				Value: cluster.Spec.GroupPort,
+				Value: strconv.FromInt(cluster.Spec.GroupPort),
 			},
 			{
 				Name: "MY_POD_IP",
