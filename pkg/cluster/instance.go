@@ -63,7 +63,7 @@ func NewInstance(namespace, clusterName, parentName string, ordinal, port int, m
 // populated from os.Hostname().
 func NewLocalInstance() (*Instance, error) {
 	pod_name := os.Getenv("MY_POD_NAME")
-	if pod_name == nil {
+	if pod_name == "" {
 		return nil, errors.Errorf("env MY_POD_NAME is empty!!!")
 	}
 	name, ordinal := GetParentNameAndOrdinal(pod_name)
