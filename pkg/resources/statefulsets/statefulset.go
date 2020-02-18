@@ -297,8 +297,6 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 		resourceLimits = *cluster.Spec.Resources.Agent
 	}
 
-	agentPromePort := strconv.FormatUint(uint64(cluster.Spec.AgentPromePort), 10)
-
 	return v1.Container{
 		Name:         MySQLAgentName,
 		Image:        fmt.Sprintf("%s:%s", mysqlAgentImage, agentVersion),
@@ -335,7 +333,7 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 			Handler: v1.Handler{
 				HTTPGet: &v1.HTTPGetAction{
 					Path: "/live",
-					Port: agentPromePort,
+					Port: intstr.FromInt(int(cluster.Spec.agentPromePort)),
 				},
 			},
 		},
@@ -343,7 +341,7 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 			Handler: v1.Handler{
 				HTTPGet: &v1.HTTPGetAction{
 					Path: "/ready",
-					Port: agentPromePort,
+					Port: intstr.FromInt(int(cluster.Spec.agentPromePort)),
 				},
 			},
 		},
