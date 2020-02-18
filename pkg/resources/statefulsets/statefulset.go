@@ -194,7 +194,7 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 		"--datadir=/var/lib/mysql",
 		"--user=mysql",
 		"--gtid_mode=ON",
-		"--log-bin",
+		"--log-bin=$MY_POD_NAME",
 		"--binlog_checksum=NONE",
 		"--enforce_gtid_consistency=ON",
 		"--log-slave-updates=ON",
