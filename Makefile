@@ -73,6 +73,12 @@ build: dist build-dirs Makefile
 .PHONY: build-docker
 build-docker:
 	@docker build \
+    	--build-arg=http_proxy \
+    	--build-arg=https_proxy \
+    	-t $(REGISTRY)/$(TENANT)/mysql-operator:$(VERSION) \
+    	-f docker/mysql-operator/Dockerfile .
+
+	@docker build \
 	--build-arg=http_proxy \
 	--build-arg=https_proxy \
 	-t $(REGISTRY)/$(TENANT)/mysql-agent:$(VERSION) \
