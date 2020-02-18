@@ -23,6 +23,7 @@ import (
 	"sync"
 	"time"
 	"os"
+	"fmt"
 
 	"github.com/golang/glog"
 	"github.com/heptiolabs/healthcheck"
@@ -103,14 +104,15 @@ func Run(opts *agentopts.MySQLAgentOpts) error {
 	}
 	// agent prometheus port
     agentPromePort := os.Getenv("AGENT_PROME_PORT")
-    glog.Info("agent prometheus port: %d", agentPromePort)
+    promeMetricsEndpoint := fmt.Sprintf("0.0.0.0:%s", agentPromePort)
+    glog.Info("agent prometheus endpoint: %s", promeMetricsEndpoint)
 	metrics.RegisterPodName(opts.Hostname)
 	metrics.RegisterClusterName(manager.Instance.ClusterName)
 	clustermgr.RegisterMetrics()
 	backupcontroller.RegisterMetrics()
 	restorecontroller.RegisterMetrics()
 	http.Handle("/metrics", prometheus.Handler())
-	go http.ListenAndServe(agentPromePort, nil)
+	go http.ListenAndServe(promeMetricsEndpoint, nil)
 
 	// Block until local instance successfully initialised.
 	for !manager.Sync(ctx) {

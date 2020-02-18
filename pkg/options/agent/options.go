@@ -65,7 +65,7 @@ func NewMySQLAgentOpts() *MySQLAgentOpts {
 	}
 	namespace := os.Getenv("POD_NAMESPACE")
 	clusterName := os.Getenv("MYSQL_CLUSTER_NAME")
-	healthcheckPort := os.Getenv("AGENT_HEALTHCHECK_PORT")
+	healthcheckPort := int(os.Getenv("AGENT_HEALTHCHECK_PORT"))
 	glog.V(2).Infof("mysql-agent healthcheckPort: %d", healthcheckPort)
 	return &MySQLAgentOpts{
 		HealthcheckPort: healthcheckPort,

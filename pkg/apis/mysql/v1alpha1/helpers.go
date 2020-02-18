@@ -81,7 +81,7 @@ func (c *Cluster) EnsureDefaults() *Cluster {
 	}
 
 	if c.Spec.AgentPromePort == 0 {
-		c.Spe.AgentPromePort = DefaultAgentPromePort
+		c.Spec.AgentPromePort = DefaultAgentPromePort
 	}
 	return c
 }
