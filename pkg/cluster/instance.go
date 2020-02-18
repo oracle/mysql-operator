@@ -24,7 +24,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/oracle/mysql-operator/pkg/cluster/innodb"
+	//"github.com/oracle/mysql-operator/pkg/cluster/innodb"
 )
 
 // Instance represents the local MySQL instance.
@@ -68,12 +68,13 @@ func NewLocalInstance() (*Instance, error) {
 	}
 	name, ordinal := GetParentNameAndOrdinal(pod_name)
 	multiMaster, _ := strconv.ParseBool(os.Getenv("MYSQL_CLUSTER_MULTI_MASTER"))
+	mysqlPort, _ := strconv.ParseInt(os.Getenv("MYSQL_PORT"), 10, 32)
 	return &Instance{
 		Namespace:   os.Getenv("POD_NAMESPACE"),
 		ClusterName: os.Getenv("MYSQL_CLUSTER_NAME"),
 		ParentName:  name,
 		Ordinal:     ordinal,
-		Port:        innodb.MySQLDBPort,
+		Port:        mysqlPort,
 		MultiMaster: multiMaster,
 		IP:          net.ParseIP(os.Getenv("MY_POD_IP")),
 	}, nil
@@ -90,12 +91,13 @@ func NewInstanceFromGroupSeed(seed string) (*Instance, error) {
 	// MySQLDB port not its group replication port.
 	parentName, ordinal := GetParentNameAndOrdinal(podName)
 	multiMaster, _ := strconv.ParseBool(os.Getenv("MYSQL_CLUSTER_MULTI_MASTER"))
+	mysqlPort, _ := strconv.ParseInt(os.Getenv("MYSQL_PORT"), 10, 32)
 	return &Instance{
 		ClusterName: os.Getenv("MYSQL_CLUSTER_NAME"),
 		Namespace:   os.Getenv("POD_NAMESPACE"),
 		ParentName:  parentName,
 		Ordinal:     ordinal,
-		Port:        innodb.MySQLDBPort,
+		Port:        mysqlPort,
 		MultiMaster: multiMaster,
 	}, nil
 }
