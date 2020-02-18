@@ -104,8 +104,8 @@ func Run(opts *agentopts.MySQLAgentOpts) error {
 	}
 	// agent prometheus port
     agentPromePort := os.Getenv("AGENT_PROME_PORT")
-    promeMetricsEndpoint := fmt.Sprintf("0.0.0.0:%s", agentPromePort)
-    glog.Info("agent prometheus endpoint: %s", promeMetricsEndpoint)
+    promeMetricsEndpoint := fmt.Sprintf("0.0.0.0: %s", agentPromePort)
+    glog.Info("agent prometheus endpoint: ", promeMetricsEndpoint)
 	metrics.RegisterPodName(opts.Hostname)
 	metrics.RegisterClusterName(manager.Instance.ClusterName)
 	clustermgr.RegisterMetrics()
