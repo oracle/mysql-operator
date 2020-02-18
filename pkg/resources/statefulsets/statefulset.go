@@ -133,6 +133,21 @@ func replicationGroupPortEnvVar(groupPort uint32) v1.EnvVar {
 		Value: strconv.FormatUint(uint64(groupPort), 10),
 	}
 }
+
+func agentHealthCheckPortEnvVar(agentCheckPort uint32) v1.EnvVar {
+	return v1.EnvVar{
+		Name: "AGENT_HEALTHCHECK_PORT",
+		Value: strconv.FormatUint(uint64(agentCheckPort), 10),
+	}
+}
+
+func agentPromePortEnvVar(agentPromePort uint32) v1.EnvVar {
+	return v1.EnvVar{
+		Name: "AGENT_PROME_PORT",
+		Value: strconv.FormatUint(uint64(agentPromePort), 10),
+	}
+}
+
 // Returns the MySQL_ROOT_PASSWORD environment variable
 // If a user specifies a secret in the spec we use that
 // else we create a secret with a random password
@@ -194,7 +209,7 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 		"--datadir=/var/lib/mysql",
 		"--user=mysql",
 		"--gtid_mode=ON",
-		"--log-bin=$MY_POD_NAME",
+		"--log-bin=${MY_POD_NAME}-bin",
 		"--binlog_checksum=NONE",
 		"--enforce_gtid_consistency=ON",
 		"--log-slave-updates=ON",
@@ -294,6 +309,8 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 			replicationGroupSeedsEnvVar(replicationGroupSeeds),
 			multiMasterEnvVar(cluster.Spec.MultiMaster),
 			replicationGroupPortEnvVar(cluster.Spec.GroupPort),
+			agentHealthCheckPortEnvVar(cluster.Spec.AgentCheckPort),
+			agentPromePortEnvVar(cluster.Spec.AgentPromePort),
 			rootPassword,
 			{
 				Name: "MY_POD_IP",

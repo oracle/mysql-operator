@@ -23,6 +23,8 @@ const (
 	// DefaultVersion is the MySQL version to use if not specified explicitly by user
 	DefaultVersion      = "8.0.12"
 	DefaultReplicationGroupPort = 33061
+	DefaultAgentHealthCheckPort = 10512
+	DefaultAgentPromePort = 8080
 	defaultMembers      = 3
 	defaultBaseServerID = 1000
 	// maxBaseServerID is the maximum safe value for BaseServerID calculated
@@ -74,6 +76,13 @@ func (c *Cluster) EnsureDefaults() *Cluster {
 		c.Spec.GroupPort = DefaultReplicationGroupPort
 	}
 
+	if c.Spec.AgentCheckPort == 0 {
+		c.Spec.AgentCheckPort = DefaultAgentHealthCheckPort
+	}
+
+	if c.Spec.AgentPromePort == 0 {
+		c.Spe.AgentPromePort = DefaultAgentPromePort
+	}
 	return c
 }
 

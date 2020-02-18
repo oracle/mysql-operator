@@ -22,6 +22,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"os"
 
 	"github.com/golang/glog"
 	"github.com/heptiolabs/healthcheck"
@@ -100,15 +101,16 @@ func Run(opts *agentopts.MySQLAgentOpts) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create new local MySQL InnoDB cluster manager")
 	}
-
-	// Initialise the agent metrics.
+	// agent prometheus port
+    agentPromePort := os.Getenv("AGENT_PROME_PORT")
+    glog.Info("agent prometheus port: %d", agentPromePort)
 	metrics.RegisterPodName(opts.Hostname)
 	metrics.RegisterClusterName(manager.Instance.ClusterName)
 	clustermgr.RegisterMetrics()
 	backupcontroller.RegisterMetrics()
 	restorecontroller.RegisterMetrics()
 	http.Handle("/metrics", prometheus.Handler())
-	go http.ListenAndServe(metricsEndpoint, nil)
+	go http.ListenAndServe(agentPromePort, nil)
 
 	// Block until local instance successfully initialised.
 	for !manager.Sync(ctx) {

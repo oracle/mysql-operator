@@ -293,9 +293,16 @@ func (m *ClusterManager) handleInstanceNotFound(ctx context.Context, primaryAddr
 		return false
 	}
 
+	localAddress := fmt.Sprintf("%s:%s", m.Instance.Name(), os.Getenv("GROUP_PORT"))
+    groupSeeds := os.Getenv("REPLICATION_GROUP_SEEDS")
+
+    glog.Infof("localAddress: %s, groupSeeds: %s", localAddress, groupSeeds)
+
 	if err := psh.AddInstanceToCluster(ctx, m.Instance.GetShellURI(), mysqlsh.Options{
 		"memberSslMode": "REQUIRED",
 		"ipWhitelist":   whitelistCIDR,
+		"localAddress": localAddress,
+		"groupSeeds": groupSeeds,
 	}); err != nil {
 		glog.Errorf("Failed to add to cluster: %v", err)
 		return false
