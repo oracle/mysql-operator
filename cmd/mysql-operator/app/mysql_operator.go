@@ -84,7 +84,7 @@ func Run(s *operatoropts.MySQLOperatorOpts) error {
 		mysqlopClient,
 		kubeClient,
 		operatorInformerFactory.MySQL().V1alpha1().Clusters(),
-		kubeInformerFactory.Apps().V1beta1().StatefulSets(),
+		kubeInformerFactory.Apps().V1().StatefulSets(),
 		kubeInformerFactory.Core().V1().Pods(),
 		kubeInformerFactory.Core().V1().Services(),
 		30*time.Second,

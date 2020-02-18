@@ -19,8 +19,9 @@ import (
 	"fmt"
 	"os"
 
-	utilflag "k8s.io/apiserver/pkg/util/flag"
-	"k8s.io/apiserver/pkg/util/logs"
+	cliflag "k8s.io/component-base/cli/flag"
+
+	"k8s.io/kubectl/pkg/util/logs"
 
 	"github.com/golang/glog"
 	"github.com/spf13/pflag"
@@ -36,7 +37,7 @@ func main() {
 	opts := agentopts.NewMySQLAgentOpts()
 
 	opts.AddFlags(pflag.CommandLine)
-	pflag.CommandLine.SetNormalizeFunc(utilflag.WordSepNormalizeFunc)
+	pflag.CommandLine.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
 	pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)
 	pflag.Parse()
 	goflag.CommandLine.Parse([]string{})

@@ -8,9 +8,7 @@
 
 A high-performance 100% compatible drop-in replacement of "encoding/json"
 
-```
-Go开发者们请加入我们，滴滴出行平台技术部 taowen@didichuxing.com
-```
+You can also use thrift like JSON using [thrift-iterator](https://github.com/thrift-iterator/go)
 
 # Benchmark
 
@@ -29,6 +27,9 @@ Raw Result (easyjson requires static code generation)
 | easyjson encode | 883 ns/op | 576 B/op | 3 allocs/op |
 | jsoniter encode | 837 ns/op | 384 B/op | 4 allocs/op |
 
+Always benchmark with your own workload. 
+The result depends heavily on the data input.
+
 # Usage
 
 100% compatibility with standard lib
@@ -44,7 +45,9 @@ with
 
 ```go
 import "github.com/json-iterator/go"
-jsoniter.Marshal(&data)
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
+json.Marshal(&data)
 ```
 
 Replace
@@ -58,7 +61,9 @@ with
 
 ```go
 import "github.com/json-iterator/go"
-jsoniter.Unmarshal(input, &data)
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
+json.Unmarshal(input, &data)
 ```
 
 [More documentation](http://jsoniter.com/migrate-from-go-std.html)

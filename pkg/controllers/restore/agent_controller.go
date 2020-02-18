@@ -161,7 +161,7 @@ func NewAgentController(
 					return
 				}
 
-				glog.V(4).Infof("Restore %q is not Scheduled on this agent")
+				glog.V(4).Infof("Restore is not Scheduled on this agent")
 			},
 		},
 	)

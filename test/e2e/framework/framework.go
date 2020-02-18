@@ -27,7 +27,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
 
-	extensionsv1betav1 "k8s.io/api/apps/v1beta1"
+	extensionsv1betav1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -185,7 +185,7 @@ func (f *Framework) InstallOperator(namespace string) error {
 	By("Waiting for the operator to start")
 	deploymentName := "mysql-operator"
 	if err := wait.PollImmediate(Poll, DefaultTimeout, func() (bool, error) {
-		deployment, err := f.ClientSet.AppsV1beta1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
+		deployment, err := f.ClientSet.AppsV1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				return false, nil

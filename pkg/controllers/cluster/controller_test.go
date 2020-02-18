@@ -19,13 +19,13 @@ import (
 	"testing"
 	"time"
 
-	apps "k8s.io/api/apps/v1beta1"
+	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/informers"
-	appsinformers "k8s.io/client-go/informers/apps/v1beta1"
+	appsinformers "k8s.io/client-go/informers/apps/v1"
 	coreinformers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	cache "k8s.io/client-go/tools/cache"
@@ -314,7 +314,7 @@ func TestSyncEnsureStatefulSet(t *testing.T) {
 
 func assertOperatorStatefulSetInvariants(t *testing.T, controller *MySQLController, cluster *v1alpha1.Cluster) {
 	kubeClient := controller.kubeClient
-	statefulset, err := kubeClient.AppsV1beta1().StatefulSets(cluster.Namespace).Get(cluster.Name, metav1.GetOptions{})
+	statefulset, err := kubeClient.AppsV1().StatefulSets(cluster.Namespace).Get(cluster.Name, metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Get client Cluster statefulset error: %+v", err)
 	}
@@ -420,7 +420,7 @@ func assertOperatorVersionInvariants(t *testing.T, controller *MySQLController, 
 	}
 
 	// Check StatefulSets has the correct operator version.
-	updatedStatefulSet, err := controller.kubeClient.AppsV1beta1().StatefulSets(namespace).Get(name, metav1.GetOptions{})
+	updatedStatefulSet, err := controller.kubeClient.AppsV1().StatefulSets(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Get client StatefulSet err: %+v", err)
 	}
@@ -593,7 +593,7 @@ func newFakeMySQLController(cluster *v1alpha1.Cluster, kuberesources ...runtime.
 
 	fakeInformers := &fakeMySQLControllerInformers{
 		clusterInformer:     mysqlopInformerFactory.MySQL().V1alpha1().Clusters(),
-		statefulSetInformer: kubeInformerFactory.Apps().V1beta1().StatefulSets(),
+		statefulSetInformer: kubeInformerFactory.Apps().V1().StatefulSets(),
 		podInformer:         kubeInformerFactory.Core().V1().Pods(),
 		serviceInformer:     kubeInformerFactory.Core().V1().Services(),
 	}

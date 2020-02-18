@@ -85,11 +85,11 @@ func NewController(
 		opClient:                   opClient,
 		backupScheduleLister:       backupScheduleInformer.Lister(),
 		backupScheduleListerSynced: backupScheduleInformer.Informer().HasSynced,
-		queue:      workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "backupschedule"),
-		syncPeriod: syncPeriod,
-		clock:      clock.RealClock{},
-		namespace:  namespace,
-		recorder:   recorder,
+		queue:                      workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "backupschedule"),
+		syncPeriod:                 syncPeriod,
+		clock:                      clock.RealClock{},
+		namespace:                  namespace,
+		recorder:                   recorder,
 	}
 
 	c.syncHandler = c.processSchedule
