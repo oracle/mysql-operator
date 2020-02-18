@@ -263,7 +263,7 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 		ImagePullPolicy: v1.PullAlways,
 		Ports: []v1.ContainerPort{
 			{
-				ContainerPort: cluster.Spec.MysqlPort,
+				ContainerPort: int32(cluster.Spec.MysqlPort),
 			},
 		},
 		VolumeMounts: volumeMounts(cluster),
@@ -457,7 +457,7 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 					Labels: podLabels,
 					Annotations: map[string]string{
 						"prometheus.io/scrape": "true",
-						"prometheus.io/port":   cluster.Spec.AgentPromePort,
+						"prometheus.io/port":   int32(cluster.Spec.AgentPromePort),
 					},
 				},
 				Spec: v1.PodSpec{
