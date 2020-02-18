@@ -1,4 +1,4 @@
-box: golang:1.9
+box: golang:1.13
 no-response-timeout: 60
 command-timeout: 60
 
