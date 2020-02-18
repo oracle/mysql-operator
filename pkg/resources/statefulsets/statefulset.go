@@ -263,12 +263,13 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 		ImagePullPolicy: v1.PullAlways,
 		Ports: []v1.ContainerPort{
 			{
-				ContainerPort: 3306,
+				ContainerPort: cluster.Spec.MysqlPort,
 			},
 		},
 		VolumeMounts: volumeMounts(cluster),
 		Command:      []string{"/bin/bash", "-ecx", cmd},
 		Env: []v1.EnvVar{
+			//mysqlPortEnvVar(cluster.Spec.MysqlPort),
 			rootPassword,
 			{
 				Name:  "MYSQL_ROOT_HOST",
