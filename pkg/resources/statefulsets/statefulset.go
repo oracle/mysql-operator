@@ -333,7 +333,7 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 			Handler: v1.Handler{
 				HTTPGet: &v1.HTTPGetAction{
 					Path: "/live",
-					Port: intstr.FromInt(int(cluster.Spec.AgentPromePort)),
+					Port: intstr.FromInt(int(cluster.Spec.AgentCheckPort)),
 				},
 			},
 		},
@@ -341,7 +341,7 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 			Handler: v1.Handler{
 				HTTPGet: &v1.HTTPGetAction{
 					Path: "/ready",
-					Port: intstr.FromInt(int(cluster.Spec.AgentPromePort)),
+					Port: intstr.FromInt(int(cluster.Spec.AgentCheckPort)),
 				},
 			},
 		},
