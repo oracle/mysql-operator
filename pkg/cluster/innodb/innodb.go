@@ -17,6 +17,7 @@ package innodb
 import (
 	"fmt"
 	"net"
+	"os"
 )
 
 // DefaultClusterName is the default name assigned to InnoDB clusters created by
@@ -123,7 +124,7 @@ func (s *ClusterStatus) GetInstanceStatus(name string) InstanceStatus {
 	if s.DefaultReplicaSet.Topology == nil {
 		return InstanceStatusNotFound
 	}
-	if is, ok := s.DefaultReplicaSet.Topology[fmt.Sprintf("%s:%d", name, MySQLDBPort)]; ok {
+	if is, ok := s.DefaultReplicaSet.Topology[fmt.Sprintf("%s:%s", name, os.Getenv("MYSQL_PORT"))]; ok {
 		return is.Status
 	}
 	return InstanceStatusNotFound
