@@ -457,7 +457,7 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 					Labels: podLabels,
 					Annotations: map[string]string{
 						"prometheus.io/scrape": "true",
-						"prometheus.io/port":   int32(cluster.Spec.AgentPromePort),
+						"prometheus.io/port":   strconv.FormatUint(uint64(cluster.Spec.AgentPromePort), 10),
 					},
 				},
 				Spec: v1.PodSpec{
