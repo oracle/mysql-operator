@@ -3,18 +3,14 @@ module github.com/oracle/mysql-operator
 go 1.13
 
 require (
-	github.com/aws/aws-sdk-go v1.12.41
+	github.com/aws/aws-sdk-go v1.29.4
 	github.com/coreos/go-semver v0.3.0
 	github.com/ghodss/yaml v0.0.0-20180820084758-c7ce16629ff4
-	github.com/go-ini/ini v1.32.0 // indirect
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/groupcache v0.0.0-20171101203131-84a468cf14b4 // indirect
 	github.com/heptiolabs/healthcheck v0.0.0-20171103213001-9926c14869d1
-	github.com/howeyc/gopass v0.0.0-20170109162249-bf9dde6d0d2c // indirect
-	github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8 // indirect
 	github.com/onsi/ginkgo v1.10.1
 	github.com/onsi/gomega v1.7.0
-	github.com/pkg/errors v0.8.0
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v0.9.2
 	github.com/robfig/cron v1.2.0
 	github.com/spf13/pflag v1.0.5
@@ -25,6 +21,7 @@ require (
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/code-generator v0.0.0-20191004115455-8e001e5d1894
 	k8s.io/component-base v0.0.0-20191016111319-039242c015a9
+	k8s.io/klog v0.4.0
 	k8s.io/kubectl v0.0.0-00010101000000-000000000000
 	k8s.io/utils v0.0.0-20190801114015-581e00157fb1
 )

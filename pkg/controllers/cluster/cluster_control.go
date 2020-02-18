@@ -17,7 +17,7 @@ package cluster
 import (
 	"fmt"
 
-	"github.com/golang/glog"
+	glog "k8s.io/klog"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/util/retry"

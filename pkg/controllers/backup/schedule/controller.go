@@ -35,9 +35,9 @@ import (
 	"k8s.io/client-go/util/retry"
 	"k8s.io/client-go/util/workqueue"
 
-	"github.com/golang/glog"
 	"github.com/pkg/errors"
 	"github.com/robfig/cron"
+	glog "k8s.io/klog"
 
 	v1alpha1 "github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	mysqlop "github.com/oracle/mysql-operator/pkg/generated/clientset/versioned"

@@ -21,11 +21,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/golang/glog"
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v2"
+	glog "k8s.io/klog"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

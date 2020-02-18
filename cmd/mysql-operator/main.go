@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/golang/glog"
 	"github.com/spf13/pflag"
 	cliflag "k8s.io/component-base/cli/flag"
+	glog "k8s.io/klog"
 
 	"k8s.io/kubectl/pkg/util/logs"
 

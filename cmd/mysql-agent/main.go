@@ -23,8 +23,8 @@ import (
 
 	"k8s.io/kubectl/pkg/util/logs"
 
-	"github.com/golang/glog"
 	"github.com/spf13/pflag"
+	glog "k8s.io/klog"
 
 	"github.com/oracle/mysql-operator/cmd/mysql-agent/app"
 	agentopts "github.com/oracle/mysql-operator/pkg/options/agent"

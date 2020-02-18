@@ -40,8 +40,8 @@ import (
 	workqueue "k8s.io/client-go/util/workqueue"
 
 	"github.com/coreos/go-semver/semver"
-	"github.com/golang/glog"
 	"github.com/pkg/errors"
+	glog "k8s.io/klog"
 
 	clusterutil "github.com/oracle/mysql-operator/pkg/api/cluster"
 	v1alpha1 "github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
