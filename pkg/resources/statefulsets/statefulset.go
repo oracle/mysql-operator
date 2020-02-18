@@ -29,7 +29,7 @@ import (
 
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/constants"
-	agentopts "github.com/oracle/mysql-operator/pkg/options/agent"
+	//agentopts "github.com/oracle/mysql-operator/pkg/options/agent"
 	operatoropts "github.com/oracle/mysql-operator/pkg/options/operator"
 	"github.com/oracle/mysql-operator/pkg/resources/secrets"
 	"github.com/oracle/mysql-operator/pkg/version"
@@ -333,7 +333,7 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 			Handler: v1.Handler{
 				HTTPGet: &v1.HTTPGetAction{
 					Path: "/live",
-					Port: intstr.FromInt(int(cluster.Spec.agentPromePort)),
+					Port: intstr.FromInt(int(cluster.Spec.AgentPromePort)),
 				},
 			},
 		},
@@ -341,7 +341,7 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 			Handler: v1.Handler{
 				HTTPGet: &v1.HTTPGetAction{
 					Path: "/ready",
-					Port: intstr.FromInt(int(cluster.Spec.agentPromePort)),
+					Port: intstr.FromInt(int(cluster.Spec.AgentPromePort)),
 				},
 			},
 		},
