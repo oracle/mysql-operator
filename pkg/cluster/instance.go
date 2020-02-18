@@ -74,7 +74,7 @@ func NewLocalInstance() (*Instance, error) {
 		ClusterName: os.Getenv("MYSQL_CLUSTER_NAME"),
 		ParentName:  name,
 		Ordinal:     ordinal,
-		Port:        mysqlPort,
+		Port:        int(mysqlPort),
 		MultiMaster: multiMaster,
 		IP:          net.ParseIP(os.Getenv("MY_POD_IP")),
 	}, nil
@@ -97,7 +97,7 @@ func NewInstanceFromGroupSeed(seed string) (*Instance, error) {
 		Namespace:   os.Getenv("POD_NAMESPACE"),
 		ParentName:  parentName,
 		Ordinal:     ordinal,
-		Port:        mysqlPort,
+		Port:        int(mysqlPort),
 		MultiMaster: multiMaster,
 	}, nil
 }
