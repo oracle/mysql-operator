@@ -401,6 +401,9 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 		},
 		Spec: apps.StatefulSetSpec{
 			Replicas: &cluster.Spec.Members,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: podLabels,
+			},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: podLabels,
