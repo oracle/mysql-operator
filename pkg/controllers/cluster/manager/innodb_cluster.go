@@ -46,6 +46,7 @@ func isDatabaseRunning(ctx context.Context) bool {
 		"mysqladmin",
 		"--protocol", "tcp",
 		"-u", "root",
+		os.ExpandEnv("-P$MYSQL_PORT"),
 		os.ExpandEnv("-p$MYSQL_ROOT_PASSWORD"),
 		"status",
 	).Run()

@@ -25,6 +25,7 @@ const (
 	DefaultReplicationGroupPort = 33061
 	DefaultAgentHealthCheckPort = 10512
 	DefaultAgentPromePort = 8080
+	DefaultMysqlPort = 3306
 	defaultMembers      = 3
 	defaultBaseServerID = 1000
 	// maxBaseServerID is the maximum safe value for BaseServerID calculated
@@ -82,6 +83,10 @@ func (c *Cluster) EnsureDefaults() *Cluster {
 
 	if c.Spec.AgentPromePort == 0 {
 		c.Spec.AgentPromePort = DefaultAgentPromePort
+	}
+
+	if c.Spec.MysqlPort == 0 {
+		c.Spec.MysqlPort = DefaultMysqlPort
 	}
 	return c
 }

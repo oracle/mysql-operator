@@ -148,6 +148,13 @@ func agentPromePortEnvVar(agentPromePort uint32) v1.EnvVar {
 	}
 }
 
+func mysqlPortEnvVar(mysqlPort uint32) v1.EnvVar {
+	return v1.EnvVar{
+		Name: "MYSQL_PORT",
+		Value: strconv.FormatUint(uint64(mysqlPort), 10),
+	}
+}
+
 // Returns the MySQL_ROOT_PASSWORD environment variable
 // If a user specifies a secret in the spec we use that
 // else we create a secret with a random password
@@ -311,6 +318,7 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 			replicationGroupPortEnvVar(cluster.Spec.GroupPort),
 			agentHealthCheckPortEnvVar(cluster.Spec.AgentCheckPort),
 			agentPromePortEnvVar(cluster.Spec.AgentPromePort),
+			mysqlPortEnvVar(cluster.Spec.MysqlPort),
 			rootPassword,
 			{
 				Name: "MY_POD_IP",
