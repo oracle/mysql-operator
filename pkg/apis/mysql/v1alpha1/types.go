@@ -48,9 +48,9 @@ type ClusterSpec struct {
 	//replicationGroupPort 
 	GroupPort uint32 `json:"groupPort,omitempty"`
 	//agent healthcheck port
-	AgentCheckPort uint32 `json:"groupPort,omitempty"`
+	AgentCheckPort uint32 `json:"agentCheckPort,omitempty"`
 	//agent prometheus port
-	AgentPromePort uint32 `json:"groupPort,omitempty"`
+	AgentPromePort uint32 `json:"agentPromePort,omitempty"`
 	// NodeSelector is a selector which must be true for the pod to fit on a node.
 	// Selector which must match a node's labels for the pod to be scheduled on that node.
 	// More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
