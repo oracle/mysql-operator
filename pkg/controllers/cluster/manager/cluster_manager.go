@@ -292,17 +292,17 @@ func (m *ClusterManager) handleInstanceNotFound(ctx context.Context, primaryAddr
 		glog.Errorf("Getting CIDR to whitelist for GR: %v", err)
 		return false
 	}
+	//use deault mysqlPort + 1
+	//localAddress := fmt.Sprintf("%s:%s", m.Instance.Name(), os.Getenv("GROUP_PORT"))
+    //groupSeeds := os.Getenv("REPLICATION_GROUP_SEEDS")
 
-	localAddress := fmt.Sprintf("%s:%s", m.Instance.Name(), os.Getenv("GROUP_PORT"))
-    groupSeeds := os.Getenv("REPLICATION_GROUP_SEEDS")
-
-    glog.Infof("localAddress: %s, groupSeeds: %s", localAddress, groupSeeds)
+    //glog.Infof("localAddress: %s, groupSeeds: %s", localAddress, groupSeeds)
 
 	if err := psh.AddInstanceToCluster(ctx, m.Instance.GetShellURI(), mysqlsh.Options{
 		"memberSslMode": "REQUIRED",
 		"ipWhitelist":   whitelistCIDR,
-		"localAddress": localAddress,
-		"groupSeeds": groupSeeds,
+	//	"localAddress": localAddress,
+	//	"groupSeeds": groupSeeds,
 	}); err != nil {
 		glog.Errorf("Failed to add to cluster: %v", err)
 		return false
@@ -333,16 +333,17 @@ func (m *ClusterManager) createCluster(ctx context.Context) (*innodb.ClusterStat
 		return nil, errors.Wrap(err, "getting CIDR to whitelist for  GR")
 	}
 
-	localAddress := fmt.Sprintf("%s:%s", m.Instance.Name(), os.Getenv("GROUP_PORT"))
-    groupSeeds := os.Getenv("REPLICATION_GROUP_SEEDS")
+	// use deault mysql_port + 1
+	//localAddress := fmt.Sprintf("%s:%s", m.Instance.Name(), os.Getenv("GROUP_PORT"))
+    //groupSeeds := os.Getenv("REPLICATION_GROUP_SEEDS")
 
-    glog.Infof("localAddress: %s, groupSeeds: %s", localAddress, groupSeeds)
+    //glog.Infof("localAddress: %s, groupSeeds: %s", localAddress, groupSeeds)
 
 	opts := mysqlsh.Options{
 		"memberSslMode": "REQUIRED",
 		"ipWhitelist":   whitelistCIDR,
-		"localAddress": localAddress,
-		"groupSeeds": groupSeeds,
+	//	"localAddress": localAddress,
+	//	"groupSeeds": groupSeeds,
 	}
 	if m.Instance.MultiMaster {
 		opts["force"] = "True"
