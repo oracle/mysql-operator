@@ -16,6 +16,8 @@ package services
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	"os"
+	"strconv"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
@@ -25,7 +27,8 @@ import (
 
 // NewForCluster will return a new headless Kubernetes service for a MySQL cluster
 func NewForCluster(cluster *v1alpha1.Cluster) *corev1.Service {
-	mysqlPort := corev1.ServicePort{Port: 3306}
+	port := strconv.ParseInt(os.Getenv("MYSQL_PORT"), 10, 32)
+	mysqlPort := corev1.ServicePort{Port: int32(port)}
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:    map[string]string{constants.ClusterLabel: cluster.Name},
