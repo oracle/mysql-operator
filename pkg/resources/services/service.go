@@ -27,8 +27,7 @@ import (
 
 // NewForCluster will return a new headless Kubernetes service for a MySQL cluster
 func NewForCluster(cluster *v1alpha1.Cluster) *corev1.Service {
-	port, _ := strconv.ParseInt(os.Getenv("MYSQL_PORT"), 10, 32)
-	mysqlPort := corev1.ServicePort{Port: int32(port)}
+	mysqlPort := corev1.ServicePort{Port: int32(cluster.Spec.MysqlPort)}
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:    map[string]string{constants.ClusterLabel: cluster.Name},
