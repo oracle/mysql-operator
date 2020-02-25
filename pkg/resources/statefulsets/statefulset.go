@@ -256,8 +256,8 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 
 func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, rootPassword v1.EnvVar, members int) v1.Container {
 	agentVersion := version.GetBuildVersion()
-	if version := os.Getenv("MYSQL_AGENT_VERSION"); version != "" {
-		agentVersion = version
+	if v := os.Getenv("MYSQL_AGENT_VERSION"); v != "" {
+		agentVersion = v
 	}
 
 	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Name, members)
