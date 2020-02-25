@@ -1,24 +1,23 @@
----
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: mysql-operator
-  namespace: {{ if and (.Values.operator.global) (eq .Values.operator.namespace "mysql-operator") }}mysql-operator{{ else }}{{ .Values.operator.namespace}}{{ end }}
+  namespace: {{ if .Values.operator.global }}{{ .Release.Namespace }}{{ else }}{{ .Values.operator.namespace}}{{ end }}
 
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: mysql-agent
-  namespace: {{ if and (.Values.operator.global) (eq .Values.operator.namespace "mysql-operator") }}default{{ else }}{{ .Values.operator.namespace}}{{ end }}
+  namespace: {{ if .Values.operator.global }}{{ .Release.Namespace }}{{ else }}{{ .Values.operator.namespace}}{{ end }}
 
+{{- if .Values.rbac.enabled }}
 ---
-{{- if .Values.rbac.enabled -}}
 apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: {{ if and (.Values.operator.global) (eq .Values.operator.namespace "mysql-operator") }}Cluster{{ end }}Role
+kind: {{ if .Values.operator.global }}Cluster{{ end }}Role
 metadata:
-  name: mysql-operator{{ if and (.Values.operator.global) (eq .Values.operator.namespace "mysql-operator") }}{{ else}}
-  namespace: {{ .Values.operator.namespace}}{{ end }}
+  name: mysql-operator
+  namespace: {{ default .Release.Namespace .Values.operator.namespace }}
 rules:
   - apiGroups: [""]
     resources: ["pods"]
@@ -32,17 +31,11 @@ rules:
   - apiGroups: [""]
     resources: ["secrets"]
     verbs:
-      {{- if hasPrefix "0.1" .Values.image.tag }}
-      - get
-      {{- end}}
-      - create
+    - create
 
   - apiGroups: [""]
     resources:
     - services
-    {{- if hasPrefix "0.1" .Values.image.tag }}
-    - configmaps
-    {{- end }}
     verbs:
     - create
     - get
@@ -71,7 +64,6 @@ rules:
     - mysqlbackups
     - mysqlbackupschedules
     - mysqlclusters
-    - mysqlclusters/finalizers
     - mysqlrestores
     verbs:
     - get
@@ -86,10 +78,25 @@ rules:
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: {{ if and (.Values.operator.global) (eq .Values.operator.namespace "mysql-operator") }}Cluster{{ end }}Role
+kind: {{ if .Values.operator.global }}Cluster{{ end }}RoleBinding
 metadata:
-  name: mysql-agent{{ if and (.Values.operator.global) (eq .Values.operator.namespace "mysql-operator") }}{{ else}}
-  namespace: {{ .Values.operator.namespace}}{{ end }}
+  name: mysql-operator
+  namespace: {{ default .Release.Namespace .Values.operator.namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: {{ if .Values.operator.global }}Cluster{{ end }}Role
+  name: mysql-operator
+subjects:
+- kind: ServiceAccount
+  name: mysql-operator
+  namespace: {{ default .Release.Namespace .Values.operator.namespace }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: {{ if .Values.operator.global }}Cluster{{ end }}Role
+metadata:
+  name: mysql-agent
+  namespace: {{ default .Release.Namespace .Values.operator.namespace }}
 rules:
   - apiGroups: [""]
     resources: ["pods"]
@@ -116,7 +123,6 @@ rules:
     - mysqlbackups
     - mysqlbackupschedules
     - mysqlclusters
-    - mysqlclusters/finalizers
     - mysqlrestores
     verbs:
     - get
@@ -127,31 +133,16 @@ rules:
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
-kind:  {{ if and (.Values.operator.global) (eq .Values.operator.namespace "mysql-operator") }}Cluster{{ end }}RoleBinding
-metadata:
-  name: mysql-operator
-  namespace: {{ .Values.operator.namespace}}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind:  {{ if and (.Values.operator.global) (eq .Values.operator.namespace "mysql-operator") }}Cluster{{ end }}Role
-  name: mysql-operator
-subjects:
-- kind: ServiceAccount
-  name: mysql-operator
-  namespace: {{ .Values.operator.namespace }}
-
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind:  {{ if and (.Values.operator.global) (eq .Values.operator.namespace "mysql-operator") }}Cluster{{ end }}RoleBinding
+kind: {{ if .Values.operator.global }}Cluster{{ end }}RoleBinding
 metadata:
   name: mysql-agent
-  namespace: {{ .Values.operator.namespace}}
+  namespace: {{ default .Release.Namespace .Values.operator.namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind:  {{ if and (.Values.operator.global) (eq .Values.operator.namespace "mysql-operator") }}Cluster{{ end }}Role
+  kind:  {{ if .Values.operator.global }}Cluster{{ end }}Role
   name: mysql-agent
 subjects:
 - kind: ServiceAccount
   name: mysql-agent
-  namespace: {{ .Values.operator.namespace }}
-{{- end }}
+  namespace: {{ default .Release.Namespace .Values.operator.namespace }}
+{{ end }}

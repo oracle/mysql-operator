@@ -1,7 +1,7 @@
 package restore
 
 import (
-	"github.com/golang/glog"
+	glog "k8s.io/klog"
 
 	restoreutil "github.com/oracle/mysql-operator/pkg/api/restore"
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"

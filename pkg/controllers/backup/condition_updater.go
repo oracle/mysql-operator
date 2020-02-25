@@ -1,7 +1,7 @@
 package backup
 
 import (
-	"github.com/golang/glog"
+	glog "k8s.io/klog"
 
 	backuputil "github.com/oracle/mysql-operator/pkg/api/backup"
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"

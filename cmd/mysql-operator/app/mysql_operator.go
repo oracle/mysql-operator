@@ -21,8 +21,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
+	glog "k8s.io/klog"
 
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -84,7 +84,7 @@ func Run(s *operatoropts.MySQLOperatorOpts) error {
 		mysqlopClient,
 		kubeClient,
 		operatorInformerFactory.MySQL().V1alpha1().Clusters(),
-		kubeInformerFactory.Apps().V1beta1().StatefulSets(),
+		kubeInformerFactory.Apps().V1().StatefulSets(),
 		kubeInformerFactory.Core().V1().Pods(),
 		kubeInformerFactory.Core().V1().Services(),
 		30*time.Second,

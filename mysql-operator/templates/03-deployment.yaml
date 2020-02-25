@@ -1,4 +1,4 @@
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mysql-operator
@@ -27,6 +27,9 @@ spec:
         image: {{ .Values.image.registry }}/mysql-operator:{{ .Values.image.tag }}
         ports:
         - containerPort: 10254
+        env:
+        - name: MYSQL_AGENT_VERSION
+          value: {{ .Values.operator.mysqlAgentVersion }}
         args:
           - --v=4
 {{- if not .Values.operator.global }}

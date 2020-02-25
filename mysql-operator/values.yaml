@@ -4,7 +4,8 @@ operator:
   namespace: mysql-operator
   global: true
   register_crd: true
+  mysqlAgentVersion: latest
 image:
-  registry: iad.ocir.io/oracle
-  tag: 0.3.0
+  registry: registry.cn-hangzhou.aliyuncs.com/abewang
+  tag: latest
   pullPolicy: Always

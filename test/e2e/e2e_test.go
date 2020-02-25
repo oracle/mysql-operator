@@ -20,7 +20,7 @@ import (
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 
-	"k8s.io/apiserver/pkg/util/logs"
+	"k8s.io/kubectl/pkg/util/logs"
 
 	"github.com/oracle/mysql-operator/test/e2e/framework"
 	"github.com/oracle/mysql-operator/test/e2e/framework/ginkgowrapper"

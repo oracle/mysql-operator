@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"strings"
 
-	apps "k8s.io/api/apps/v1beta1"
+	apps "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -256,8 +256,8 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 
 func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, rootPassword v1.EnvVar, members int) v1.Container {
 	agentVersion := version.GetBuildVersion()
-	if version := os.Getenv("MYSQL_AGENT_VERSION"); version != "" {
-		agentVersion = version
+	if v := os.Getenv("MYSQL_AGENT_VERSION"); v != "" {
+		agentVersion = v
 	}
 
 	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Name, members)
@@ -401,6 +401,9 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 		},
 		Spec: apps.StatefulSetSpec{
 			Replicas: &cluster.Spec.Members,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: podLabels,
+			},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: podLabels,

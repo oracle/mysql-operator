@@ -22,8 +22,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/glog"
 	"github.com/pkg/errors"
+	glog "k8s.io/klog"
 
 	utilexec "k8s.io/utils/exec"
 

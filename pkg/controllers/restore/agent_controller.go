@@ -19,8 +19,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/glog"
 	"github.com/pkg/errors"
+	glog "k8s.io/klog"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -161,7 +161,7 @@ func NewAgentController(
 					return
 				}
 
-				glog.V(4).Infof("Restore %q is not Scheduled on this agent")
+				glog.V(4).Infof("Restore is not Scheduled on this agent")
 			},
 		},
 	)
