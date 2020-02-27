@@ -376,7 +376,7 @@ func (m *ClusterManager) rebootFromOutage(ctx context.Context) (*innodb.ClusterS
 // NOTE: ctx is not currently used for cancellation by caller (the stopCh is).
 func (m *ClusterManager) Run(ctx context.Context) {
 	interval_time, _ := strconv.ParseUint(os.Getenv("AGENT_INTERVAL"), 10, 32)
-	glog.Info("***agent run interval: %d", interval_time)
+	glog.Info("***agent run interval: ", interval_time)
 	//wait.Until(func() { m.Sync(ctx) }, time.Second*pollingIntervalSeconds, ctx.Done())
 	wait.Until(func() { m.Sync(ctx) }, time.Second*time.Duration(interval_time), ctx.Done())
 
