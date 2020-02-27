@@ -28,6 +28,7 @@ const (
 	DefaultMysqlPort = 3306
 	defaultMembers      = 3
 	defaultBaseServerID = 1000
+	defaultAgentIntervalTime = 15
 	// maxBaseServerID is the maximum safe value for BaseServerID calculated
 	// as max MySQL server_id value - max Replication Group size.
 	maxBaseServerID uint32 = 4294967295 - 9
@@ -87,6 +88,9 @@ func (c *Cluster) EnsureDefaults() *Cluster {
 
 	if c.Spec.MysqlPort == 0 {
 		c.Spec.MysqlPort = DefaultMysqlPort
+	}
+	if c.Spec.AgentIntervalTime == 0 {
+		c.Spec.AgentIntervalTime = defaultAgentIntervalTime
 	}
 	return c
 }

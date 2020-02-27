@@ -17,8 +17,9 @@ package manager
 import (
 	"context"
 	"fmt"
-	//"os"
+	"os"
 	"strings"
+	"strconv"
 	"time"
 
 	"github.com/golang/glog"
@@ -374,7 +375,10 @@ func (m *ClusterManager) rebootFromOutage(ctx context.Context) (*innodb.ClusterS
 // Run runs the ClusterManager controller.
 // NOTE: ctx is not currently used for cancellation by caller (the stopCh is).
 func (m *ClusterManager) Run(ctx context.Context) {
-	wait.Until(func() { m.Sync(ctx) }, time.Second*pollingIntervalSeconds, ctx.Done())
+	interval_time, _ := stronv.ParseUint(os.Getenv("AGENT_INTERVAL"), 10 32)
+	glog.Info("***agent run interval: %d", interval_time)
+	//wait.Until(func() { m.Sync(ctx) }, time.Second*pollingIntervalSeconds, ctx.Done())
+	wait.Until(func() { m.Sync(ctx) }, time.Second*interval_time, ctx.Done())
 
 	<-ctx.Done()
 

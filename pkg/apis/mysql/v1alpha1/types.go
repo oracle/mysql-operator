@@ -53,6 +53,8 @@ type ClusterSpec struct {
 	AgentPromePort uint32 `json:"agentPromePort,omitempty"`
 	//mysql_port
 	MysqlPort uint32 `json:"mysqlPort,omitempty"`
+	//agent execute interval
+	AgentIntervalTime `json:"agentIntervalTime,omitempty"`
 	// NodeSelector is a selector which must be true for the pod to fit on a node.
 	// Selector which must match a node's labels for the pod to be scheduled on that node.
 	// More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
