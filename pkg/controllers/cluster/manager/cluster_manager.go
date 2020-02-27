@@ -37,7 +37,7 @@ import (
 	"github.com/oracle/mysql-operator/pkg/util/mysqlsh"
 )
 
-const pollingIntervalSeconds = 15
+const pollingIntervalSeconds = 60
 
 // ClusterManager manages the local MySQL instance's membership of an InnoDB cluster.
 type ClusterManager struct {
