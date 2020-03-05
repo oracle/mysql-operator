@@ -243,9 +243,9 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 			"--ssl-key=/etc/ssl/mysql/tls.key")
 	}
 
-	if checkSupportGroupExitStateArgs(cluster.Spec.Version) {
-		args = append(args, "--loose-group-replication-exit-state-action=READ_ONLY")
-	}
+	//if checkSupportGroupExitStateArgs(cluster.Spec.Version) {
+	//	args = append(args, "--loose-group-replication-exit-state-action=READ_ONLY")
+	//}
 
 	entryPointArgs := strings.Join(args, " ")
 
