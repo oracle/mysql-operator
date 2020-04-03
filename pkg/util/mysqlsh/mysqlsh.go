@@ -87,6 +87,7 @@ func (r *runner) IsClustered(ctx context.Context) bool {
 
 func (r *runner) CreateCluster(ctx context.Context, opts Options) (*innodb.ClusterStatus, error) {
 	python := fmt.Sprintf("print dba.create_cluster('%s', %s).status()", innodb.DefaultClusterName, opts)
+	glog.V(2).Infof("mysqlsh CreateCluster: %q", python)
 	output, err := r.run(ctx, python)
 	if err != nil {
 		return nil, err
@@ -118,9 +119,22 @@ func (r *runner) GetClusterStatus(ctx context.Context) (*innodb.ClusterStatus, e
 	if err != nil {
 		return nil, err
 	}
-
+	
+	//repair json decode problem 
+	rawJson := string(output)
+	firstBraceIndex := strings.Index(rawJson, "{")
+	
+	var jsonData string
+	
+	if firstBraceIndex == -1 {
+		return nil, errors.Errorf("no json found in output: %q", rawJson)
+	}
+	
+	jsonData = rawJson[firstBraceIndex:]
+	glog.V(2).Infof("mysqlsh clusterstatus: %q", jsonData)
+	
 	status := &innodb.ClusterStatus{}
-	err = json.Unmarshal(sanitizeJSON(output), status)
+	err = json.Unmarshal(sanitizeJSON([]byte(jsonData)), status)
 	if err != nil {
 		return nil, errors.Wrapf(err, "decoding cluster status output: %q", output)
 	}

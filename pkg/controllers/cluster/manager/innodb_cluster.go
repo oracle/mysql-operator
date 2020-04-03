@@ -35,7 +35,7 @@ import (
 
 var errNoClusterFound = errors.New("no cluster found on any of the seed nodes")
 
-const defaultTimeout = 10 * time.Second
+const defaultTimeout = 60 * time.Second
 
 // isDatabaseRunning returns true if a connection can be made to the MySQL
 // database running in the pod instance in which this function is called.
@@ -46,6 +46,7 @@ func isDatabaseRunning(ctx context.Context) bool {
 		"mysqladmin",
 		"--protocol", "tcp",
 		"-u", "root",
+		os.ExpandEnv("-P$MYSQL_PORT"),
 		os.ExpandEnv("-p$MYSQL_ROOT_PASSWORD"),
 		"status",
 	).Run()

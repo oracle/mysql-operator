@@ -29,7 +29,7 @@ import (
 
 	"github.com/oracle/mysql-operator/pkg/apis/mysql/v1alpha1"
 	"github.com/oracle/mysql-operator/pkg/constants"
-	agentopts "github.com/oracle/mysql-operator/pkg/options/agent"
+	//agentopts "github.com/oracle/mysql-operator/pkg/options/agent"
 	operatoropts "github.com/oracle/mysql-operator/pkg/options/operator"
 	"github.com/oracle/mysql-operator/pkg/resources/secrets"
 	"github.com/oracle/mysql-operator/pkg/version"
@@ -127,6 +127,41 @@ func multiMasterEnvVar(enabled bool) v1.EnvVar {
 	}
 }
 
+func replicationGroupPortEnvVar(groupPort uint32) v1.EnvVar {
+	return v1.EnvVar{
+		Name: "GROUP_PORT",
+		Value: strconv.FormatUint(uint64(groupPort), 10),
+	}
+}
+
+func agentHealthCheckPortEnvVar(agentCheckPort uint32) v1.EnvVar {
+	return v1.EnvVar{
+		Name: "AGENT_HEALTHCHECK_PORT",
+		Value: strconv.FormatUint(uint64(agentCheckPort), 10),
+	}
+}
+
+func agentPromePortEnvVar(agentPromePort uint32) v1.EnvVar {
+	return v1.EnvVar{
+		Name: "AGENT_PROME_PORT",
+		Value: strconv.FormatUint(uint64(agentPromePort), 10),
+	}
+}
+
+func mysqlPortEnvVar(mysqlPort uint32) v1.EnvVar {
+	return v1.EnvVar{
+		Name: "MYSQL_PORT",
+		Value: strconv.FormatUint(uint64(mysqlPort), 10),
+	}
+}
+
+func numberEnvVar(field string, num uint32) v1.EnvVar {
+	return v1.EnvVar{
+		Name: field,
+		Value: strconv.FormatUint(uint64(num), 10),
+	}
+}
+
 // Returns the MySQL_ROOT_PASSWORD environment variable
 // If a user specifies a secret in the spec we use that
 // else we create a secret with a random password
@@ -151,10 +186,10 @@ func mysqlRootPassword(cluster *v1alpha1.Cluster) v1.EnvVar {
 	}
 }
 
-func getReplicationGroupSeeds(name string, members int) string {
+func getReplicationGroupSeeds(name string, members int, groupPort uint32) string {
 	seeds := []string{}
 	for i := 0; i < members; i++ {
-		seeds = append(seeds, fmt.Sprintf("%[1]s-%[2]d.%[1]s:%[3]d", name, i, replicationGroupPort))
+		seeds = append(seeds, fmt.Sprintf("%[1]s-%[2]d.%[1]s:%[3]d", name, i, groupPort))
 	}
 	return strings.Join(seeds, ",")
 }
@@ -188,7 +223,7 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 		"--datadir=/var/lib/mysql",
 		"--user=mysql",
 		"--gtid_mode=ON",
-		"--log-bin",
+		"--log-bin=${MY_POD_NAME}-bin",
 		"--binlog_checksum=NONE",
 		"--enforce_gtid_consistency=ON",
 		"--log-slave-updates=ON",
@@ -208,9 +243,9 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 			"--ssl-key=/etc/ssl/mysql/tls.key")
 	}
 
-	if checkSupportGroupExitStateArgs(cluster.Spec.Version) {
-		args = append(args, "--loose-group-replication-exit-state-action=READ_ONLY")
-	}
+	//if checkSupportGroupExitStateArgs(cluster.Spec.Version) {
+	//	args = append(args, "--loose-group-replication-exit-state-action=READ_ONLY")
+	//}
 
 	entryPointArgs := strings.Join(args, " ")
 
@@ -220,7 +255,7 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 
          # Finds the replica index from the hostname, and uses this to define
          # a unique server id for this instance.
-         index=$(cat /etc/hostname | grep -o '[^-]*$')
+         index=$(echo $MY_POD_NAME | grep -o '[^-]*$')
          /entrypoint.sh %s`, baseServerID, entryPointArgs)
 
 	var resourceLimits corev1.ResourceRequirements
@@ -232,14 +267,16 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 		Name: MySQLServerName,
 		// TODO(apryde): Add BaseImage to cluster CRD.
 		Image: fmt.Sprintf("%s:%s", mysqlServerImage, cluster.Spec.Version),
+		ImagePullPolicy: v1.PullAlways,
 		Ports: []v1.ContainerPort{
 			{
-				ContainerPort: 3306,
+				ContainerPort: int32(cluster.Spec.MysqlPort),
 			},
 		},
 		VolumeMounts: volumeMounts(cluster),
 		Command:      []string{"/bin/bash", "-ecx", cmd},
 		Env: []v1.EnvVar{
+			//mysqlPortEnvVar(cluster.Spec.MysqlPort),
 			rootPassword,
 			{
 				Name:  "MYSQL_ROOT_HOST",
@@ -248,6 +285,14 @@ func mysqlServerContainer(cluster *v1alpha1.Cluster, mysqlServerImage string, ro
 			{
 				Name:  "MYSQL_LOG_CONSOLE",
 				Value: "true",
+			},
+			{
+				Name: "MY_POD_NAME",
+				ValueFrom: &v1.EnvVarSource{
+					FieldRef: &v1.ObjectFieldSelector{
+						FieldPath: "metadata.name",
+					},
+				},
 			},
 		},
 		Resources: resourceLimits,
@@ -260,7 +305,7 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 		agentVersion = version
 	}
 
-	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Name, members)
+	replicationGroupSeeds := getReplicationGroupSeeds(cluster.Name, members, cluster.Spec.GroupPort)
 
 	var resourceLimits corev1.ResourceRequirements
 	if cluster.Spec.Resources != nil && cluster.Spec.Resources.Agent != nil {
@@ -270,13 +315,19 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 	return v1.Container{
 		Name:         MySQLAgentName,
 		Image:        fmt.Sprintf("%s:%s", mysqlAgentImage, agentVersion),
-		Args:         []string{"--v=4"},
+		ImagePullPolicy: v1.PullAlways,
+		Args:         []string{"--v=6"},
 		VolumeMounts: volumeMounts(cluster),
 		Env: []v1.EnvVar{
 			clusterNameEnvVar(cluster),
 			namespaceEnvVar(),
 			replicationGroupSeedsEnvVar(replicationGroupSeeds),
 			multiMasterEnvVar(cluster.Spec.MultiMaster),
+			replicationGroupPortEnvVar(cluster.Spec.GroupPort),
+			agentHealthCheckPortEnvVar(cluster.Spec.AgentCheckPort),
+			agentPromePortEnvVar(cluster.Spec.AgentPromePort),
+			mysqlPortEnvVar(cluster.Spec.MysqlPort),
+			numberEnvVar("AGENT_INTERVAL", cluster.Spec.AgentIntervalTime),
 			rootPassword,
 			{
 				Name: "MY_POD_IP",
@@ -286,12 +337,20 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 					},
 				},
 			},
+			{
+				Name: "MY_POD_NAME",
+				ValueFrom: &v1.EnvVarSource{
+					FieldRef: &v1.ObjectFieldSelector{
+						FieldPath: "metadata.name",
+					},
+				},
+			},
 		},
 		LivenessProbe: &v1.Probe{
 			Handler: v1.Handler{
 				HTTPGet: &v1.HTTPGetAction{
 					Path: "/live",
-					Port: intstr.FromInt(int(agentopts.DefaultMySQLAgentHeathcheckPort)),
+					Port: intstr.FromInt(int(cluster.Spec.AgentCheckPort)),
 				},
 			},
 		},
@@ -299,7 +358,7 @@ func mysqlAgentContainer(cluster *v1alpha1.Cluster, mysqlAgentImage string, root
 			Handler: v1.Handler{
 				HTTPGet: &v1.HTTPGetAction{
 					Path: "/ready",
-					Port: intstr.FromInt(int(agentopts.DefaultMySQLAgentHeathcheckPort)),
+					Port: intstr.FromInt(int(cluster.Spec.AgentCheckPort)),
 				},
 			},
 		},
@@ -406,7 +465,7 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 					Labels: podLabels,
 					Annotations: map[string]string{
 						"prometheus.io/scrape": "true",
-						"prometheus.io/port":   "8080",
+						"prometheus.io/port":   strconv.FormatUint(uint64(cluster.Spec.AgentPromePort), 10),
 					},
 				},
 				Spec: v1.PodSpec{
@@ -416,6 +475,7 @@ func NewForCluster(cluster *v1alpha1.Cluster, images operatoropts.Images, servic
 					ServiceAccountName: "mysql-agent",
 					NodeSelector:       cluster.Spec.NodeSelector,
 					Affinity:           cluster.Spec.Affinity,
+					HostNetwork:        cluster.Spec.HostNetwork,
 					Containers:         containers,
 					Volumes:            podVolumes,
 				},

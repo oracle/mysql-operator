@@ -17,7 +17,9 @@ package manager
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
+	"strconv"
 	"time"
 
 	"github.com/golang/glog"
@@ -36,7 +38,7 @@ import (
 	"github.com/oracle/mysql-operator/pkg/util/mysqlsh"
 )
 
-const pollingIntervalSeconds = 15
+const pollingIntervalSeconds = 60
 
 // ClusterManager manages the local MySQL instance's membership of an InnoDB cluster.
 type ClusterManager struct {
@@ -100,6 +102,7 @@ func (m *ClusterManager) getClusterStatus(ctx context.Context) (*innodb.ClusterS
 	if localMSHErr != nil {
 		var err error
 		clusterStatus, err = getClusterStatusFromGroupSeeds(ctx, m.kubeClient, m.Instance)
+		glog.V(2).Infof("get cluster seeds*** error: %+v", err)
 		if err != nil {
 			// NOTE: We return the localMSHErr rather than the error here so that we
 			// can dispatch on it.
@@ -122,6 +125,7 @@ func (m *ClusterManager) Sync(ctx context.Context) bool {
 	clusterStatus, err := m.getClusterStatus(ctx)
 	if err != nil {
 		myshErr, ok := errors.Cause(err).(*mysqlsh.Error)
+		glog.V(2).Infof("get cluster*** error: %+v", err)
 		if !ok {
 			glog.Errorf("Failed to get the cluster status: %+v", err)
 			return false
@@ -289,10 +293,17 @@ func (m *ClusterManager) handleInstanceNotFound(ctx context.Context, primaryAddr
 		glog.Errorf("Getting CIDR to whitelist for GR: %v", err)
 		return false
 	}
+	//use deault mysqlPort + 1
+	//localAddress := fmt.Sprintf("%s:%s", m.Instance.Name(), os.Getenv("GROUP_PORT"))
+    //groupSeeds := os.Getenv("REPLICATION_GROUP_SEEDS")
+
+    //glog.Infof("localAddress: %s, groupSeeds: %s", localAddress, groupSeeds)
 
 	if err := psh.AddInstanceToCluster(ctx, m.Instance.GetShellURI(), mysqlsh.Options{
 		"memberSslMode": "REQUIRED",
 		"ipWhitelist":   whitelistCIDR,
+	//	"localAddress": localAddress,
+	//	"groupSeeds": groupSeeds,
 	}); err != nil {
 		glog.Errorf("Failed to add to cluster: %v", err)
 		return false
@@ -322,9 +333,18 @@ func (m *ClusterManager) createCluster(ctx context.Context) (*innodb.ClusterStat
 	if err != nil {
 		return nil, errors.Wrap(err, "getting CIDR to whitelist for  GR")
 	}
+
+	// use deault mysql_port + 1
+	//localAddress := fmt.Sprintf("%s:%s", m.Instance.Name(), os.Getenv("GROUP_PORT"))
+    //groupSeeds := os.Getenv("REPLICATION_GROUP_SEEDS")
+
+    //glog.Infof("localAddress: %s, groupSeeds: %s", localAddress, groupSeeds)
+
 	opts := mysqlsh.Options{
 		"memberSslMode": "REQUIRED",
 		"ipWhitelist":   whitelistCIDR,
+	//	"localAddress": localAddress,
+	//	"groupSeeds": groupSeeds,
 	}
 	if m.Instance.MultiMaster {
 		opts["force"] = "True"
@@ -355,7 +375,10 @@ func (m *ClusterManager) rebootFromOutage(ctx context.Context) (*innodb.ClusterS
 // Run runs the ClusterManager controller.
 // NOTE: ctx is not currently used for cancellation by caller (the stopCh is).
 func (m *ClusterManager) Run(ctx context.Context) {
-	wait.Until(func() { m.Sync(ctx) }, time.Second*pollingIntervalSeconds, ctx.Done())
+	interval_time, _ := strconv.ParseUint(os.Getenv("AGENT_INTERVAL"), 10, 32)
+	glog.Info("***agent run interval: ", interval_time)
+	//wait.Until(func() { m.Sync(ctx) }, time.Second*pollingIntervalSeconds, ctx.Done())
+	wait.Until(func() { m.Sync(ctx) }, time.Second*time.Duration(interval_time), ctx.Done())
 
 	<-ctx.Done()
 
